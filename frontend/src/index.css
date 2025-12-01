@@ -1,0 +1,23 @@
+/* Import font Urbanist từ Google Fonts */
+@import url("https://fonts.googleapis.com/css2?family=Urbanist:ital,wght@0,100..900;1,100..900&display=swap");
+
+/* Import core của Tailwind */
+@import "tailwindcss";
+
+/* Custom theme variables */
+@theme {
+  --font-display: "Urbanist", sans-serif;
+  --breakpoint-3xl: 1920px;
+  --color-primary: #ff9324;
+}
+
+/* Base layer overrides */
+@layer base {
+  html {
+    font-family: var(--font-display);
+  }
+
+  body {
+    background-color: #fcfbfc;
+  }
+}
