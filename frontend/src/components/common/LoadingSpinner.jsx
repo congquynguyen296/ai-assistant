@@ -9,17 +9,11 @@
  * @param {string} size - "sm" | "md" | "lg" - kích thước của dots
  */
 
-interface LoadingSpinnerProps {
-  message?: string;
-  variant?: "overlay" | "inline";
-  size?: "sm" | "md" | "lg";
-}
-
 export default function LoadingSpinner({
   message = "Loading...",
   variant = "overlay",
   size = "md",
-}: LoadingSpinnerProps) {
+}) {
   // Kích thước dots dựa theo size prop
   const dotSizes = {
     sm: "w-2 h-2",

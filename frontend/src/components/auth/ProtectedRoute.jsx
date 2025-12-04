@@ -15,7 +15,7 @@ const ProtectedRoute = () => {
     );
   }
 
-  const Layout = AppLayout as React.ComponentType<{ children?: React.ReactNode }>;
+  const Layout = AppLayout;
 
   return isAuthenticated ? (
     <Layout>
