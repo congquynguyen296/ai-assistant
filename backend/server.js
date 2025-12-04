@@ -8,7 +8,9 @@ import connectDB from "./src/config/db.js";
 import authRoutes from "./src/routes/authRoutes.js";
 import documentRoutes from "./src/routes/documentRoutes.js";
 import flashcardRoutes from "./src/routes/flashcardRoutes.js";
-import aiRoute from "./src/routes/aiRoutes.js";
+import aiRoutes from "./src/routes/aiRoutes.js";
+import quizRoutes from "./src/routes/quizRoutes.js";
+import processRoutes from "./src/routes/processRoute.js";
 
 // Load env variables
 dotenv.config();
@@ -40,10 +42,12 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // Routes
-app.use(`${process.env.API_PREFIX}/auth`, authRoutes)
+app.use(`${process.env.API_PREFIX}/auth`, authRoutes);
 app.use(`${process.env.API_PREFIX}/documents`, documentRoutes);
 app.use(`${process.env.API_PREFIX}/flashcards`, flashcardRoutes);
-app.use(`${process.env.API_PREFIX}/ai-generation`, aiRoute);
+app.use(`${process.env.API_PREFIX}/quizzes`, quizRoutes);
+app.use(`${process.env.API_PREFIX}/ai-generation`, aiRoutes);
+app.use(`${process.env.API_PREFIX}/dashboard`, processRoutes);
 
 // Globle error handler
 app.use(errorHandler);
