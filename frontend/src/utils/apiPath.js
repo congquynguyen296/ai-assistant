@@ -1,6 +1,6 @@
 export const BASE_URL = "http://localhost:8000/api/v1";
 
-export const API_PATH = {
+export const API_PATHS = {
   AUTH: {
     REGISTER: "/auth/register",
     LOGIN: "/auth/login",
@@ -9,13 +9,40 @@ export const API_PATH = {
     CHANGE_PASSWORD: "auth/change-password",
   },
 
-  DOCUMENTS: {},
+  DOCUMENTS: {
+    UPLOAD: "/documents/upload",
+    GET_DOCUMENTS: "/documents",
+    GET_DOCUMENT_BY_ID: "/documents/:id",
+    DELETE_DOCUMENT: "/documents/:id",
+  },
 
-  AI: {},
+  AI: {
+    GENERATE_FLASHCARDS: "/ai-generation/generate-flashcards",
+    GENERATE_QUIZ: "/ai-generation/generate-quiz",
+    GENERATE_SUMMARY: "/ai-generation/generate-summary",
+    EXPLAIN_CONCEPT: "/ai-generation/explain-concept",
+    CHAT: "/ai-generation/chat",
+    GET_CHAT_HISTORY: "/ai-generation/chat-history",
+  },
 
-  FLASHCARDS: {},
+  FLASHCARDS: {
+    GET_ALL_FLASHCARDS_SET: "/flashcards",
+    GET_FLASHCARDS_FOR_DOCUMENT: (documentId) => `/flashcards/${documentId}`,
+    REVIEW_FLASHCARD: (cardId) => `/flashcards/${cardId}/review`,
+    TOGGLE_STAR_FLASHCARD: (cardId) => `/flashcards/${cardId}/toggle-star`,
+    DELETE_FLASHCARD_SET: (flashcardId) => `/flashcards/${flashcardId}`,
+  },
 
-  QUIZZES: {},
+  QUIZZES: {
+    GET_ALL_QUIZZES: "/quizzes",
+    GET_QUIZZES_FOR_DOCUMENT: (documentId) => `/quizzes/${documentId}`,
+    GET_QUIZ_BY_ID: (quizId) => `/quizzes/${quizId}`,
+    SUBMIT_QUIZ: (quizId) => `/quizzes/${quizId}/submit`,
+    GET_QUIZ_RESULTS: (quizId) => `/quizzes/${quizId}/results`,
+    DELETE_QUIZ: (quizId) => `/quizzes/${quizId}`,
+  },
 
-  DASHBOARD: {},
+  PROGRESS: {
+    GET_DASHBOARD: "/progress/dashboard",
+  },
 };
