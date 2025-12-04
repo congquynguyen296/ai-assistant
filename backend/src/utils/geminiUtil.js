@@ -179,7 +179,7 @@ export const generateQuiz = async (text, numQuestions = 5) => {
     "question": "Question text...",
     "options": ["Option A", "Option B", "Option C", "Option D"],
     "correctAnswer": "Option B",
-    "explanation": "Short explanation...",
+    "explanation": "Explain for this correctAnswer. Talk reason why this is the correct answer.",
     "difficulty": "medium"
   }
 ]

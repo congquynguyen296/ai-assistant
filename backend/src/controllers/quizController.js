@@ -68,7 +68,7 @@ export const submitQuiz = async (req, res, next) => {
     const userId = getUserIdFromReq(req);
 
     const { answers } = req.body;
-    if (!answers || !Array.isArray(answers)) {
+    if (!answers || !Array.isArray(answers) || answers.length === 0) {
       return res.status(400).json({
         success: false,
         error: "Answers không hợp lệ",

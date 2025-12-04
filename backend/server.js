@@ -10,7 +10,7 @@ import documentRoutes from "./src/routes/documentRoutes.js";
 import flashcardRoutes from "./src/routes/flashcardRoutes.js";
 import aiRoutes from "./src/routes/aiRoutes.js";
 import quizRoutes from "./src/routes/quizRoutes.js";
-import processRoutes from "./src/routes/processRoute.js";
+import processRoutes from "./src/routes/progressRoute.js";
 
 // Load env variables
 dotenv.config();

@@ -21,7 +21,7 @@ export const getDashboardService = async ({ userId }) => {
   for (const flashcardSet of flashcardSets) {
     totalFlashcards += flashcardSet.cards.length;
     reviviewedFlashcards += flashcardSet.cards.filter(
-      (card) => card.length > 0
+      (card) => card.reviewCount > 0
     ).length;
     starredFlashcards += flashcardSet.cards.filter(
       (card) => card.isStarred
