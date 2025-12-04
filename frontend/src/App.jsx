@@ -15,12 +15,12 @@ import FlashCardListPage from "@/pages/Flashcards/FlashcardListPage";
 import FlashCardDetailPage from "@/pages/Flashcards/FlashcardDetailPage";
 import QuizTakePage from "@/pages/Quizzes/QuizTakePage";
 import QuizResultPage from "@/pages/Quizzes/QuizResultPage";
+import { useAuth } from "@/context/AuthContext";
 
 export default function App() {
-  const isAuthenticated = false;
-  const isLoading = false;
+  const { isAuthenticated, loading } = useAuth();
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="h-screen w-full flex items-center justify-center">
         <LoadingSpinner message="Đang tải..." variant="overlay" size="md" />
