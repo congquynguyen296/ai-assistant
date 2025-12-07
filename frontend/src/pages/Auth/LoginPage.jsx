@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { toast } from "sonner";
 import authService from "../../services/authService";
+import { validateLogin } from "../../utils/validation";
 import { ArrowRight, BrainCircuit, Lock, Mail } from "lucide-react";
 
 const LoginPage = () => {
@@ -10,7 +11,7 @@ const LoginPage = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [focusField, setFocusFiled] = useState(null);
+  const [focusField, setFocusField] = useState(null);
 
   const navigate = useNavigate();
   const { login } = useAuth();
@@ -21,14 +22,28 @@ const LoginPage = () => {
     setError("");
     setLoading(true);
 
+    // Validate data using validation utility
+    const validation = validateLogin(email, password);
+    if (!validation.isValid) {
+      setError(validation.error);
+      setFocusField(validation.field);
+      setLoading(false);
+      return;
+    }
+
     try {
       const response = await authService.login(email, password);
-      const { user, token } = response?.data;
+      const { user, token } = response?.data || response;
+      login(user, token);
       toast.success("Đăng nhập thành công");
       navigate("/dashboard");
     } catch (error) {
-      setError(error.message || "Đăng nhập không thành công");
-      toast.error("Đăng nhập không thành công");
+      const errorMessage =
+        error?.message ||
+        error?.response?.data?.message ||
+        "Đăng nhập không thành công";
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -51,7 +66,7 @@ const LoginPage = () => {
             </div>
 
             {/* Form */}
-            <div className="space-y-5">
+            <form onSubmit={handleSubmit} className="space-y-5">
               {/* Email */}
               <div className="space-y-2">
                 {" "}
@@ -73,8 +88,8 @@ const LoginPage = () => {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    onFocus={() => setFocusFiled("email")}
-                    onBlur={() => setFocusFiled(null)}
+                    onFocus={() => setFocusField("email")}
+                    onBlur={() => setFocusField(null)}
                     placeholder="you@example.com"
                     className="w-full h-12 pl-12 pr-4 border-2 border-slate-200 rounded-xl bg-slate-50/50 text-slate-900 placeholder-slate-400 text-sm font-medium transition-all duration-200 focus:outline-none focus:border-emerald-500 focus:bg-white focus:shadow-lg focus:shadow-emerald-500/10"
                   />
@@ -102,8 +117,8 @@ const LoginPage = () => {
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    onFocus={() => setFocusFiled("password")}
-                    onBlur={() => setFocusFiled(null)}
+                    onFocus={() => setFocusField("password")}
+                    onBlur={() => setFocusField(null)}
                     placeholder="********"
                     className="w-full h-12 pl-12 pr-4 border-2 border-slate-200 rounded-xl bg-slate-50/50 text-slate-900 placeholder-slate-400 text-sm font-medium transition-all duration-200 focus:outline-none focus:border-emerald-500 focus:bg-white focus:shadow-lg focus:shadow-emerald-500/10  "
                   />
@@ -121,6 +136,7 @@ const LoginPage = () => {
 
               {/* Submit button */}
               <button
+                type="submit"
                 onClick={handleSubmit}
                 disabled={loading}
                 className="group relative w-full h-12 bg-linear-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 active:scale-[0.98] text-white font-semibold rounded-xl transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-emerald-500/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 shadow-lg shadow-emerald-500/25 overflow-hidden"
@@ -142,7 +158,7 @@ const LoginPage = () => {
                 </span>
                 <div className="absolute inset-0 bg-linear-to-r from-white/0 via-white/20 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
               </button>
-            </div>
+            </form>
 
             {/* Footer */}
             <div className="mt-8 pt-6 border-t border-slate-200/60">
