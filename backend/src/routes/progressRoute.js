@@ -7,6 +7,6 @@ const route = express.Router();
 route.use(protect);
 
 // Dashboard page
-route.get("/", getDashboard);
+route.get("/dashboard", getDashboard);
 
 export default route;

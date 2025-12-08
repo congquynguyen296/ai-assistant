@@ -47,7 +47,7 @@ app.use(`${process.env.API_PREFIX}/documents`, documentRoutes);
 app.use(`${process.env.API_PREFIX}/flashcards`, flashcardRoutes);
 app.use(`${process.env.API_PREFIX}/quizzes`, quizRoutes);
 app.use(`${process.env.API_PREFIX}/ai-generation`, aiRoutes);
-app.use(`${process.env.API_PREFIX}/dashboard`, processRoutes);
+app.use(`${process.env.API_PREFIX}/progress`, processRoutes);
 
 // Globle error handler
 app.use(errorHandler);
