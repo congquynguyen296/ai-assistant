@@ -10,7 +10,7 @@
  */
 
 export default function LoadingSpinner({
-  message = "Loading...",
+  message = "Đang tải...",
   variant = "overlay",
   size = "md",
 }) {

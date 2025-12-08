@@ -16,6 +16,7 @@ import FlashCardDetailPage from "@/pages/Flashcards/FlashcardDetailPage";
 import QuizTakePage from "@/pages/Quizzes/QuizTakePage";
 import QuizResultPage from "@/pages/Quizzes/QuizResultPage";
 import { useAuth } from "@/context/AuthContext";
+import DashboardPage from "./pages/Dashboard/DashboardPage";
 
 export default function App() {
   const { isAuthenticated, loading } = useAuth();
@@ -47,7 +48,7 @@ export default function App() {
 
         {/* Protected route */}
         <Route element={<ProtectedRoute />}>
-          <Route path="/dashboard" element={<div>Dashboard</div>} />
+          <Route path="/dashboard" element={<DashboardPage />} />
 
           <Route path="/profile" element={<div>Profile</div>} />
 

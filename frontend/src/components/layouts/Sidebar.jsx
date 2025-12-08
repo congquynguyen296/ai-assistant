@@ -21,10 +21,10 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar }) => {
 
   // Navigate link to page
   const navLinks = [
-    { to: "/dashboard", icon: LayoutDashboard, text: "Dashboard" },
-    { to: "/documents", icon: FileText, text: "Documents" },
-    { to: "/flashcards", icon: BookOpen, text: "Flashcards" },
-    { to: "profile", icon: User, text: "Profile" },
+    { to: "/dashboard", icon: LayoutDashboard, text: "Thống kê" },
+    { to: "/documents", icon: FileText, text: "Tài liệu" },
+    { to: "/flashcards", icon: BookOpen, text: "Câu hỏi" },
+    { to: "/profile", icon: User, text: "Cá nhân" },
   ];
 
   return (
