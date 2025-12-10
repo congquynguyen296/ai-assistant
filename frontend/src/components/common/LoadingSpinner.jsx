@@ -31,15 +31,15 @@ export default function LoadingSpinner({
           {/* 3 dots bounce animation */}
           <div className="flex items-center gap-1.5">
             <div
-              className={`${dotSize} bg-indigo-600 rounded-full animate-bounce`}
+              className={`${dotSize} bg-emerald-500 rounded-full animate-bounce`}
               style={{ animationDelay: "0ms" }}
             ></div>
             <div
-              className={`${dotSize} bg-purple-600 rounded-full animate-bounce`}
+              className={`${dotSize} bg-teal-500 rounded-full animate-bounce`}
               style={{ animationDelay: "150ms" }}
             ></div>
             <div
-              className={`${dotSize} bg-pink-600 rounded-full animate-bounce`}
+              className={`${dotSize} bg-blue-500 rounded-full animate-bounce`}
               style={{ animationDelay: "300ms" }}
             ></div>
           </div>

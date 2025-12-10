@@ -4,6 +4,7 @@ import { API_PATHS } from "@/utils/apiPath.js";
 const getDocuments = async () => {
   try {
     const response = await axiosInstance.get(API_PATHS.DOCUMENTS.GET_DOCUMENTS);
+    console.log(response);
     return response.data;
   } catch (error) {
     throw error.response?.data || "Lấy danh sách tài liệu thất bại";
@@ -32,8 +33,10 @@ const deleteDocument = async (documentId) => {
     const response = await axiosInstance.delete(
       API_PATHS.DOCUMENTS.DELETE_DOCUMENT(documentId)
     );
+    console.log("Xóa tài liệu thành công:", response.data);
     return response.data;
   } catch (error) {
+    console.error("Xóa tài liệu thất bại:", error);
     throw error.response?.data || "Xóa tài liệu thất bại";
   }
 };
