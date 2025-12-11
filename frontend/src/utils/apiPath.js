@@ -22,7 +22,7 @@ export const API_PATHS = {
     GENERATE_SUMMARY: "/ai-generation/generate-summary",
     EXPLAIN_CONCEPT: "/ai-generation/explain-concept",
     CHAT: "/ai-generation/chat",
-    GET_CHAT_HISTORY: "/ai-generation/chat-history",
+    GET_CHAT_HISTORY: (documentId) => `/ai-generation/chat-history?documentId=${documentId}`,
   },
 
   FLASHCARDS: {
