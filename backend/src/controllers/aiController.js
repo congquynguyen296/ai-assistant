@@ -118,6 +118,8 @@ export const chat = async (req, res, next) => {
       question,
     });
 
+    console.log(result);
+
     return res.status(200).json({
       success: true,
       message: "Chat với AI thành công",
@@ -163,7 +165,7 @@ export const explainConcept = async (req, res, next) => {
 export const getChatHistory = async (req, res, next) => {
   try {
     const userId = req.user.id;
-    const { documentId } = req.body;
+    const { documentId } = req.query;
     if (!documentId) {
       return res.status(400).json({
         success: false,
@@ -180,7 +182,7 @@ export const getChatHistory = async (req, res, next) => {
     return res.status(200).json({
       success: true,
       message: "Lấy lịch sử chat thành công",
-      data: result,
+      data: result?.messages || [],
     });
   } catch (error) {
     next(error);

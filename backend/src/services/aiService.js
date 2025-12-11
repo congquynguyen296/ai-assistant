@@ -108,54 +108,53 @@ export const chatService = async ({ userId, documentId, question }) => {
     userId,
     status: "ready",
   });
+
   if (!document) {
     throw new AppError("Tài liệu không tồn tại", 404);
   }
 
-  // Find revalant chunks
-  const revalantChunks = findRelevantChunks(document.chunks, question, 3);
-  const chunkIndices = chunks.map((chunk) => chunk.chunkIndex);
+  const relevantChunks = findRelevantChunks(document.chunks, question, 3);
 
-  // Get or create chat history
+  const chunkIndices = relevantChunks.map((chunk) => chunk.chunkIndex);
+
   let chatHistory = await ChatHistory.findOne({
     userId,
     documentId: document._id,
   });
+
   if (!chatHistory) {
     chatHistory = await ChatHistory.create({
       userId,
       documentId: document._id,
       messages: [],
     });
-
-    // Generate answer using Gemini API
-    const answer = await geminiUtil.chatWithContext(question, revalantChunks);
-
-    // Save chat message
-    chatHistory.messages.push(
-      {
-        role: "user",
-        content: question,
-        timestamp: new Date(),
-        relevantChunks: [],
-      },
-      {
-        role: "assistant",
-        content: answer,
-        timestamp: new Date(),
-        relevantChunks: chunkIndices,
-      }
-    );
-
-    await chatHistory.save();
-
-    return {
-      question,
-      answer,
-      relevantChunks: chunkIndices,
-      chatHistoryId: chatHistory._id,
-    };
   }
+
+  const answer = await geminiUtil.chatWithContext(question, relevantChunks);
+
+  chatHistory.messages.push(
+    {
+      role: "user",
+      content: question,
+      timestamp: new Date(),
+      relevantChunks: [],
+    },
+    {
+      role: "assistant",
+      content: answer,
+      timestamp: new Date(),
+      relevantChunks: chunkIndices,
+    }
+  );
+
+  await chatHistory.save();
+
+  return {
+    question,
+    answer,
+    relevantChunks: chunkIndices,
+    chatHistoryId: chatHistory._id,
+  };
 };
 
 export const explainConceptService = async ({
