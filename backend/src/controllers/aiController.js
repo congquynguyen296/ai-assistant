@@ -137,7 +137,7 @@ export const explainConcept = async (req, res, next) => {
   try {
     const userId = req.user.id;
     const { documentId, concept } = req.body;
-    if (!documentId || concept) {
+    if (!documentId || !concept) {
       return res.status(400).json({
         success: false,
         error: "DocumentId hoặc concept không hợp lệ",
