@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { toast } from "sonner";
-import { BASE_URL } from "../../utils/apiPath";
 import documentService from "../../services/documentService";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
 import { ArrowLeft, DoorOpen } from "lucide-react";
 import PageHeader from "../../components/common/PageHeader";
 import Tabs from "../../components/common/Tabs";
 import ChatInterface from "../../components/chat/ChatInterface";
+import PDFViewer from "../../components/documents/PDFViewer";
 
 const DocumentDetailPage = () => {
   const { documentId: id } = useParams();
@@ -34,6 +34,23 @@ const DocumentDetailPage = () => {
     fetchDocument();
   }, [id]);
 
+  // Helper func to get URL PDF file
+  const getFileUrl = (localPath) => {
+    if (!localPath) return "";
+
+    if (localPath.startsWith("http")) return localPath;
+    const serverBaseUrl = "http://localhost:8000";
+
+    const normalizedPath = localPath.replace(/\\/g, "/");
+    const relativePath = normalizedPath.split("/uploads/")[1];
+
+    if (relativePath) {
+      return `${serverBaseUrl}/uploads/${relativePath}`;
+    }
+
+    return localPath;
+  };
+
   // Render content file PDF
   const renderContent = () => {
     if (loading) {
@@ -44,64 +61,8 @@ const DocumentDetailPage = () => {
       return <div className="">Không thể hiển thị tài liệu.</div>;
     }
 
-    // Helper func to get URL PDF file
-    const getFileUrl = (localPath) => {
-      if (!localPath) return "";
-
-      // Nếu path đã là http... thì giữ nguyên
-      if (localPath.startsWith("http")) return localPath;
-
-      // Xử lý đường dẫn Windows: D:\...\backend\src\uploads\documents\file.pdf
-      // Chúng ta cần lấy phần sau chữ "uploads"
-      // Kết quả mong muốn: http://localhost:5000/uploads/documents/file.pdf
-
-      const serverBaseUrl = "http://localhost:8000";
-
-      // Chuẩn hóa dấu gạch chéo ngược "\" thành "/"
-      const normalizedPath = localPath.replace(/\\/g, "/");
-
-      // Cắt chuỗi để lấy phần đuôi bắt đầu từ /uploads
-      // Logic này phụ thuộc vào cách bạn lưu path trong DB.
-      // Cách an toàn nhất là tìm vị trí của thư mục được public (ví dụ 'uploads')
-      const relativePath = normalizedPath.split("/uploads/")[1];
-
-      if (relativePath) {
-        return `${serverBaseUrl}/uploads/${relativePath}`;
-      }
-
-      return localPath;
-    };
-
     const pdfUrl = getFileUrl(document.filePath);
-
-    return (
-      <div className="bg-white border border-gray-300 rounded-lg overflow-hidden shadow-sm">
-        <div className="flex items-center justify-between p-4 bg-gray-50 border-b border-gray-300">
-          <span className="text-sm text-gray-700 font-medium">
-            Tài liệu chi tiết
-          </span>
-          <a
-            href={pdfUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors"
-          >
-            <DoorOpen size={16} />
-            Mở trong cửa sổ mới
-          </a>
-        </div>
-
-        <div className="bg-gray-100 p-1">
-          <iframe
-            src={pdfUrl}
-            className="w-full h-[70vh] bg-white rounded border border-gray-300"
-            title="PDF Viewer"
-            style={{ colorScheme: "light" }}
-            frameBorder="0"
-          ></iframe>
-        </div>
-      </div>
-    );
+    return <PDFViewer pdfUrl={pdfUrl} />;
   };
 
   // Render chat AI

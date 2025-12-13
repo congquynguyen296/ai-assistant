@@ -23,6 +23,7 @@ export const API_PATHS = {
     EXPLAIN_CONCEPT: "/ai-generation/explain-concept",
     CHAT: "/ai-generation/chat",
     GET_CHAT_HISTORY: (documentId) => `/ai-generation/chat-history?documentId=${documentId}`,
+    DELETE_CHAT_HISTORY: (documentId) => `/ai-generation/chat-history?documentId=${documentId}`,
   },
 
   FLASHCARDS: {

@@ -75,6 +75,17 @@ const getChatHistory = async (documentId) => {
   }
 };
 
+const deleteChatHistory = async (documentId) => {
+  try {
+    const response = await axiosInstance.delete(
+      API_PATHS.AI.DELETE_CHAT_HISTORY(documentId)
+    );
+    return response?.data;
+  } catch (error) {
+    throw error.response?.data || { message: "Failed to delete chat history" };
+  }
+};
+
 const aiService = {
   generateFlashcards,
   generateQuiz,
@@ -82,6 +93,7 @@ const aiService = {
   chat,
   explainConcept,
   getChatHistory,
+  deleteChatHistory,
 };
 
 export default aiService;

@@ -2,20 +2,54 @@ import { useEffect, useRef, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useParams } from "react-router-dom";
 import aiService from "../../services/aiService";
-import { MessageSquare, Send, Sparkles } from "lucide-react";
+import { MessageSquare, Send, Sparkles, Trash2 } from "lucide-react";
 import MarkdownRenderer from "../common/MarkdownRerender";
+import ConfirmModal from "../common/ConfirmModal";
+import { toast } from "sonner";
 
 const ChatInterface = () => {
   // Define props and state
   const { documentId } = useParams();
   const { user } = useAuth();
+
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [message, setMessage] = useState("");
-  const messageEndRef = useRef(null);
+
+  // State for delete confirmation modal
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  // Handle delete request function
+  const handleDeleteRequest = () => {
+    setIsDeleteModalOpen(true);
+  };
+
+  // Handle confirm delete function
+  const handleConfirmDelete = async () => {
+    setDeleting(true);
+
+    try {
+      await aiService.deleteChatHistory(documentId);
+      // Clear history state immediately
+      setHistory([]);
+      // Close modal
+      setIsDeleteModalOpen(false);
+      // Show success message
+      toast.success("Xóa lịch sử chat thành công");
+      // Fetch again to ensure sync (should return empty)
+      await fetchChatHistory();
+    } catch (error) {
+      console.error("Xóa lịch sử chat thất bại:", error);
+      toast.error("Xóa lịch sử chat không thành công");
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   // Scroll to bottom helper
+  const messageEndRef = useRef(null);
   const scrollToBottom = () => {
     if (messageEndRef.current) {
       messageEndRef.current.scrollIntoView({ behavior: "smooth" });
@@ -27,27 +61,27 @@ const ChatInterface = () => {
     return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   }
 
+  // Get chat history func
+  const fetchChatHistory = async () => {
+    try {
+      setInitialLoading(true);
+      const response = await aiService.getChatHistory(documentId);
+      // Handle both array and object with messages property
+      const messages = Array.isArray(response.data)
+        ? response.data
+        : response.data?.messages || [];
+      setHistory(messages);
+    } catch (error) {
+      console.error("Error fetching chat history:", error);
+      setHistory([]);
+    } finally {
+      setInitialLoading(false);
+    }
+  };
+
   // Fetch chat history on mount and when documentId changes
   useEffect(() => {
     if (!documentId) return;
-    
-    const fetchChatHistory = async () => {
-      try {
-        setInitialLoading(true);
-        const response = await aiService.getChatHistory(documentId);
-        // Handle both array and object with messages property
-        const messages = Array.isArray(response.data) 
-          ? response.data 
-          : (response.data?.messages || []);
-        setHistory(messages);
-      } catch (error) {
-        console.error("Error fetching chat history:", error);
-        setHistory([]);
-      } finally {
-        setInitialLoading(false);
-      }
-    };
-
     fetchChatHistory();
   }, [documentId]);
 
@@ -207,6 +241,12 @@ const ChatInterface = () => {
 
       {/* Input area */}
       <div className="px-5 border-t border-slate-200/60 bg-white/80">
+        <button
+          onClick={handleDeleteRequest}
+          className="shink-0 w-12 h-12 bg-linear-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 rounded-xl flex items-center justify-center shadow-lg shadow-red-500/25 transition-all duration-200 disabled:opacity-50 text-white disabled:cursor-not-allowed"
+        >
+          <Trash2 className="" strokeWidth={2} />
+        </button>
         <form onSubmit={handleSendMessage} className="flex items-center gap-3">
           <input
             type="text"
@@ -225,6 +265,20 @@ const ChatInterface = () => {
           </button>
         </form>
       </div>
+
+      {/* Delete confirmation modal */}
+      <ConfirmModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleConfirmDelete}
+        title="Xác nhận xóa"
+        message="Bạn có chắc muốn xóa lịch sử đoạn chat này? Hành động này không thể hoàn tác sau khi được xác nhận."
+        confirmText="Xóa"
+        cancelText="Hủy"
+        isLoading={deleting}
+        icon={Trash2}
+        variant="danger"
+      />
     </div>
   );
 };

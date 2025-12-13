@@ -3,6 +3,7 @@ import LoadingSpinner from "../../components/common/LoadingSpinner";
 import documentService from "../../services/documentService";
 import { toast } from "sonner";
 import Button from "../../components/common/Button";
+import ConfirmModal from "../../components/common/ConfirmModal";
 import { FileText, Plus, Trash2, UploadCloud, X } from "lucide-react";
 import DocumentCard from "../../components/documents/DocumentCard";
 
@@ -265,14 +266,14 @@ const DocumentListPage = () => {
                 <button
                   type="button"
                   onClick={() => setIsUploadModalOpen(false)}
-                  disable={uploading}
+                  disabled={uploading}
                   className="flex-1 h-11 px-4 border-2 border-slate-200 rounded-xl bg-white text-slate-700 text-sm font-semibold hover:bg-slate-50 hover:border-slate-300 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Hủy
                 </button>
                 <button
                   type="submit"
-                  disable={uploading}
+                  disabled={uploading}
                   className="flex-1 h-11 px-4 bg-linear-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hove
 r:to-teal-600 text-white rounded-xl text-sm font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:shadow-emerald-500/30 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
@@ -293,64 +294,29 @@ r:to-teal-600 text-white rounded-xl text-sm font-semibold shadow-lg shadow-emera
       )}
 
       {/* Delete confirmation modal */}
-      {isDeleteModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
-          <div className="relative w-full max-w-lg bg-white/95 backdrop-blur-xl border border-slate-200/60 rounded-2xl shadow-lg shadow-slate-900/20 p-4">
-            {/* Close button */}
-            <button
-              className="absolute top-6 right-6 h-8 w-8 flex items-center justify-center rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all duration-200"
-              onClick={() => setIsDeleteModalOpen(false)}
-            >
-              <X className="w-5 h-5" strokeWidth={2} />
-            </button>
-
-            {/* Modal header */}
-            <div className="mb-6">
-              <div className="w-12 h-12 rounded-xl bg-linear-to-r from-red-100 to-red-200 flex items-center justify-center mb-3">
-                <Trash2 className="w-6 h-6 text-red-600" strokeWidth={2} />
-              </div>
-              <h2 className="text-xl font-medium text-slate-900 tracking-tight">
-                Xác nhận xóa
-              </h2>
-            </div>
-
-            {/* Content */}
-            <p className="text-sm text-slate-500 mb-6">
-              Bạn có chắc muốn xóa tài liệu{" "}
-              <span className="font-semibold text-slate-900">
-                {selectedDocument?.title || "này"}?
-              </span>{" "}
-              Hành động này không thể hoàn tác sau khi được xác nhận.
-            </p>
-
-            {/* Action buttons */}
-            <div className="flex gap-3 pt-2">
-              <button
-                type="button"
-                onClick={() => setIsDeleteModalOpen(false)}
-                disable={deleting}
-                className="flex-1 h-11 px-4 border-2 border-slate-200 rounded-xl bg-white text-slate-700 text-sm font-semibold hover:bg-slate-50 hover:border-slate-300 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Hủy
-              </button>
-              <button
-                onClick={handleConfirmDelete}
-                disabled={deleting}
-                className="flex-1 h-10 px-4 bg-red-500 hover:bg-red-600 text-white rounded-xl text-sm font-semibold shadow-lg shadow-red-500/25 hover:shadow-xl hover:shadow-red-500/30 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {deleting ? (
-                  <span className="flex items-center justify-center gap-2">
-                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      Đang xóa...
-                    </span>
-                ) : (
-                  "Xóa"
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => {
+          setIsDeleteModalOpen(false);
+          setSelectedDocument(null);
+        }}
+        onConfirm={handleConfirmDelete}
+        title="Xác nhận xóa"
+        message={
+          <>
+            Bạn có chắc muốn xóa tài liệu{" "}
+            <span className="font-semibold text-slate-900">
+              {selectedDocument?.title || "này"}?
+            </span>{" "}
+            Hành động này không thể hoàn tác sau khi được xác nhận.
+          </>
+        }
+        confirmText="Xóa"
+        cancelText="Hủy"
+        isLoading={deleting}
+        icon={Trash2}
+        variant="danger"
+      />
     </div>
   );
 };
