@@ -240,26 +240,42 @@ const ChatInterface = () => {
       </div>
 
       {/* Input area */}
-      <div className="px-5 border-t border-slate-200/60 bg-white/80">
+      <div className="px-5 py-4 border-t border-slate-200/60 bg-white/80 flex items-end gap-3">
         <button
           onClick={handleDeleteRequest}
-          className="shink-0 w-12 h-12 bg-linear-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 rounded-xl flex items-center justify-center shadow-lg shadow-red-500/25 transition-all duration-200 disabled:opacity-50 text-white disabled:cursor-not-allowed"
+          className="shrink-0 w-12 h-12 bg-linear-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 rounded-xl flex items-center justify-center shadow-lg shadow-red-500/25 transition-all duration-200 disabled:opacity-50 text-white disabled:cursor-not-allowed"
         >
           <Trash2 className="" strokeWidth={2} />
         </button>
-        <form onSubmit={handleSendMessage} className="flex items-center gap-3">
-          <input
-            type="text"
+
+        {/* Form: Thêm flex-1 để chiếm hết không gian còn lại */}
+        <form
+          onSubmit={handleSendMessage}
+          className="flex-1 flex items-end gap-3"
+        >
+          <textarea
             value={message}
             onChange={(e) => setMessage(e.target.value)}
+            onKeyDown={(e) => {
+              // Nếu nhấn Enter mà KHÔNG nhấn Shift
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault(); // Chặn xuống dòng
+                // Kiểm tra nếu có nội dung thì mới submit (để tránh submit rỗng)
+                if (message.trim()) {
+                  handleSendMessage(e);
+                }
+              }
+            }}
             placeholder="Hỏi bất kỳ điều gì trong tài liệu"
-            className="flex-1 h-12 px-4 border-2 border-slate-200 rounded-xl bg-slate-50/50 text-slate-900 placeholder-slate-400 text-sm font-medium focus:outline-none focus:border-emerald-500 transition-all duration-200"
+            className="flex-1 min-h-12 max-h-32 py-3 px-4 border-2 border-slate-200 rounded-xl bg-slate-50/50 text-slate-900 placeholder-slate-400 text-sm font-medium focus:outline-none focus:border-emerald-500 transition-all duration-200 resize-none overflow-y-auto"
             disabled={loading}
+            rows={1}
           />
+
           <button
             type="submit"
             disabled={loading || !message.trim()}
-            className="shink-0 w-12 h-12 bg-linear-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/25 transition-all duration-200 disabled:opacity-50 text-white disabled:cursor-not-allowed"
+            className="shrink-0 w-12 h-12 bg-linear-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/25 transition-all duration-200 disabled:opacity-50 text-white disabled:cursor-not-allowed"
           >
             <Send className="" strokeWidth={2} />
           </button>

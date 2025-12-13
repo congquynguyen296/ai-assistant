@@ -8,6 +8,7 @@ import PageHeader from "../../components/common/PageHeader";
 import Tabs from "../../components/common/Tabs";
 import ChatInterface from "../../components/chat/ChatInterface";
 import PDFViewer from "../../components/documents/PDFViewer";
+import AIActions from "../../components/ai/AIActions";
 
 const DocumentDetailPage = () => {
   const { documentId: id } = useParams();
@@ -73,7 +74,7 @@ const DocumentDetailPage = () => {
 
   // Render AI action
   const renderAIAction = () => {
-    return <div className="">Tạo hành động AI với tài liệu</div>;
+    return <AIActions />;
   };
 
   // Render flashcards tab
