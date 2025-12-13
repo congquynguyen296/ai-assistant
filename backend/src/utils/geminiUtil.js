@@ -356,7 +356,7 @@ export const generateSummary = async (text, language) => {
 
   try {
     const response = await ai.models.generateContent({
-      model: "models/gemini-2.5-flash",
+      model: "models/gemini-2.5-flash-lite",
       contents: prompt,
       config: {
         temperature: 0.4, // Giữ thấp để AI tập trung vào nội dung gốc, không bịa đặt
@@ -456,7 +456,7 @@ ${context.substring(0, 10000)}`;
 
   try {
     const response = await ai.models.generateContent({
-      model: "models/gemini-2.5-flash",
+      model: "models/gemini-2.5-flash-lite",
       contents: prompt,
     });
 
