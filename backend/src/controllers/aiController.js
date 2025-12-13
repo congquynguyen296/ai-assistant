@@ -5,6 +5,7 @@ import {
   chatService,
   explainConceptService,
   getChatHistoryService,
+  deleteChatService,
 } from "../services/aiService.js";
 
 // @desc    Generate flashcards from a document
@@ -183,6 +184,35 @@ export const getChatHistory = async (req, res, next) => {
       success: true,
       message: "Lấy lịch sử chat thành công",
       data: result?.messages || [],
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Delete chat history
+// @routw   GET /api/v1/ai-generation/chat-history
+export const deleteChatHistory = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const { documentId } = req.query;
+    if (!documentId) {
+      return res.status(400).json({
+        success: false,
+        error: "DocumentId không hợp lệ",
+        statusCode: 400,
+      });
+    }
+
+    const result = await deleteChatService({
+      userId,
+      documentId,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Xóa lịch sử chat thành công",
+      data: null,
     });
   } catch (error) {
     next(error);

@@ -381,33 +381,58 @@ export const generateSummary = async (text, language) => {
  * @returns {Promise<string>}
  */
 export const chatWithContext = async (question, chunks) => {
-  const context = chunks
-    .map((c, i) => `[Chunk ${i + 1}]\n${c.content}`)
-    .join("\n\n");
+  // Chuẩn bị context
+  const contextText = chunks
+    .map((c) => `[Trang ${c.pageNumber || 0}]:\n${c.content}`)
+    .join("\n\n---\n\n");
 
-  const prompt = `Based on the following context from a document, analyze the context and answer the user's question using ONLY the provided context.
-- Use the SAME LANGUAGE as the context.
-- If the answer is not present in the context, say "I don't know" (or the equivalent in the context's language).
-- Be concise and factual. Respond ONLY with the answer (no step-by-step chain-of-thought).
-
-Context:
-${context.substring(0, 20000)}
-
-Question: ${question}
-
-Answer:`;
+  const prompt = `
+    Bạn là một trợ lý AI thông minh, chuyên về phân tích tài liệu, nhưng có tính cách thân thiện, cởi mở và tự nhiên (như một người đồng nghiệp giỏi).
+    
+    === TÀI LIỆU CỦA NGƯỜI DÙNG ===
+    ${contextText.substring(0, 50000)}
+    === HẾT TÀI LIỆU ===
+    
+    === CÂU NÓI CỦA NGƯỜI DÙNG ===
+    "${question}"
+    
+    === HƯỚNG DẪN TRẢ LỜI (QUAN TRỌNG) ===
+    Hãy phân tích ý định của người dùng trước khi trả lời:
+    
+    1. **Nhóm Giao tiếp Xã hội / Khen ngợi / Trêu đùa**:
+       - Nếu người dùng KHEN (vd: "Khá nhể", "Giỏi quá", "Thông minh đấy"): Hãy nhận lời khen một cách tự nhiên, khiêm tốn hoặc hài hước nhẹ nhàng. **TUYỆT ĐỐI KHÔNG** hỏi lại ngay câu "Bạn cần giúp gì thêm?" gây mất hứng.
+         * Ví dụ: "Cảm ơn bạn! Được khen là tôi vui cả ngày đấy 😄" hoặc "Cũng thường thôi, do tài liệu của bạn viết rõ ràng mà."
+       - Nếu người dùng TRÊU ĐÙA hoặc CHÀO HỎI: Hãy đáp lại thoải mái, như hai người bạn.
+       - Nếu người dùng hỏi VU VƠ không liên quan tài liệu: Trả lời ngắn gọn theo kiến thức của bạn rồi khéo léo quay lại chủ đề chính nếu cần.
+    
+    2. **Nhóm Hỏi về Tài liệu (Chuyên môn)**:
+       - Nếu câu hỏi liên quan đến kiến thức trong tài liệu: Hãy trả lời CHÍNH XÁC, SÂU SẮC dựa trên "TÀI LIỆU CỦA NGƯỜI DÙNG" ở trên.
+       - Trích dẫn thông tin cụ thể để chứng minh bạn hiểu bài.
+    
+    3. **Nguyên tắc chung**:
+       - KHÔNG lặp lại các mẫu câu robot như "Tôi là AI", "Dựa trên tài liệu".
+       - Dùng ngôn ngữ tự nhiên, không cứng nhắc.
+    
+    Câu trả lời của bạn:`;
 
   try {
+    // Gọi API với cú pháp mới của @google/genai
     const response = await ai.models.generateContent({
       model: "models/gemini-2.5-flash",
       contents: prompt,
+      config: {
+        temperature: 0.6, // Tăng tính sáng tạo
+      },
     });
 
+    // Lấy kết quả text
     const generatedText = String(response?.text ?? "").trim();
-    return generatedText;
+    return generatedText
+      ? generatedText.trim()
+      : "Xin lỗi, tôi chưa thể xử lý câu trả lời ngay lúc này.";
   } catch (error) {
-    console.error("Gemini API error:", error);
-    throw new Error("Failed to process chat request");
+    console.error("Lỗi Gemini API:", error);
+    throw new Error("Không thể kết nối với AI Server.");
   }
 };
 

@@ -1,4 +1,3 @@
-import express from "express";
 import Document from "../models/Document.js";
 import Quiz from "../models/Quiz.js";
 import Flashcard from "../models/Flashcard.js";
@@ -155,6 +154,11 @@ export const chatService = async ({ userId, documentId, question }) => {
     relevantChunks: chunkIndices,
     chatHistoryId: chatHistory._id,
   };
+};
+
+export const deleteChatService = async ({ userId, documentId }) => {
+  const result = await ChatHistory.deleteOne({ userId, documentId });
+  return result;
 };
 
 export const explainConceptService = async ({

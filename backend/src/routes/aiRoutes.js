@@ -7,6 +7,7 @@ import {
   chat,
   explainConcept,
   getChatHistory,
+  deleteChatHistory,
 } from "../controllers/aiController.js";
 
 const router = express.Router();
@@ -25,5 +26,7 @@ router.post("/chat", chat);
 router.post("/explain-concept", explainConcept);
 
 router.get("/chat-history", getChatHistory);
+
+router.delete("/chat-history", deleteChatHistory);
 
 export default router;

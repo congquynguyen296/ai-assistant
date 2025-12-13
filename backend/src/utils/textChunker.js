@@ -119,7 +119,7 @@ export const chunkText = (text, chunkSize = 500, overlap = 50) => {
  * @param {number} maxChunks - Maximum chunks to return
  * @returns {Array<Object>}
  */
-export const findRelevantChunks = (chunks, query, maxChunks = 3) => {
+export const findRelevantChunksTest = (chunks, query, maxChunks = 3) => {
   if (!chunks || chunks.length === 0 || !query) {
     return [];
   }
@@ -221,4 +221,89 @@ export const findRelevantChunks = (chunks, query, maxChunks = 3) => {
       return a.chunkIndex - b.chunkIndex;
     })
     .slice(0, maxChunks);
+};
+
+/**
+ * Find relevant chunks based on keyword matching
+ * @param {Array<Object>} chunks - Array of chunks
+ * @param {string} query - Search query
+ * @param {number} maxChunks - Maximum chunks to return
+ * @returns {Array<Object>}
+ */
+export const findRelevantChunks = (chunks, query, maxChunks = 15) => {
+  // 1. Bảo vệ dữ liệu đầu vào
+  if (!chunks || chunks.length === 0) return [];
+  if (!query) return chunks.slice(0, 3); // Trả về đầu tài liệu nếu không hỏi gì
+
+  // 2. CHIẾN THUẬT "ALL-IN" (Quan trọng):
+  // Gemini 2.5 Flash có context window rất lớn (1 triệu token).
+  // Nếu tổng độ dài tài liệu < 30,000 ký tự (khoảng 10-15 trang A4 full chữ),
+  // Hãy gửi HẾT. Đừng tìm kiếm cắt gọt làm gì cho sai sót.
+  const totalLength = chunks.reduce(
+    (acc, chunk) => acc + chunk.content.length,
+    0
+  );
+  if (totalLength < 30000) {
+    console.log("Tài liệu ngắn, gửi toàn bộ context cho AI.");
+    return chunks.map((c) => ({
+      content: c.content,
+      chunkIndex: c.chunkIndex,
+      pageNumber: c.pageNumber,
+      _id: c._id,
+    }));
+  }
+
+  // 3. Xử lý tìm kiếm cho tài liệu DÀI (keyword scoring cải tiến cho Tiếng Việt)
+  const queryLower = query.toLowerCase().trim();
+  const queryTerms = queryLower.split(/\s+/).filter((w) => w.length > 1); // Bỏ từ quá ngắn 1 ký tự
+
+  const scoredChunks = chunks.map((chunk) => {
+    const contentLower = chunk.content.toLowerCase();
+    let score = 0;
+
+    // Tính điểm:
+    // +10 điểm nếu chứa nguyên cụm từ người dùng hỏi (Phrase match)
+    if (contentLower.includes(queryLower)) {
+      score += 10;
+    }
+
+    // +1 điểm cho mỗi từ khóa xuất hiện
+    queryTerms.forEach((term) => {
+      if (contentLower.includes(term)) {
+        score += 1;
+      }
+    });
+
+    return {
+      ...chunk, // Giữ lại metadata
+      content: chunk.content,
+      score,
+      // Điểm bonus nhỏ cho các chunk nằm đầu tài liệu (thường chứa thông tin giới thiệu)
+      finalScore: score + 1 / (chunk.chunkIndex + 1),
+    };
+  });
+
+  // 4. Sắp xếp và lấy kết quả
+  // Lọc những chunk có score > 0 hoặc lấy top chunk nếu không tìm thấy gì
+  let result = scoredChunks
+    .sort((a, b) => b.finalScore - a.finalScore)
+    .slice(0, maxChunks);
+
+  // FALLBACK: Nếu tìm kiếm thất bại (không khớp từ nào),
+  // vẫn trả về 5 chunk đầu tiên để AI không bị "mù".
+  const hasMatch = result.some((r) => r.score > 0);
+  if (!hasMatch) {
+    console.log("Không khớp từ khóa, dùng Fallback chunks đầu tiên.");
+    return chunks.slice(0, 5);
+  }
+
+  // 5. Luôn thêm Chunk số 0 (Chunk đầu tiên) vào nếu nó chưa có trong danh sách
+  // Vì chunk đầu thường chứa Tiêu đề, Tác giả, Tóm tắt quan trọng.
+  const hasFirstChunk = result.some((r) => r.chunkIndex === 0);
+  if (!hasFirstChunk && chunks.length > 0) {
+    result.push(chunks[0]);
+  }
+
+  // Sắp xếp lại theo thứ tự xuất hiện trong văn bản để AI đọc cho mượt
+  return result.sort((a, b) => a.chunkIndex - b.chunkIndex);
 };

@@ -25,7 +25,7 @@ export const uploadDocumentService = async ({ userId, title, file }) => {
     status: "processing",
   });
 
-  // Process document in backgroud - use RMQ
+  // Process document in backgroud - will use RMQ
   processDocument(document._id, file.path).catch((error) => {
     console.error("Lỗi khi tải tài liệu: ", error);
   });
