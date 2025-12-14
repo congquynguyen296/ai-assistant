@@ -1,5 +1,6 @@
 import { useAuth } from "@/context/AuthContext";
 import {
+  Banknote,
   BookOpen,
   BrainCircuit,
   FileText,
@@ -24,6 +25,7 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar }) => {
     { to: "/dashboard", icon: LayoutDashboard, text: "Thống kê" },
     { to: "/documents", icon: FileText, text: "Tài liệu" },
     { to: "/flashcards", icon: BookOpen, text: "Câu hỏi" },
+    { to: "/billing", icon: Banknote, text: "Thanh toán" },
     { to: "/profile", icon: User, text: "Cá nhân" },
   ];
 

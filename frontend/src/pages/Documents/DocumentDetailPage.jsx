@@ -3,15 +3,16 @@ import { Link, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import documentService from "../../services/documentService";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
-import { ArrowLeft, DoorOpen } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import PageHeader from "../../components/common/PageHeader";
 import Tabs from "../../components/common/Tabs";
 import ChatInterface from "../../components/chat/ChatInterface";
 import PDFViewer from "../../components/documents/PDFViewer";
 import AIActions from "../../components/ai/AIActions";
+import FlashcardManager from "../../components/flashcards/FlashcardManager";
 
 const DocumentDetailPage = () => {
-  const { documentId: id } = useParams();
+  const { documentId } = useParams();
 
   const [document, setDocument] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -22,7 +23,7 @@ const DocumentDetailPage = () => {
     const fetchDocument = async () => {
       try {
         setLoading(true);
-        const response = await documentService.getDocumentById(id);
+        const response = await documentService.getDocumentById(documentId);
         setDocument(response.data);
       } catch (error) {
         console.error("Error fetching document details:", error);
@@ -33,7 +34,7 @@ const DocumentDetailPage = () => {
     };
 
     fetchDocument();
-  }, [id]);
+  }, [documentId]);
 
   // Helper func to get URL PDF file
   const getFileUrl = (localPath) => {
@@ -79,7 +80,7 @@ const DocumentDetailPage = () => {
 
   // Render flashcards tab
   const renderFlashcards = () => {
-    return <div className="">Flashcards từ tài liệu</div>;
+    return <FlashcardManager documentId={documentId} />;
   };
 
   // Render quizzes tab
