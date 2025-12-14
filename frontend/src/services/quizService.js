@@ -4,7 +4,7 @@ import { API_PATHS } from "@/utils/apiPath.js";
 const getQuizzesForDocument = async (documentId) => {
   try {
     const response = await axiosInstance.get(
-      API_PATHS.QUIZZES.GET_QUIZZES_FOR_DOC(documentId)
+      API_PATHS.QUIZZES.GET_QUIZZES_FOR_DOCUMENT(documentId)
     );
     return response.data;
   } catch (error) {

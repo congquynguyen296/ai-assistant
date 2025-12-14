@@ -10,6 +10,7 @@ import ChatInterface from "../../components/chat/ChatInterface";
 import PDFViewer from "../../components/documents/PDFViewer";
 import AIActions from "../../components/ai/AIActions";
 import FlashcardManager from "../../components/flashcards/FlashcardManager";
+import QuizManager from "../../components/quizzes/QuizManager";
 
 const DocumentDetailPage = () => {
   const { documentId } = useParams();
@@ -85,7 +86,7 @@ const DocumentDetailPage = () => {
 
   // Render quizzes tab
   const renderQuizzes = () => {
-    return <div className="">Bài kiểm tra từ tài liệu</div>;
+    return <QuizManager documentId={documentId} />;
   };
 
   // Tabs
@@ -110,7 +111,7 @@ const DocumentDetailPage = () => {
       <div className="">
         <Link
           to="/documents"
-          className="inline-flex items-center gap-2 text-sm text-neutral-600 hover:text-neutral-800 transition-colors"
+          className="inline-flex mb-4 items-center gap-2 text-sm text-neutral-600 hover:text-neutral-800 transition-colors"
         >
           <ArrowLeft size={16} />
           Quay lại
