@@ -71,7 +71,7 @@ const RegisterPage = () => {
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-linear-to-br from-slate-50 via-white to-slate-50">
-      <div className="w-full max-w-md px-6">
+      <div className="w-full max-w-lg px-6">
         <div className="bg-white/80 backdrop-blur-xl border border-slate-200/60 shadow-xl shadow-slate-200/50 p-10 rounded-2xl">
           {/* Header */}
           <div className="text-center mb-10">
