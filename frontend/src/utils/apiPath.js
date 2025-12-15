@@ -4,6 +4,7 @@ export const API_PATHS = {
   AUTH: {
     REGISTER: "/auth/register",
     LOGIN: "/auth/login",
+    GOOGLE_LOGIN: "/auth/google-login",
     PROFILE: "auth/profile",
     UPDATE_PROFILE: "auth/profile",
     CHANGE_PASSWORD: "auth/change-password",

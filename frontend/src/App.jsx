@@ -7,6 +7,7 @@ import {
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import LoginPage from "@/pages/Auth/LoginPage";
 import RegisterPage from "@/pages/Auth/RegisterPage";
+import AuthCallbackPage from "@/pages/Auth/AuthCallbackPage";
 import NotFoundPage from "@/pages/NotFoundPage";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import DocumentDetailPage from "@/pages/Documents/DocumentDetailPage";
@@ -18,6 +19,7 @@ import QuizResultPage from "@/pages/Quizzes/QuizResultPage";
 import QuizReviewPage from "@/pages/Quizzes/QuizReviewPage";
 import { useAuth } from "@/context/AuthContext";
 import DashboardPage from "./pages/Dashboard/DashboardPage";
+import ProfilePage from "./pages/Profile/ProfilePage";
 
 export default function App() {
   const { isAuthenticated, loading } = useAuth();
@@ -46,12 +48,13 @@ export default function App() {
 
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/auth/google/callback" element={<AuthCallbackPage />} />
 
         {/* Protected route */}
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<DashboardPage />} />
 
-          <Route path="/profile" element={<div>Profile</div>} />
+          <Route path="/profile" element={<ProfilePage />} />
 
           <Route path="/documents" element={<DocumentListPage />} />
           <Route

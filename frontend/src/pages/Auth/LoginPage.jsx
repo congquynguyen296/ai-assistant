@@ -51,6 +51,18 @@ const LoginPage = () => {
     }
   };
 
+  const handleGoogleLogin = () => {
+    const params = new URLSearchParams({
+      client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+      redirect_uri: import.meta.env.VITE_GOOGLE_REDIRECT_URI,
+      response_type: "code",
+      scope: "openid email profile",
+      access_type: "offline",
+      prompt: "consent",
+    });
+    window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
+  };
+
   return (
     <div className="flex items-center justify-center min-h-screen bg-linear-to-br from-slate-50 via-white to-slate-50">
       <div className="w-full max-w-lg px-6">
@@ -173,12 +185,7 @@ const LoginPage = () => {
 
           {/* Login with social */}
           <div className="grid w-full grid-cols-2 gap-3">
-            <GoogleButton
-              onClick={() => {
-                // TODO: Implement Google login logic
-                console.log("Google login clicked");
-              }}
-            />
+            <GoogleButton onClick={handleGoogleLogin} />
             <FacebookButton
               onClick={() => {
                 // TODO: Implement Facebook login logic

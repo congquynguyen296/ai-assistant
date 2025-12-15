@@ -13,6 +13,17 @@ const login = async (email, password) => {
   }
 };
 
+const googleLogin = async (code) => {
+  try {
+    const response = await axiosInstance.post(API_PATHS.AUTH.GOOGLE_LOGIN, {
+      code,
+    });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || "Đăng nhập Google thất bại";
+  }
+};
+
 const register = async (username, email, password) => {
   try {
     const response = await axiosInstance.post(API_PATHS.AUTH.REGISTER, {
@@ -61,6 +72,7 @@ const changePassword = async (oldPassword, newPassword) => {
 
 const authService = {
   login,
+  googleLogin,
   register,
   getProfile,
   updateProfile,
