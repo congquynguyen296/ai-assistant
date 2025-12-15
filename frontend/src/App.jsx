@@ -15,6 +15,7 @@ import FlashCardListPage from "@/pages/Flashcards/FlashcardListPage";
 import FlashCardDetailPage from "@/pages/Flashcards/FlashcardDetailPage";
 import QuizTakePage from "@/pages/Quizzes/QuizTakePage";
 import QuizResultPage from "@/pages/Quizzes/QuizResultPage";
+import QuizReviewPage from "@/pages/Quizzes/QuizReviewPage";
 import { useAuth } from "@/context/AuthContext";
 import DashboardPage from "./pages/Dashboard/DashboardPage";
 
@@ -62,10 +63,11 @@ export default function App() {
             path="/documents/:documentId/flashcards"
             element={<FlashCardDetailPage />}
           />
-        </Route>
 
-        <Route path="/quizzes/:quizId" element={<QuizTakePage />} />
-        <Route path="/quizzes/:quizId/result" element={<QuizResultPage />} />
+          <Route path="/quizzes/:quizId" element={<QuizTakePage />} />
+          <Route path="/quizzes/:quizId/review" element={<QuizReviewPage />} />
+          <Route path="/quizzes/:quizId/result" element={<QuizResultPage />} />
+        </Route>
 
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
