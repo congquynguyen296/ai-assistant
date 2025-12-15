@@ -20,9 +20,16 @@ const userSchema = new mongoose.Schema(
     },
     password: {
       type: String,
-      required: [true, "Mật khẩu không được để trống"],
+      required: function () {
+        return !this.googleId;
+      },
       minlength: [6, "Mật khẩu phải có ít nhất 6 ký tự"],
       select: false,
+    },
+    googleId: {
+      type: String,
+      unique: true,
+      sparse: true,
     },
     profileImage: {
       type: String,

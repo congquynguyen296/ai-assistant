@@ -4,6 +4,7 @@ import {
   getProfileService,
   updateProfileService,
   changePasswordService,
+  googleLoginService,
 } from "../services/authService.js";
 
 // @desc    Register a new user
@@ -161,6 +162,31 @@ export const changePassword = async (req, res, next) => {
     return res.status(200).json({
       success: true,
       message: "Đổi mật khẩu thành công",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Google Login
+// @route   POST /api/auth/google-login
+// @access  Public
+export const googleLogin = async (req, res, next) => {
+  try {
+    const { code } = req.body;
+    if (!code) {
+      return res.status(400).json({
+        success: false,
+        error: "Authorization code is required",
+      });
+    }
+
+    const result = await googleLoginService(code);
+
+    return res.status(200).json({
+      success: true,
+      message: "Đăng nhập Google thành công",
+      data: result,
     });
   } catch (error) {
     next(error);

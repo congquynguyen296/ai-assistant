@@ -1,6 +1,7 @@
 import { AppError } from "../middlewares/errorHandle.js";
 import User from "../models/User.js";
 import jwt from "jsonwebtoken";
+import { getGoogleClient } from "../config/googleConfig.js";
 
 const generateToken = (payload) => {
   return jwt.sign(payload, process.env.JWT_SECRET, {
@@ -125,4 +126,63 @@ export const changePasswordService = async ({
   await user.save();
 
   console.log("Password updated successfully");
+};
+
+export const googleLoginService = async (code) => {
+  try {
+    const oAuth2Client = getGoogleClient();
+    const { tokens } = await oAuth2Client.getToken({
+      code,
+      redirect_uri: process.env.GOOGLE_OAUTH_REDIRECT,
+    });
+    oAuth2Client.setCredentials(tokens);
+
+    const ticket = await oAuth2Client.verifyIdToken({
+      idToken: tokens.id_token,
+      audience: process.env.GOOGLE_OAUTH_CLIENT_ID,
+    });
+    const payload = ticket.getPayload();
+
+    const { sub: googleId, email, name, picture } = payload;
+
+    let user = await User.findOne({ $or: [{ googleId }, { email }] });
+
+    if (user) {
+      if (!user.googleId) {
+        user.googleId = googleId;
+        await user.save();
+      }
+    } else {
+      let username = name || email.split("@")[0];
+
+      // Ensure username is unique
+      let existingUsername = await User.findOne({ username });
+      while (existingUsername) {
+        username = `${username}${Math.floor(Math.random() * 1000)}`;
+        existingUsername = await User.findOne({ username });
+      }
+
+      user = await User.create({
+        username,
+        email,
+        googleId,
+        profileImage: picture,
+      });
+    }
+
+    const token = generateToken({ id: user._id });
+
+    return {
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        profileImage: user.profileImage,
+      },
+      token,
+    };
+  } catch (error) {
+    console.error("Google Login Error:", error);
+    throw new AppError("Google Login Failed: " + error.message, 400);
+  }
 };
