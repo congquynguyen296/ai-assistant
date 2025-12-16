@@ -21,6 +21,7 @@ import { useAuth } from "@/context/AuthContext";
 import DashboardPage from "./pages/Dashboard/DashboardPage";
 import ProfilePage from "./pages/Profile/ProfilePage";
 import PaymentPage from "./pages/Payment/PaymentPage";
+import ConfirmOTPPage from "./pages/Auth/ConfirmOTPPage";
 
 export default function App() {
   const { isAuthenticated, loading } = useAuth();
@@ -49,6 +50,7 @@ export default function App() {
 
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="confirm-otp" element={<ConfirmOTPPage />} />
         <Route path="/auth/google/callback" element={<AuthCallbackPage />} />
 
         {/* Protected route */}

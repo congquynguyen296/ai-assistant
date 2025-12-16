@@ -8,6 +8,8 @@ export const API_PATHS = {
     PROFILE: "auth/profile",
     UPDATE_PROFILE: "auth/profile",
     CHANGE_PASSWORD: "auth/change-password",
+    CONFIRM_EMAIL: "/auth/confirm-email",
+    RESEND_OTP: "/auth/resend-otp",
   },
 
   DOCUMENTS: {

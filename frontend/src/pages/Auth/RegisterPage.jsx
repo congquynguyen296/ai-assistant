@@ -46,17 +46,11 @@ const RegisterPage = () => {
         email.trim(),
         password
       );
-      const { user, token } = response?.data || response;
-
-      // Tự động đăng nhập sau khi đăng ký thành công
-      if (user && token) {
-        login(user, token);
-        toast.success("Đăng ký thành công");
-        navigate("/dashboard");
-      } else {
-        toast.success("Đăng ký thành công");
-        navigate("/login");
-      }
+      
+      // Sau khi đăng ký thành công, chuyển đến trang xác thực OTP
+      toast.success("Đăng ký thành công. Vui lòng kiểm tra email để lấy mã OTP.");
+      navigate("/confirm-otp", { state: { email: email.trim() } });
+      
     } catch (error) {
       const errorMessage =
         error?.message ||

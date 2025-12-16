@@ -37,6 +37,29 @@ const register = async (username, email, password) => {
   }
 };
 
+const verifyOTP = async (email, otp) => {
+  try {
+    const response = await axiosInstance.post(API_PATHS.AUTH.CONFIRM_EMAIL, {
+      email,
+      otp,
+    });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || "Xác thực OTP thất bại";
+  }
+};
+
+const resendOTP = async (email) => {
+  try {
+    const response = await axiosInstance.post(API_PATHS.AUTH.RESEND_OTP, {
+      email,
+    });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || "Gửi lại OTP thất bại";
+  }
+};
+
 const getProfile = async () => {
   try {
     const response = await axiosInstance.get(API_PATHS.AUTH.PROFILE);
@@ -74,6 +97,8 @@ const authService = {
   login,
   googleLogin,
   register,
+  verifyOTP,
+  resendOTP,
   getProfile,
   updateProfile,
   changePassword,
