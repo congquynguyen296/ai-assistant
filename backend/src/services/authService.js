@@ -3,7 +3,7 @@ import User from "../models/User.js";
 import jwt from "jsonwebtoken";
 import { getGoogleClient } from "../config/googleConfig.js";
 import { redisService } from "./redisService.js";
-import { sendOTP } from "./mailService.js";
+import { sendOTP, sendWelcomeEmail } from "./mailService.js";
 
 const generateToken = (payload) => {
   return jwt.sign(payload, process.env.JWT_SECRET, {
@@ -34,7 +34,7 @@ export const registerService = async ({ username, email, password }) => {
 
   return {
     message: "Mã OTP đã được gửi đến email của bạn",
-    email
+    email,
   };
 };
 
@@ -59,6 +59,9 @@ export const confirmEmailService = async ({ otp, email }) => {
   // Delete from Redis
   await redisService.deleteObject(`register_otp:${email}`);
 
+  // Send welcome email
+  await sendWelcomeEmail(email, parsedData.username);
+
   // Gererate token
   const token = generateToken({ id: newUser._id });
 
@@ -81,13 +84,13 @@ export const resendOTPService = async ({ email }) => {
 
   // Generate new OTP
   const newOtp = Math.floor(100000 + Math.random() * 900000).toString();
-  
-  // Update OTP in Redis using setField (preserves other data and updates TTL if needed, 
-  // but here we probably want to reset TTL to 5 mins or keep existing? 
-  // The requirement said "TTL khoảng 5 phút" for the OTP. 
+
+  // Update OTP in Redis using setField (preserves other data and updates TTL if needed,
+  // but here we probably want to reset TTL to 5 mins or keep existing?
+  // The requirement said "TTL khoảng 5 phút" for the OTP.
   // If we resend, we should probably extend the session.)
-  
-  // Using setField would keep the old TTL if we don't force it. 
+
+  // Using setField would keep the old TTL if we don't force it.
   // But let's just update the object and reset TTL to 300s as per common practice for resend.
   parsedData.otp = newOtp;
   await redisService.setObject(`register_otp:${email}`, parsedData, 300);
@@ -228,11 +231,16 @@ export const googleLoginService = async (code) => {
         existingUsername = await User.findOne({ username });
       }
 
+      // Create password default and send mail to user to change password later
+      const defaultPassword = Math.random().toString(36).slice(-8);
+      await sendWelcomeEmail(email, username, defaultPassword);
+
       user = await User.create({
         username,
         email,
         googleId,
         profileImage: picture,
+        password: defaultPassword,
       });
     }
 

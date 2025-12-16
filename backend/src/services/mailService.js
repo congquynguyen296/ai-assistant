@@ -1,6 +1,10 @@
 import nodemailer from "nodemailer";
 import dotenv from "dotenv";
-import { otpEmailTemplate } from "../templates/emails/authTemplate.js";
+import {
+  otpEmailTemplate,
+  welcomeEmailTemplate,
+  welcomeWithGoogleEmailTemplate,
+} from "../templates/emails/authTemplate.js";
 
 dotenv.config();
 
@@ -23,6 +27,25 @@ export const sendOTP = async (email, otp) => {
   try {
     await transporter.sendMail(mailOptions);
     console.log(`OTP sent to ${email}`);
+    return true;
+  } catch (error) {
+    console.error("Error sending email:", error);
+    throw new Error("Gửi email thất bại");
+  }
+};
+
+export const sendWelcomeEmail = async (email, username, defaultPassword) => {
+  const mailOptions = {
+    from: `"Hyra AI" <${process.env.GMAIL_USER}>`,
+    to: email,
+    subject: `Chào mừng ${username} đến với Hyra AI!`,
+    html: defaultPassword
+      ? welcomeWithGoogleEmailTemplate(email, username, defaultPassword)
+      : welcomeEmailTemplate(email, username),
+  };
+
+  try {
+    transporter.sendMail(mailOptions);
     return true;
   } catch (error) {
     console.error("Error sending email:", error);
