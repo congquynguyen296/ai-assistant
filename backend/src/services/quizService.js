@@ -97,7 +97,7 @@ export const getQuizResultsService = async ({ userId, quizId }) => {
       correctAnswer: question.correctAnswer,
       selectedAnswer: userAnswer?.selectedAnswer || null,
       isCorrect: userAnswer?.isCorrect || false,
-      explaintion: question.explaintion,
+      explanation: question.explanation,
       difficulty: question.difficulty,
     };
   });

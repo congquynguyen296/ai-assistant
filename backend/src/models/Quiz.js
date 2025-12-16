@@ -32,7 +32,7 @@ const quizSchema = new mongoose.Schema(
           type: String,
           required: true,
         },
-        explaintion: {
+        explanation: {
           type: String,
           default: "",
         },

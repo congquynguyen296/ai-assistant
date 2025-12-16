@@ -11,7 +11,9 @@ import { findRelevantChunks } from "../utils/textChunker.js";
 export const generateFlashcardsService = async ({
   userId,
   documentId,
-  count,
+  numFlashcards,
+  requirements,
+  title,
 }) => {
   const document = await Document.findOne({
     _id: documentId,
@@ -25,13 +27,15 @@ export const generateFlashcardsService = async ({
   // Generate flashcards using Gemini API
   const cards = await geminiUtil.generateFlashcards(
     document.extractedText,
-    count
+    numFlashcards,
+    requirements
   );
 
   // Save to database
   const flashcardSet = await Flashcard.create({
     userId,
     documentId,
+    title: title || `Flashcards for ${document.title}`,
     cards: cards.map((card) => ({
       question: card.question,
       answer: card.answer,
@@ -47,7 +51,8 @@ export const generateFlashcardsService = async ({
 export const generateQuizService = async ({
   userId,
   documentId,
-  count,
+  numQuizzes,
+  requirements,
   title,
 }) => {
   const document = await Document.findOne({
@@ -62,7 +67,8 @@ export const generateQuizService = async ({
   // Generate quiz using Gemini API
   const questions = await geminiUtil.generateQuiz(
     document.extractedText,
-    parseInt(count)
+    parseInt(numQuizzes),
+    requirements
   );
 
   // Save to database

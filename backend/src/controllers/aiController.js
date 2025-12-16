@@ -13,7 +13,7 @@ import {
 export const generateFlashcards = async (req, res, next) => {
   try {
     const userId = req.user.id;
-    const { documentId, count = 10 } = req.body;
+    const { documentId, numFlashcards, requirements, title } = req.body;
     if (!documentId) {
       return res.status(400).json({
         success: false,
@@ -25,7 +25,9 @@ export const generateFlashcards = async (req, res, next) => {
     const result = await generateFlashcardsService({
       userId,
       documentId,
-      count,
+      numFlashcards,
+      requirements,
+      title,
     });
 
     return res.status(201).json({
@@ -43,7 +45,7 @@ export const generateFlashcards = async (req, res, next) => {
 export const generateQuiz = async (req, res, next) => {
   try {
     const userId = req.user.id;
-    const { documentId, count = 5, title } = req.body;
+    const { documentId, numQuizzes, requirements, title } = req.body;
     if (!documentId) {
       return res.status(400).json({
         success: false,
@@ -55,7 +57,8 @@ export const generateQuiz = async (req, res, next) => {
     const result = await generateQuizService({
       userId,
       documentId,
-      count,
+      numQuizzes,
+      requirements,
       title,
     });
 

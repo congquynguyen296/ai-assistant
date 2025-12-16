@@ -18,22 +18,45 @@ if (!process.env.GEMINI_API_KEY) {
  * - Requests the model to RETURN STRICT JSON (array of objects).
  * - Instructs the model to respond in the SAME LANGUAGE as the input text.
  * @param {string} text - Document text
- * @param {number} count - Number of flashcards to generate
+ * @param {numFlashcards} count - Number of flashcards to generate
+ * @param {string} requirements - Additional requirements for flashcards
  * @returns {Promise<Array<{question: string, answer: string, difficulty: string}>>}
  */
-export const generateFlashcards = async (text, count = 10) => {
-  const prompt = `Generate exactly ${count} educational flashcards from the following text.
-- Use the SAME LANGUAGE as the input text when creating questions and answers.
-- Format: Return a STRICTLY PARSEABLE JSON array (no extra commentary), for example:
-[
-  { "question": "Question 1 ...", "answer": "Answer 1 ...", "difficulty": "easy" },
-  { "question": "Question 2 ...", "answer": "Answer 2 ...", "difficulty": "medium" }
-]
-- Allowed difficulty values: "easy", "medium", "hard".
-- If information to make a question is missing, skip that card (do not invent unrelated facts).
+export const generateFlashcards = async (text, numFlashcards, requirements) => {
+  // Chuyển requirements thành chuỗi nếu nó là object để AI hiểu rõ hơn
+  const reqString =
+    typeof requirements === "object"
+      ? JSON.stringify(requirements)
+      : requirements;
 
-Text:
-${text.substring(0, 15000)}`;
+  const prompt = `
+    You are an expert educational content creator and curriculum designer.
+    Your task is to extract key concepts from the provided text and convert them into exactly ${numFlashcards} high-quality flashcards.
+
+    ### STRICT CONFIGURATION:
+    - **Quantity:** ${numFlashcards} cards.
+    - **Source Language:** Detect and use the EXACT SAME LANGUAGE as the source text for all questions and answers.
+    - **Output Format:** Return ONLY a raw JSON array. Do not use Markdown code blocks (no \`\`\`json). Do not add any introductory or concluding text.
+
+    ### USER CUSTOM REQUIREMENTS (Must Follow):
+    "${reqString}"
+
+    ### QUALITY GUIDELINES:
+    1. **Focus:** Prioritize main ideas, definitions, and critical facts over trivial details.
+    2. **Clarity:** Questions must be unambiguous. Answers must be concise and accurate.
+    3. **Difficulty:** Assign "easy", "medium", or "hard" based on the cognitive load required.
+    4. **Safety:** If the text does not contain enough info for ${numFlashcards} cards, generate as many valid ones as possible. DO NOT hallucinate or invent facts.
+
+    ### REQUIRED JSON SCHEMA:
+    [
+      { "question": "Concise question string", "answer": "Clear answer string", "difficulty": "easy|medium|hard" }
+    ]
+
+    ### SOURCE TEXT:
+    """
+    ${text.substring(0, 15000)}
+    """
+    `;
 
   try {
     const response = await ai.models.generateContent({
@@ -73,7 +96,7 @@ ${text.substring(0, 15000)}`;
                 ? c.difficulty
                 : "medium",
             }));
-          return normalized.slice(0, count);
+          return normalized.slice(0, numFlashcards);
         }
       } catch (e) {
         // fall through to text parsing
@@ -170,24 +193,52 @@ ${text.substring(0, 15000)}`;
  * @param {number} numQuestions
  * @returns {Promise<Array<{question: string, options: string[], correctAnswer: string, explanation: string, difficulty: string}>>}
  */
-export const generateQuiz = async (text, numQuestions = 5) => {
-  const prompt = `Generate exactly ${numQuestions} multiple choice questions from the following text.
-- Use the SAME LANGUAGE as the input text.
-- Return a STRICT JSON array, example:
-[
-  {
-    "question": "Question text...",
-    "options": ["Option A", "Option B", "Option C", "Option D"],
-    "correctAnswer": "Option B",
-    "explanation": "Explain for this correctAnswer. Talk reason why this is the correct answer.",
-    "difficulty": "medium"
-  }
-]
-- Allowed difficulty values: "easy", "medium", "hard".
-- Respond ONLY with the JSON array and nothing else.
+export const generateQuiz = async (text, numQuestions, requirements) => {
+  // Xử lý requirements đầu vào để đảm bảo nó là string
+  const reqString =
+    typeof requirements === "object"
+      ? JSON.stringify(requirements)
+      : requirements;
 
-Text:
-${text.substring(0, 15000)}`;
+  const prompt = `
+    You are an expert assessment specialist and educational content creator.
+    Your task is to create a high-quality multiple-choice quiz based strictly on the provided text.
+
+    ### STRICT CONFIGURATION:
+    - **Quantity:** Exactly ${numQuestions} questions.
+    - **Language:** Detect and use the EXACT SAME LANGUAGE as the source text.
+    - **Output Format:** Return ONLY a raw JSON array. Do not use Markdown code blocks (no \`\`\`json). Do not add any conversational text.
+
+    ### USER CUSTOM REQUIREMENTS (Must Follow):
+    "${reqString}"
+
+    ### QUALITY GUIDELINES:
+    1. **Distractors:** The wrong options must be plausible and related to the context, not obviously fake or silly.
+    2. **Unambiguous:** Ensure there is exactly one clearly correct answer per question.
+    3. **Explanation:** The "explanation" field must provide a clear reasoning for why the answer is correct, serving as a learning point.
+    4. **Variety:** Unless specified otherwise, cover different difficulty levels (easy, medium, hard).
+
+    ### REQUIRED JSON SCHEMA:
+    [
+      {
+        "question": "The question stem here?",
+        "options": [
+          "Option A string",
+          "Option B string",
+          "Option C string",
+          "Option D string"
+        ],
+        "correctAnswer": "Exact string matching one of the options",
+        "explanation": "Educational explanation of why this is correct.",
+        "difficulty": "easy|medium|hard"
+      }
+    ]
+
+    ### SOURCE TEXT:
+    """
+    ${text.substring(0, 15000)}
+    """
+    `;
 
   try {
     const response = await ai.models.generateContent({
@@ -196,6 +247,8 @@ ${text.substring(0, 15000)}`;
     });
 
     let generatedText = String(response?.text ?? "");
+
+    console.log("Generated quiz text:", generatedText);
 
     // Try JSON parse first
     const firstBracket = generatedText.indexOf("[");
