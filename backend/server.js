@@ -5,6 +5,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import errorHandler from "./src/middlewares/errorHandle.js";
 import connectDB from "./src/config/db.js";
+import { connectRedis } from "./src/config/redis.js";
 import authRoutes from "./src/routes/authRoutes.js";
 import documentRoutes from "./src/routes/documentRoutes.js";
 import flashcardRoutes from "./src/routes/flashcardRoutes.js";
@@ -23,7 +24,9 @@ const __dirname = path.dirname(__filename);
 const app = express();
 
 // Connect db
-connectDB();
+await connectDB();
+// Connect Redis
+await connectRedis();
 
 // Middleware to handle cors
 app.use(

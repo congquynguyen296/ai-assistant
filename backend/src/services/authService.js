@@ -2,6 +2,8 @@ import { AppError } from "../middlewares/errorHandle.js";
 import User from "../models/User.js";
 import jwt from "jsonwebtoken";
 import { getGoogleClient } from "../config/googleConfig.js";
+import { redisService } from "./redisService.js";
+import { sendOTP } from "./mailService.js";
 
 const generateToken = (payload) => {
   return jwt.sign(payload, process.env.JWT_SECRET, {
@@ -19,8 +21,43 @@ export const registerService = async ({ username, email, password }) => {
     );
   }
 
-  // Create new user
-  const newUser = await User.create({ username, email, password });
+  // Generate OTP
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+  // Store in Redis
+  const userData = { username, email, password, otp };
+  // Key format: register_otp:email
+  await redisService.setObject(`register_otp:${email}`, userData, 300);
+
+  // Send Email
+  await sendOTP(email, otp);
+
+  return {
+    message: "Mã OTP đã được gửi đến email của bạn",
+    email
+  };
+};
+
+export const confirmEmailService = async ({ otp, email }) => {
+  const parsedData = await redisService.getObject(`register_otp:${email}`);
+
+  if (!parsedData) {
+    throw new AppError("Mã OTP đã hết hạn hoặc không tồn tại", 400);
+  }
+
+  if (parsedData.otp !== otp) {
+    throw new AppError("Mã OTP không chính xác", 400);
+  }
+
+  // Create user
+  const newUser = await User.create({
+    username: parsedData.username,
+    email: parsedData.email,
+    password: parsedData.password,
+  });
+
+  // Delete from Redis
+  await redisService.deleteObject(`register_otp:${email}`);
 
   // Gererate token
   const token = generateToken({ id: newUser._id });
@@ -32,6 +69,34 @@ export const registerService = async ({ username, email, password }) => {
       email: newUser.email,
     },
     token,
+  };
+};
+
+export const resendOTPService = async ({ email }) => {
+  const parsedData = await redisService.getObject(`register_otp:${email}`);
+
+  if (!parsedData) {
+    throw new AppError("Phiên đăng ký đã hết hạn, vui lòng đăng ký lại", 400);
+  }
+
+  // Generate new OTP
+  const newOtp = Math.floor(100000 + Math.random() * 900000).toString();
+  
+  // Update OTP in Redis using setField (preserves other data and updates TTL if needed, 
+  // but here we probably want to reset TTL to 5 mins or keep existing? 
+  // The requirement said "TTL khoảng 5 phút" for the OTP. 
+  // If we resend, we should probably extend the session.)
+  
+  // Using setField would keep the old TTL if we don't force it. 
+  // But let's just update the object and reset TTL to 300s as per common practice for resend.
+  parsedData.otp = newOtp;
+  await redisService.setObject(`register_otp:${email}`, parsedData, 300);
+
+  // Send Email
+  await sendOTP(email, newOtp);
+
+  return {
+    message: "Mã OTP mới đã được gửi",
   };
 };
 

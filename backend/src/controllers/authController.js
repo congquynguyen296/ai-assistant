@@ -5,6 +5,8 @@ import {
   updateProfileService,
   changePasswordService,
   googleLoginService,
+  confirmEmailService,
+  resendOTPService,
 } from "../services/authService.js";
 
 // @desc    Register a new user
@@ -27,6 +29,59 @@ export const register = async (req, res, next) => {
     return res.status(201).json({
       success: true,
       message: "Đăng ký thàng công",
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Confirm Email
+// @route   POST /api/auth/confirm-email
+// @access  Public
+export const confirmEmail = async (req, res, next) => {
+  try {
+    const { otp, email } = req.body;
+    if (!otp || !email) {
+      return res.status(400).json({
+        sucess: false,
+        error: "Thông tin xác nhận không hợp lệ",
+      });
+    }
+
+    // Call service to confirm email
+    const result = await confirmEmailService({ otp, email });
+
+    // Return data
+    return res.status(200).json({
+      success: true,
+      message: "Xác nhận email thành công",
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Resend OTP
+// @route   POST /api/auth/resend-otp
+// @access  Public
+export const resendOTP = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        error: "Email không hợp lệ",
+      });
+    }
+
+    // Call service to resend OTP
+    const result = await resendOTPService({ email });
+
+    return res.status(200).json({
+      success: true,
+      message: "Gửi lại mã OTP thành công",
       data: result,
     });
   } catch (error) {
