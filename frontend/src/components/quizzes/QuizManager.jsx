@@ -5,6 +5,7 @@ import aiService from "../../services/aiService";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
 import QuizCard from "./QuizCard";
 import ConfirmModal from "../common/ConfirmModal";
+import GenerateModal from "../common/GenerateModal";
 import { Plus, Sparkles, HelpCircle, Trash2, X } from "lucide-react";
 
 const QuizManager = ({ documentId }) => {
@@ -15,7 +16,6 @@ const QuizManager = ({ documentId }) => {
   const [deleting, setDeleting] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isGenerateModalOpen, setIsGenerateModalOpen] = useState(false);
-  const [numQuestion, setNumQuestion] = useState(5);
 
   // Fetch quizzes function
   const fetchQuizzes = async (documentId) => {
@@ -39,21 +39,18 @@ const QuizManager = ({ documentId }) => {
   }, [documentId]);
 
   // Handle generate quiz
-  const handleGenerateQuiz = async (e) => {
-    e.preventDefault();
-
-    if (numQuestion < 1 || numQuestion > 20) {
-      toast.error("Số lượng câu hỏi phải từ 1 đến 20");
-      return;
-    }
-
+  const handleGenerateQuiz = async ({ count, title, requirements }) => {
     setGenerating(true);
 
     try {
-      await aiService.generateQuiz(documentId, { numQuestion });
+      // Gọi service với các tham số mới: numQuestion, title, requirements
+      await aiService.generateQuiz(documentId, { 
+        numQuizzes: count,
+        title,
+        requirements 
+      });
       toast.success("Tạo quiz thành công");
       setIsGenerateModalOpen(false);
-      setNumQuestion(5);
       fetchQuizzes(documentId);
     } catch (error) {
       console.error(`Có lỗi xảy ra khi generate quiz: ${error}`);
@@ -207,108 +204,17 @@ const QuizManager = ({ documentId }) => {
       />
 
       {/* Generate quiz modal */}
-      {isGenerateModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
-          <div className="relative w-full max-w-lg bg-white/95 backdrop-blur-xl border border-slate-200/60 rounded-2xl shadow-lg shadow-slate-900/20 p-6">
-            {/* Close button */}
-            <button
-              className="absolute top-6 right-6 h-8 w-8 flex items-center justify-center rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all duration-200"
-              onClick={() => {
-                setIsGenerateModalOpen(false);
-                setNumQuestion(5);
-              }}
-              disabled={generating}
-            >
-              <X className="w-5 h-5" strokeWidth={2} />
-            </button>
-
-            {/* Modal header */}
-            <div className="mb-6">
-              <div className="w-12 h-12 rounded-xl bg-linear-to-r from-emerald-100 to-teal-100 flex items-center justify-center mb-3">
-                <Sparkles
-                  className="w-6 h-6 text-emerald-600"
-                  strokeWidth={2}
-                />
-              </div>
-              <h2 className="text-xl font-medium text-slate-900 tracking-tight">
-                Tạo quiz mới
-              </h2>
-              <p className="text-sm text-slate-500 mt-1">
-                Nhập số lượng câu hỏi bạn muốn tạo (1-20)
-              </p>
-            </div>
-
-            {/* Form */}
-            <form onSubmit={handleGenerateQuiz} className="space-y-6">
-              {/* Input field */}
-              <div>
-                <label
-                  htmlFor="numQuestion"
-                  className="block text-sm font-semibold text-slate-700 mb-2"
-                >
-                  Số lượng câu hỏi
-                </label>
-                <input
-                  type="number"
-                  id="numQuestion"
-                  min="1"
-                  max="20"
-                  value={numQuestion}
-                  onChange={(e) => {
-                    const value = parseInt(e.target.value);
-                    if (!isNaN(value) && value >= 1 && value <= 20) {
-                      setNumQuestion(value);
-                    } else if (e.target.value === "") {
-                      setNumQuestion("");
-                    }
-                  }}
-                  className="w-full h-11 px-4 border-2 border-slate-200 rounded-xl bg-white text-slate-900 text-sm font-medium focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all duration-200"
-                  placeholder="Nhập số lượng câu hỏi"
-                  required
-                  disabled={generating}
-                />
-                <p className="text-xs text-slate-500 mt-2">
-                  Số lượng câu hỏi tối thiểu: 1, tối đa: 20
-                </p>
-              </div>
-
-              {/* Action buttons */}
-              <div className="flex gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsGenerateModalOpen(false);
-                    setNumQuestion(5);
-                  }}
-                  disabled={generating}
-                  className="flex-1 h-11 px-4 border-2 border-slate-200 rounded-xl bg-white text-slate-700 text-sm font-semibold hover:bg-slate-50 hover:border-slate-300 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Hủy
-                </button>
-                <button
-                  type="submit"
-                  disabled={
-                    generating ||
-                    !numQuestion ||
-                    numQuestion < 1 ||
-                    numQuestion > 20
-                  }
-                  className="flex-1 h-11 px-4 bg-linear-to-r from-emerald-500 to-teal-500 text-white rounded-xl text-sm font-semibold shadow-lg shadow-emerald-500/25 hover:from-emerald-600 hover:to-teal-600 hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {generating ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      Đang tạo...
-                    </span>
-                  ) : (
-                    "Tạo quiz"
-                  )}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <GenerateModal
+        isOpen={isGenerateModalOpen}
+        onClose={() => setIsGenerateModalOpen(false)}
+        onGenerate={handleGenerateQuiz}
+        loading={generating}
+        title="Tạo quiz mới"
+        description="Nhập số lượng câu hỏi và các yêu cầu khác (nếu có)"
+        countLabel="Số lượng câu hỏi"
+        defaultCount={5}
+        maxCount={20}
+      />
     </div>
   );
 };

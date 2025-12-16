@@ -1,7 +1,7 @@
-import React from "react";
+import NotFoundPage from "../NotFoundPage";
 
 const FlashCardListPage = () => {
-  return <div>FlashCardListPage</div>;
+  return <NotFoundPage />;
 };
 
 export default FlashCardListPage;

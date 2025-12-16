@@ -191,13 +191,13 @@ const QuizResultPage = () => {
                 })}
               </div>
 
-              {item.explaintion && (
+              {item.explanation && (
                 <div className="mt-4 p-4 bg-indigo-50 border border-indigo-100 rounded-lg">
                   <h4 className="text-sm font-bold text-indigo-900 mb-1">
                     Giải thích:
                   </h4>
                   <p className="text-sm text-indigo-800 leading-relaxed">
-                    {item.explaintion}
+                    {item.explanation}
                   </p>
                 </div>
               )}

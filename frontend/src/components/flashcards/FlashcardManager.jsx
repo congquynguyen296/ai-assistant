@@ -6,6 +6,7 @@ import LoadingSpinner from "../common/LoadingSpinner";
 import { Brain, Sparkles, Trash2, Plus } from "lucide-react";
 import moment from "moment";
 import ConfirmModal from "../common/ConfirmModal";
+import GenerateModal from "../common/GenerateModal";
 import Flashcard from "./Flashcard";
 
 const FlashcardManager = ({ documentId }) => {
@@ -15,6 +16,7 @@ const FlashcardManager = ({ documentId }) => {
   const [generating, setGenerating] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isGenerateModalOpen, setIsGenerateModalOpen] = useState(false);
   const [setToDelete, setSetToDelete] = useState(null);
 
   // Fetch all flashcard of document function
@@ -42,12 +44,18 @@ const FlashcardManager = ({ documentId }) => {
   }, [documentId]);
 
   // Function to generate flashcard
-  const handleGenerateFlashcards = async () => {
+  const handleGenerateFlashcards = async ({ count, title, requirements }) => {
     setGenerating(true);
-    await aiService.generateFlashcards(documentId);
-    toast.success("Tạo flashcards thành công");
-    fetchFlashcardSets();
     try {
+      // Gọi service với các tham số mới: numFlashcards, title, requirements
+      await aiService.generateFlashcards(documentId, {
+        numFlashcards: count,
+        title,
+        requirements,
+      });
+      toast.success("Tạo flashcards thành công");
+      setIsGenerateModalOpen(false);
+      fetchFlashcardSets();
     } catch (error) {
       console.log(`Có lỗi xảy ra khi tạo flashcards: ${error}`);
       toast.error("Có lỗi xảy ra khi tạo fashcards");
@@ -123,7 +131,7 @@ const FlashcardManager = ({ documentId }) => {
             Tạo flashcard của bạn ngay bây giờ để tìm hiểu về tài liệu
           </p>
           <button
-            onClick={handleGenerateFlashcards}
+            onClick={() => setIsGenerateModalOpen(true)}
             disabled={generating}
             className="inline-flex items-center justify-center gap-2 px-6 h-12 font-semibold rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 whitespace-nowrap bg-linear-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/25 hover:from-emerald-600 hover:to-teal-600 hover:shadow-xl hover:shadow-emerald-500/30"
           >
@@ -160,7 +168,7 @@ const FlashcardManager = ({ documentId }) => {
 
           <button
             className="inline-flex items-center justify-center gap-2 px-6 h-12 font-semibold rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 whitespace-nowrap bg-linear-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/25 hover:from-emerald-600 hover:to-teal-600 hover:shadow-xl hover:shadow-emerald-500/30"
-            onClick={handleGenerateFlashcards}
+            onClick={() => setIsGenerateModalOpen(true)}
             disabled={generating}
           >
             {generating ? (
@@ -207,7 +215,7 @@ const FlashcardManager = ({ documentId }) => {
 
                 <div className="mb-4">
                   <h4 className="text-base font-semibold text-slate-900 mb-2">
-                    Bộ flashcard
+                    {set.title || "Bộ flashcard không tiêu đề"}
                   </h4>
                   <p className="text-xs font-medium text-slate-500">
                     Đã tạo {moment(set.createAt).format("MMM D, YYYY")}
@@ -250,6 +258,7 @@ const FlashcardManager = ({ documentId }) => {
           renderSetList()
         )}
       </div>
+
       {/* Delete confirm modal */}
       <ConfirmModal
         isOpen={isDeleteModalOpen}
@@ -262,6 +271,19 @@ const FlashcardManager = ({ documentId }) => {
         isLoading={deleting}
         icon={Trash2}
         variant="danger"
+      />
+
+      {/* Generate flashcard modal */}
+      <GenerateModal
+        isOpen={isGenerateModalOpen}
+        onClose={() => setIsGenerateModalOpen(false)}
+        onGenerate={handleGenerateFlashcards}
+        loading={generating}
+        title="Tạo flashcard mới"
+        description="Nhập số lượng thẻ và các yêu cầu khác (nếu có)"
+        countLabel="Số lượng thẻ"
+        defaultCount={10}
+        maxCount={30}
       />
     </div>
   );

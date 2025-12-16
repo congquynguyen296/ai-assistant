@@ -34,7 +34,7 @@ const LoginPage = () => {
     }
 
     try {
-      const response = await authService.login(email, password);
+      const response = await authService.login(email.trim(), password.trim());
       const { user, token } = response?.data || response;
       login(user, token);
       toast.success("Đăng nhập thành công");
