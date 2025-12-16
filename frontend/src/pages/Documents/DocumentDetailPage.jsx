@@ -38,21 +38,21 @@ const DocumentDetailPage = () => {
   }, [documentId]);
 
   // Helper func to get URL PDF file
-  const getFileUrl = (localPath) => {
-    if (!localPath) return "";
+  // const getFileUrl = (localPath) => {
+  //   if (!localPath) return "";
 
-    if (localPath.startsWith("http")) return localPath;
-    const serverBaseUrl = "http://localhost:8000";
+  //   if (localPath.startsWith("http")) return localPath;
+  //   const serverBaseUrl = "http://localhost:8000";
 
-    const normalizedPath = localPath.replace(/\\/g, "/");
-    const relativePath = normalizedPath.split("/uploads/")[1];
+  //   const normalizedPath = localPath.replace(/\\/g, "/");
+  //   const relativePath = normalizedPath.split("/uploads/")[1];
 
-    if (relativePath) {
-      return `${serverBaseUrl}/uploads/${relativePath}`;
-    }
+  //   if (relativePath) {
+  //     return `${serverBaseUrl}/uploads/${relativePath}`;
+  //   }
 
-    return localPath;
-  };
+  //   return localPath;
+  // };
 
   // Render content file PDF
   const renderContent = () => {
@@ -64,8 +64,8 @@ const DocumentDetailPage = () => {
       return <div className="">Không thể hiển thị tài liệu.</div>;
     }
 
-    const pdfUrl = getFileUrl(document.filePath);
-    return <PDFViewer pdfUrl={pdfUrl} />;
+    // const pdfUrl = getFileUrl(document.filePath);
+    return <PDFViewer pdfUrl={document.fileUrl} />;
   };
 
   // Render chat AI
