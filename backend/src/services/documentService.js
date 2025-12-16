@@ -2,31 +2,62 @@ import mongoose from "mongoose";
 import Document from "../models/Document.js";
 import Flashcard from "../models/Flashcard.js";
 import Quiz from "../models/Quiz.js";
-import fs from "fs/promises";
 import { extractTextFromPDF } from "../utils/pdfParser.js";
 import { chunkText } from "../utils/textChunker.js";
 import { AppError } from "../middlewares/errorHandle.js";
+import cloudinary from "../config/cloudinary.js";
+import { Readable } from "stream";
 
 export const uploadDocumentService = async ({ userId, title, file }) => {
-  // Construct file URL
-  const baseUrl = `${process.env.APP_HOST || "localhost"}:${
-    process.env.APP_PORT || 8000
-  }`;
-  const fileUrl = `${baseUrl}/uploads/documents/${file.filename}`;
+  // Generate a new ObjectId for the document
+  const documentId = new mongoose.Types.ObjectId();
+
+  // Upload to Cloudinary
+  const uploadStream = (buffer) => {
+    return new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        {
+          public_id: documentId.toString(), // Just the ID, let folder/asset_folder handle the path
+          folder: `hyra/${userId}`, // For URL structure (legacy/standard)
+          asset_folder: `hyra/${userId}`, // For Media Library folder structure (new)
+          resource_type: "auto",
+          overwrite: true,
+          unique_filename: false,
+        },
+        (error, result) => {
+          if (error) {
+            console.error("[Upload] Cloudinary Error:", error);
+            return reject(error);
+          }
+          resolve(result);
+        }
+      );
+      Readable.from(buffer).pipe(stream);
+    });
+  };
+
+  let uploadResult;
+  try {
+    uploadResult = await uploadStream(file.buffer);
+  } catch (error) {
+    console.error("Cloudinary upload error:", error);
+    throw new AppError("Lỗi khi upload file lên Cloudinary", 500);
+  }
 
   // Create new document record
   const document = await Document.create({
+    _id: documentId,
     userId,
     title,
-    fileUrl,
+    fileUrl: uploadResult.secure_url,
     fileName: file.originalname,
-    filePath: file.path,
+    filePath: uploadResult.public_id, // Store public_id for deletion
     fileSize: file.size,
     status: "processing",
   });
 
-  // Process document in backgroud - will use RMQ
-  processDocument(document._id, file.path).catch((error) => {
+  // Process document in backgroud
+  processDocument(document._id, file.buffer).catch((error) => {
     console.error("Lỗi khi tải tài liệu: ", error);
   });
 
@@ -125,10 +156,18 @@ export const deleteDocumentService = async ({ documentId, userId }) => {
     throw new AppError("Tài liệu không tồn tại", 404);
   }
 
-  // Delete file from storange
-  await fs.unlink(document.filePath).catch((error) => {
-    console.error("Lỗi khi xóa file tài liệu: ", error);
-  });
+  // Delete file from Cloudinary
+  if (document.filePath) {
+    try {
+      // Try deleting as image (default for auto/pdf)
+      await cloudinary.uploader.destroy(document.filePath);
+      // If it was raw, we might need to specify resource_type: 'raw'
+      // But since we used 'auto', it's likely 'image' or 'raw'.
+      // We can try both or just ignore error.
+    } catch (error) {
+      console.error("Lỗi khi xóa file trên Cloudinary: ", error);
+    }
+  }
 
   // Optionally, delete related flashcards and quizzes
   await Flashcard.deleteMany({ documentId: document._id, userId });
@@ -139,9 +178,9 @@ export const deleteDocumentService = async ({ documentId, userId }) => {
 };
 
 // Helper function to process document in background
-const processDocument = async (documentId, filePath) => {
+const processDocument = async (documentId, fileBuffer) => {
   try {
-    const { text } = await extractTextFromPDF(filePath);
+    const { text } = await extractTextFromPDF(fileBuffer);
 
     // Create chunks
     const chunks = chunkText(text, 500, 50);

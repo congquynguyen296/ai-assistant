@@ -3,17 +3,15 @@ import { AppError } from "../middlewares/errorHandle.js";
 import { PDFParse } from "pdf-parse";
 
 /**
- * Extract text content from a PDF file
+ * Extract text content from a PDF file buffer
  *
- * @param {*} filePath Path to PDF file
+ * @param {Buffer} buffer PDF file buffer
  * @returns {Promise<text: string, numPages: number>} Extracted text and number of pages
  */
-export const extractTextFromPDF = async (filePath) => {
+export const extractTextFromPDF = async (buffer) => {
   try {
-    const dataBuffer = await fs.readFile(filePath);
-
     // pdf-parse expects a Unit8Array
-    const pdfParser = new PDFParse(new Uint8Array(dataBuffer));
+    const pdfParser = new PDFParse(new Uint8Array(buffer));
     const data = await pdfParser.getText();
 
     return {

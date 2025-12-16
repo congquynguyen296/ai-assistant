@@ -1,11 +1,6 @@
 export const getUserIdFromReq = (req) => {
-  const userId = req.user.id;
-  if (!userId) {
-    return res.status(400).json({
-      sucess: false,
-      error: "Token không hợp lệ",
-      statusCode: 400,
-    });
+  if (!req.user || !req.user.id) {
+    throw new Error("User ID not found in request");
   }
-  return userId;
+  return req.user.id;
 };

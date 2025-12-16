@@ -5,7 +5,6 @@ import {
   updateDocumentService,
   deleteDocumentService,
 } from "../services/documentService.js";
-import fs from "fs/promises";
 import { getUserIdFromReq } from "../utils/authUtil.js";
 
 // @desc    Upload a new document
@@ -28,7 +27,6 @@ export const uploadDocument = async (req, res, next) => {
     const { title } = req.body;
     // Clean up uploaded file if data invalid
     if (!title) {
-      await fs.unlink(req.file.path);
       return res.status(400).json({
         success: false,
         error: "Tiêu đề tài liệu không hợp lệ",
@@ -45,12 +43,6 @@ export const uploadDocument = async (req, res, next) => {
       data: result,
     });
   } catch (error) {
-    // Clean up file when error occurs
-    if (req.file) {
-      await fs.unlink(req.file.path).catch(() => {
-        console.error("Xóa file khi upload thất bại");
-      });
-    }
     next(error);
   }
 };
