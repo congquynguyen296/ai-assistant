@@ -215,6 +215,7 @@ export const googleLoginService = async (code) => {
     if (user) {
       if (!user.googleId) {
         user.googleId = googleId;
+        user.profileImage = picture;
         await user.save();
       }
     } else {
