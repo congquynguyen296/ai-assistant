@@ -1,6 +1,6 @@
 import { Check } from "lucide-react";
 
-const PaymentCard = ({ plan, isPopular, isCurrent }) => {
+const PaymentCard = ({ plan, isPopular, isCurrent, onSelect }) => {
   return (
     <div
       className={`relative w-full flex flex-col ${
@@ -78,6 +78,7 @@ const PaymentCard = ({ plan, isPopular, isCurrent }) => {
 
         <div className="p-6 pt-0 mt-auto">
           <button
+            onClick={() => onSelect && onSelect(plan)}
             className={`w-full h-12 rounded-xl font-semibold text-sm transition-all duration-200 active:scale-[0.98]
             ${
               isPopular
@@ -85,6 +86,7 @@ const PaymentCard = ({ plan, isPopular, isCurrent }) => {
                 : "bg-slate-100 text-slate-700 hover:bg-slate-200"
             }
             ${isCurrent ? "disabled cursor-not-allowed opacity-50" : ""}`}
+            disabled={isCurrent}
           >
             {plan.buttonText}
           </button>

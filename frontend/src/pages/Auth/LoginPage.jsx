@@ -187,10 +187,11 @@ const LoginPage = () => {
           <div className="grid w-full grid-cols-2 gap-3">
             <GoogleButton onClick={handleGoogleLogin} />
             <FacebookButton
-              onClick={() => {
-                // TODO: Implement Facebook login logic
-                console.log("Facebook login clicked");
-              }}
+              onClick={() =>
+                toast.info(
+                  "Tính năng đang được bảo trì. Chúng tôi xin lỗi vì sự bất tiện này."
+                )
+              }
             />
           </div>
 

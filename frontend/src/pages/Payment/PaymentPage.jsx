@@ -1,8 +1,25 @@
+import { useState } from "react";
 import PageHeader from "@/components/common/PageHeader";
 import { Zap, Star, Shield } from "lucide-react";
 import PaymentCard from "../../components/payment/PaymentCard";
+import PaymentModal from "../../components/payment/PaymentModal";
 
 const PaymentPage = () => {
+  const [selectedPlan, setSelectedPlan] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleSelectPlan = (plan) => {
+    if (plan.isCurrent) return;
+
+    if (plan.price === "Liên hệ") {
+      window.open("https://www.facebook.com/nguyencong.quy.100/", "_blank");
+      return;
+    }
+
+    setSelectedPlan(plan);
+    setIsModalOpen(true);
+  };
+
   const plans = [
     {
       name: "Cơ bản",
@@ -12,7 +29,7 @@ const PaymentPage = () => {
       icon: <Star size={24} />,
       features: [
         "Tải lên tối đa 3 tài liệu/ngày",
-        "Tạo Flashcard cơ bản", 
+        "Tạo Flashcard cơ bản",
         "Tạo Quiz trắc nghiệm",
         "Lưu trữ 100MB",
         "Hỗ trợ cộng đồng",
@@ -75,22 +92,29 @@ const PaymentPage = () => {
               plan={plan}
               isPopular={plan.isPopular}
               isCurrent={plan.isCurrent}
+              onSelect={handleSelectPlan}
             />
           ))}
         </div>
 
         <div className="mt-16 text-center">
           <p className="text-slate-500 text-sm">
-            Bạn có câu hỏi? Liên hệ với chúng tôi qua{" "}
+            Bạn có câu hỏi? Liên hệ qua{" "}
             <a
               href="#"
               className="text-emerald-600 font-semibold hover:underline"
             >
-              support@ai-assistant.com
+              congquynguyen296@gmail.com
             </a>
           </p>
         </div>
       </div>
+
+      <PaymentModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        plan={selectedPlan}
+      />
     </div>
   );
 };
