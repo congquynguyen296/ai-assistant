@@ -2,8 +2,8 @@ name: Keep Alive Server
 
 on:
   schedule:
-    # Chạy mỗi 3 phút (định dạng cron)
-    - cron: '*/3 * * * *'
+    # Chạy mỗi 5 phút (định dạng cron)
+    - cron: '*/5 * * * *'
   workflow_dispatch: # Cho phép bấm chạy thủ công để test
 
 jobs:
