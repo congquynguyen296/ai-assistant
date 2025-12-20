@@ -100,7 +100,7 @@ export const generateSummaryService = async ({
   }
 
   // Generate summary using Gemini API
-  const summary = await groqUtil.generateSummary(
+  const summary = await geminiUtil.generateSummary(
     document.extractedText,
     language || "VIETNAMESE"
   );

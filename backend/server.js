@@ -32,7 +32,7 @@ await connectRedis();
 app.use(
   cors({
     origin: [
-      "https://hyra-ui.vercel.app",
+      "https://hyra-six.vercel.app",
       "http://localhost:5173",
       "http://localhost:3000",
     ],
