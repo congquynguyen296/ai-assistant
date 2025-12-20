@@ -1,0 +1,23 @@
+name: Keep Alive Server
+
+on:
+  schedule:
+    # Chạy mỗi 3 phút (định dạng cron)
+    - cron: '*/3 * * * *'
+  workflow_dispatch: # Cho phép bấm chạy thủ công để test
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Backend
+        env:
+          BACKEND_URL: ${{ secrets.BACKEND_URL }} # Cấu hình trong Settings > Secrets and variables > Actions
+        run: |
+          if [ -z "$BACKEND_URL" ]; then
+            echo "BACKEND_URL secret is not set. Using default placeholder or failing."
+            # Có thể hardcode URL ở đây nếu không muốn dùng secret
+            curl -I https://your-backend-url.onrender.com/health-check
+          else
+            curl -I $BACKEND_URL/health-check
+          fi
