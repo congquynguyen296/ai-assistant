@@ -10,7 +10,7 @@ const PaymentModal = ({ isOpen, onClose, plan }) => {
   const bankInfo = {
     accVia: import.meta.env.VITE_SEPAY_ACC_VIA_QR,
     bank: "MBBank",
-    amount: plan.price === "39.000đ" ? 39000 : 0,
+    amount: parseInt(plan.price.replace(/\D/g, "")) || 0,
     desc: "HQ29062020",
     accountName: "Nguyễn Công Quý",
     accountNumber: "0976870127",
@@ -26,8 +26,8 @@ const PaymentModal = ({ isOpen, onClose, plan }) => {
   };
 
   return (
-    <div className="fixed inset-0 top-16 md:left-64 z-40 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm transition-all duration-300">
-      <div className="relative w-full max-w-3xl bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row max-h-[85vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm transition-all duration-300">
+      <div className="relative w-full max-w-3xl bg-white rounded-3xl shadow-2xl flex flex-col md:flex-row max-h-[90vh] overflow-y-auto md:overflow-hidden">
         <button
           onClick={onClose}
           className="absolute top-4 right-4 z-10 p-2 bg-white/80 backdrop-blur-sm rounded-full text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-all"
@@ -36,7 +36,7 @@ const PaymentModal = ({ isOpen, onClose, plan }) => {
         </button>
 
         {/* Left Side - QR Code */}
-        <div className="w-full md:w-1/2 bg-slate-50 p-8 flex flex-col items-center justify-center border-r border-slate-100 overflow-y-auto [&::-webkit-scrollbar]:hidden">
+        <div className="w-full md:w-1/2 bg-slate-50 p-8 flex flex-col items-center justify-center border-r border-slate-100 md:overflow-y-auto [&::-webkit-scrollbar]:hidden">
           <div className="text-center mb-6">
             <h3 className="text-xl font-bold text-slate-900 mb-2">
               Thanh toán qua QR
@@ -103,7 +103,7 @@ const PaymentModal = ({ isOpen, onClose, plan }) => {
                   {bankInfo.desc}
                 </span>
                 <button
-                  onClick={() => handleCopy(bankInfo.content)}
+                  onClick={() => handleCopy(bankInfo.desc)}
                   className="text-emerald-600 hover:text-emerald-700 p-1 hover:bg-emerald-50 rounded"
                   title="Sao chép"
                 >
@@ -121,7 +121,7 @@ const PaymentModal = ({ isOpen, onClose, plan }) => {
         </div>
 
         {/* Right Side - Plan Info */}
-        <div className="w-full md:w-1/2 p-8 flex flex-col bg-white overflow-y-auto [&::-webkit-scrollbar]:hidden">
+        <div className="w-full md:w-1/2 p-8 flex flex-col bg-white md:overflow-y-auto [&::-webkit-scrollbar]:hidden">
           <div className="mb-6">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-medium mb-4">
               {plan.period === "tháng" ? "Gói tháng" : "Gói năm"}
