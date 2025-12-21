@@ -1,4 +1,4 @@
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 import dotenv from "dotenv";
 import {
   otpEmailTemplate,
@@ -8,31 +8,27 @@ import {
 
 dotenv.config();
 
-const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587,
-  secure: false, // false cho cổng 587, true cho cổng 465
-  auth: {
-    user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_PASS,
-  },
-  // Thêm cấu hình timeout để tránh treo kết nối
-  connectionTimeout: 10000,
-  greetingTimeout: 10000,
-  socketTimeout: 10000,
-});
+// Khởi tạo Resend với API Key
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+// "onboarding@resend.dev"
+const FROM_EMAIL = "Hyra AI <onboarding@resend.dev>";
 
 export const sendOTP = async (email, otp) => {
-  const mailOptions = {
-    from: `"Hyra AI" <${process.env.GMAIL_USER}>`,
-    to: email,
-    subject: "Xác thực tài khoản Hyra AI của bạn",
-    html: otpEmailTemplate(otp),
-  };
-
   try {
-    await transporter.sendMail(mailOptions);
-    console.log(`OTP sent to ${email}`);
+    const { data, error } = await resend.emails.send({
+      from: FROM_EMAIL,
+      to: email,
+      subject: "Xác thực tài khoản Hyra AI của bạn",
+      html: otpEmailTemplate(otp),
+    });
+
+    if (error) {
+      console.error("Resend Error:", error);
+      throw new Error("Gửi email thất bại");
+    }
+
+    console.log(`OTP sent to ${email}`, data.id);
     return true;
   } catch (error) {
     console.error("Error sending email:", error);
@@ -41,17 +37,21 @@ export const sendOTP = async (email, otp) => {
 };
 
 export const sendWelcomeEmail = async (email, username, defaultPassword) => {
-  const mailOptions = {
-    from: `"Hyra AI" <${process.env.GMAIL_USER}>`,
-    to: email,
-    subject: `Chào mừng ${username} đến với Hyra AI!`,
-    html: defaultPassword
-      ? welcomeWithGoogleEmailTemplate(email, username, defaultPassword)
-      : welcomeEmailTemplate(email, username),
-  };
-
   try {
-    await transporter.sendMail(mailOptions);
+    const { data, error } = await resend.emails.send({
+      from: FROM_EMAIL,
+      to: email,
+      subject: `Chào mừng ${username} đến với Hyra AI!`,
+      html: defaultPassword
+        ? welcomeWithGoogleEmailTemplate(email, username, defaultPassword)
+        : welcomeEmailTemplate(email, username),
+    });
+
+    if (error) {
+      console.error("Resend Error:", error);
+      throw new Error("Gửi email thất bại");
+    }
+
     return true;
   } catch (error) {
     console.error("Error sending email:", error);

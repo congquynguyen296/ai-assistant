@@ -62,7 +62,7 @@ export const welcomeWithGoogleEmailTemplate = (
             </p>
             
             <div style="text-align: center; margin: 32px 0;">
-                <a href="http://localhost:3000/dashboard" style="display: inline-block; background-color: #10b981; color: white; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: 600; font-size: 16px; transition: background-color 0.2s;">Đăng nhập ngay</a>
+                <a href="https://hira-six.vercel.app/dashboard" style="display: inline-block; background-color: #10b981; color: white; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: 600; font-size: 16px; transition: background-color 0.2s;">Đăng nhập ngay</a>
             </div>
             
             <div style="border-top: 1px solid #e2e8f0; margin-top: 32px; padding-top: 24px;">
@@ -109,7 +109,7 @@ export const welcomeEmailTemplate = (email, username) => `
             </p>
 
             <div style="text-align: center; margin: 32px 0;">
-                <a href="http://localhost:3000/dashboard" 
+                <a href="https://hira-six.vercel.app/dashboard" 
                    style="display: inline-block; background-color: #10b981; color: white; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: 600; font-size: 16px;">
                     Đăng nhập ngay
                 </a>

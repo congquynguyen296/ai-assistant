@@ -23,7 +23,8 @@
     "multer": "^2.0.2",
     "nodemailer": "^7.0.11",
     "pdf-parse": "^2.4.5",
-    "redis": "^5.10.0"
+    "redis": "^5.10.0",
+    "resend": "^6.6.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.11"
