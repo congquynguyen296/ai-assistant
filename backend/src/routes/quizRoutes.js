@@ -1,6 +1,7 @@
 import express from "express";
 import protect from "../middlewares/auth.js";
 import {
+    getAllQuizzes,
     getQuizzes,
     getQuizById,
     submitQuiz,
@@ -11,6 +12,8 @@ import {
 const router = express.Router();
 
 router.use(protect);
+
+router.get("/", getAllQuizzes);
 
 router.get("/:documentId", getQuizzes);
 
