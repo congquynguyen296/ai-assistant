@@ -17,6 +17,7 @@ import FlashCardDetailPage from "@/pages/Flashcards/FlashcardDetailPage";
 import QuizTakePage from "@/pages/Quizzes/QuizTakePage";
 import QuizResultPage from "@/pages/Quizzes/QuizResultPage";
 import QuizReviewPage from "@/pages/Quizzes/QuizReviewPage";
+import QuizzesPage from "@/pages/Quizzes/QuizzesPage";
 import { useAuth } from "@/context/AuthContext";
 import DashboardPage from "./pages/Dashboard/DashboardPage";
 import ProfilePage from "./pages/Profile/ProfilePage";
@@ -72,6 +73,7 @@ export default function App() {
 
           <Route path="/payment" element={<PaymentPage />} />
 
+          <Route path="/quizzes" element={<QuizzesPage />} />
           <Route path="/quizzes/:quizId" element={<QuizTakePage />} />
           <Route path="/quizzes/:quizId/review" element={<QuizReviewPage />} />
           <Route path="/quizzes/:quizId/result" element={<QuizResultPage />} />

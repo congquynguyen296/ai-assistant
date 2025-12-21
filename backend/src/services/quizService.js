@@ -10,6 +10,26 @@ export const getQuizzesService = async ({ userId, documentId }) => {
   return quizzes;
 };
 
+export const getAllQuizzesService = async ({ userId, page, size }) => {
+  const total = await Quiz.countDocuments({ userId });
+  const quizzes = await Quiz.find({ userId })
+    .populate("documentId", "title fileName fileUrl")
+    .skip((page - 1) * size)
+    .limit(size)
+    .sort({ createdAt: -1 })
+    .lean();
+
+  return {
+    quizzes,
+    pagination: {
+      total,
+      page,
+      size,
+      totalPages: Math.ceil(total / size),
+    },
+  };
+};
+
 export const getQuizByIdService = async ({ userId, quizId }) => {
   const quiz = await Quiz.findOne({ userId, _id: quizId })
     .populate("documentId", "title fileName fileUrl")

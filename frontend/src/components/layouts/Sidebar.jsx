@@ -24,7 +24,8 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar }) => {
   const navLinks = [
     { to: "/dashboard", icon: LayoutDashboard, text: "Thống kê" },
     { to: "/documents", icon: FileText, text: "Tài liệu" },
-    { to: "/flashcards", icon: BookOpen, text: "Câu hỏi" },
+    { to: "/flashcards", icon: BookOpen, text: "Thẻ ghi nhớ" },
+    { to: "/quizzes", icon: BrainCircuit, text: "Trắc nghiệm" },
     { to: "/payment", icon: Banknote, text: "Thanh toán" },
     { to: "/profile", icon: User, text: "Cá nhân" },
   ];
