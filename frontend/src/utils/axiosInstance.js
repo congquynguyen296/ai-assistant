@@ -25,12 +25,13 @@ axiosInstance.interceptors.request.use(
 );
 
 // Response interceptor
-axios.interceptors.response.use(
+axiosInstance.interceptors.response.use(
   (response) => {
-    // Có thể xử lý trường hợp request bị từ chối do token hết hạn ở đây
+    // Có thể xử lý trường hợp request bị từ chối do token hết hạn ở đây
     return response;
   },
   (error) => {
+    console.error('API Error:', error.response?.status, error.response?.data || error.message);
     if (error.response) {
       if (error.response.status === 401) {
         localStorage.removeItem("token");
