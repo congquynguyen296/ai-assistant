@@ -1,5 +1,5 @@
-// export const BASE_URL = "http://localhost:8000/api/v1";
-export const BASE_URL = "https://ai-assistant-cn4r.onrender.com/api/v1";
+export const BASE_URL = "http://localhost:8000/api/v1";
+// export const BASE_URL = "https://ai-assistant-cn4r.onrender.com/api/v1";
 
 export const API_PATHS = {
   AUTH: {
@@ -26,8 +26,10 @@ export const API_PATHS = {
     GENERATE_SUMMARY: "/ai-generation/generate-summary",
     EXPLAIN_CONCEPT: "/ai-generation/explain-concept",
     CHAT: "/ai-generation/chat",
-    GET_CHAT_HISTORY: (documentId) => `/ai-generation/chat-history?documentId=${documentId}`,
-    DELETE_CHAT_HISTORY: (documentId) => `/ai-generation/chat-history?documentId=${documentId}`,
+    GET_CHAT_HISTORY: (documentId) =>
+      `/ai-generation/chat-history?documentId=${documentId}`,
+    DELETE_CHAT_HISTORY: (documentId) =>
+      `/ai-generation/chat-history?documentId=${documentId}`,
   },
 
   FLASHCARDS: {
@@ -39,7 +41,7 @@ export const API_PATHS = {
   },
 
   QUIZZES: {
-    GET_ALL_QUIZZES: "/quizzes",
+    GET_ALL_QUIZZES: (page, size) => `/quizzes?page=${page}&size=${size}`,
     GET_QUIZZES_FOR_DOCUMENT: (documentId) => `/quizzes/${documentId}`,
     GET_QUIZ_BY_ID: (quizId) => `/quizzes/quiz/${quizId}`,
     SUBMIT_QUIZ: (quizId) => `/quizzes/${quizId}/submit`,

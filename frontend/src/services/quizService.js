@@ -12,9 +12,11 @@ const getQuizzesForDocument = async (documentId) => {
   }
 };
 
-const getQuizzes = async () => {
+const getQuizzes = async (page = 1, size = 9) => {
   try {
-    const response = await axiosInstance.get(API_PATHS.QUIZZES.GET_QUIZZES);
+    const response = await axiosInstance.get(
+      API_PATHS.QUIZZES.GET_ALL_QUIZZES(page, size)
+    );
     return response.data;
   } catch (error) {
     throw error.response?.data || { message: "Lấy quizzes thất bại" };
