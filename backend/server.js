@@ -31,12 +31,24 @@ await connectRedis();
 // Middleware to handle cors
 app.use(
   cors({
-    origin: [
-      "https://hyra-six.vercel.app",
-      "http://localhost:5173",
-      "http://localhost:3000",
-    ],
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    origin: function (origin, callback) {
+      // Allow requests with no origin (mobile apps, curl, postman)
+      if (!origin) return callback(null, true);
+      
+      const allowedOrigins = [
+        // "https://hyra-six.vercel.app",
+        "http://localhost:5173",
+        "http://localhost:3000",
+      ];
+      
+      // Allow all Vercel preview deployments
+      if (origin.endsWith('.vercel.app') || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      
+      return callback(new Error('Not allowed by CORS'));
+    },
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
   })
