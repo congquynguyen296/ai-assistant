@@ -200,8 +200,13 @@ const LoginPage = () => {
             <p className="text-center text-sm text-slate-600">
               Chưa có tài khoản?{" "}
               <Link
-                to={"/register"}
+                to={"/login"}
                 className="font-semibold text-emerald-600 hover:text-emerald-700 transition-colors duration-200"
+                onClick={() => {
+                  toast.info(
+                    "Tính năng đang được bảo trì. Chúng tôi xin lỗi vì sự bất tiện này. Bạn có thể đăng ký bằng Google."
+                  );
+                }}
               >
                 Đăng ký
               </Link>
