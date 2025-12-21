@@ -1,11 +1,34 @@
 import { getUserIdFromReq } from "../utils/authUtil.js";
 import {
   getQuizzesService,
+  getAllQuizzesService,
   getQuizByIdService,
   submitQuizService,
   getQuizResultsService,
   deleteQuizService,
 } from "../services/quizService.js";
+
+// @desc    Get all quizzes
+// @route   GET /api/v1/quizzes
+export const getAllQuizzes = async (req, res, next) => {
+  try {
+    const userId = getUserIdFromReq(req);
+
+    // Pagination parameters (optional)
+    const page = parseInt(req.query.page) || 1;
+    const size = parseInt(req.query.size) || 10;
+
+    const result = await getAllQuizzesService({ userId, page, size });
+
+    return res.status(200).json({
+      success: true,
+      message: "Lấy danh sách quiz thành công",
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
 // @desc    Get quizzes by documentId
 // @route   GET /api/v1/quizzes/:documentId
