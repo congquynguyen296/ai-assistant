@@ -17,13 +17,19 @@ const __dirname = path.dirname(__filename);
 // Configure storage
 const storage = multer.memoryStorage();
 
-// File filter — only PDFs
+// File filter — allow PDF, DOCX, XLSX
 const fileFilter = (_req, file, cb) => {
-  if (file.mimetype === "application/pdf") {
+  const allowedMimeTypes = [
+    "application/pdf",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // .docx
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", // .xlsx
+  ];
+
+  if (allowedMimeTypes.includes(file.mimetype)) {
     cb(null, true);
   } else {
     cb(null, false);
-    throw new AppError("Chỉ hỗ trợ upload file PDF", 400);
+    cb(new AppError("Chỉ hỗ trợ file PDF, DOCX, XLSX", 400));
   }
 };
 
