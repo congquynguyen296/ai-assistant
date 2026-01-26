@@ -1,4 +1,4 @@
-import { Resend } from "resend";
+import nodemailer from "nodemailer";
 import dotenv from "dotenv";
 import {
   otpEmailTemplate,
@@ -8,37 +8,41 @@ import {
 
 dotenv.config();
 
-// Khởi tạo Resend với API Key
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Remove spaces from GMAIL_PASS if present
+const gmailPass = process.env.GMAIL_PASS
+  ? process.env.GMAIL_PASS.replace(/\s+/g, "")
+  : "";
 
-// "onboarding@resend.dev"
-const FROM_EMAIL = "Hyra AI <onboarding@resend.dev>";
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.GMAIL_USER,
+    pass: gmailPass,
+  },
+});
+
+const FROM_EMAIL = `"Hyra AI" <${process.env.GMAIL_USER}>`;
 
 export const sendOTP = async (email, otp) => {
   try {
-    const { data, error } = await resend.emails.send({
+    const info = await transporter.sendMail({
       from: FROM_EMAIL,
       to: email,
       subject: "Xác thực tài khoản Hyra AI của bạn",
       html: otpEmailTemplate(otp),
     });
 
-    if (error) {
-      console.error("Resend Error:", error);
-      throw new Error("Gửi email thất bại");
-    }
-
-    console.log(`OTP sent to ${email}`, data.id);
+    console.log(`OTP sent to ${email}`, info.messageId);
     return true;
   } catch (error) {
-    console.error("Error sending email:", error);
+    console.error("Nodemailer Error (sendOTP):", error);
     throw new Error("Gửi email thất bại");
   }
 };
 
 export const sendWelcomeEmail = async (email, username, defaultPassword) => {
   try {
-    const { data, error } = await resend.emails.send({
+    const info = await transporter.sendMail({
       from: FROM_EMAIL,
       to: email,
       subject: `Chào mừng ${username} đến với Hyra AI!`,
@@ -47,14 +51,10 @@ export const sendWelcomeEmail = async (email, username, defaultPassword) => {
         : welcomeEmailTemplate(email, username),
     });
 
-    if (error) {
-      console.error("Resend Error:", error);
-      throw new Error("Gửi email thất bại");
-    }
-
+    console.log(`Welcome email sent to ${email}`, info.messageId);
     return true;
   } catch (error) {
-    console.error("Error sending email:", error);
+    console.error("Nodemailer Error (sendWelcomeEmail):", error);
     throw new Error("Gửi email thất bại");
   }
 };
