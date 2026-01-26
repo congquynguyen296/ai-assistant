@@ -9,7 +9,8 @@ import {
   User,
   X,
 } from "lucide-react";
-import { NavLink, useNavigate } from "react-router-dom";
+import Logo from "../../assets/logo.svg";
+import { NavLink, useNavigate, Link } from "react-router-dom";
 
 const Sidebar = ({ isSidebarOpen, toggleSidebar }) => {
   const { logout } = useAuth();
@@ -48,12 +49,16 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar }) => {
         {/* Logo and close button for mobile */}
         <div className="flex items-center justify-between h-16 px-5 border-b border-slate-200/60">
           <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-linear-to-br from-emerald-400 to-teal-500 text-white shadow-md shadow-emerald-500/20">
-              <BrainCircuit
-                className="text-white"
-                size={20}
-                strokeWidth={2.5}
-              />
+            <div className="flex items-center justify-center w-9 h-9">
+              <Link to="/">
+                <img
+                  src={Logo}
+                  alt="logo"
+                  className="text-white"
+                  size={18}
+                  strokeWidth={2.5}
+                />
+              </Link>
             </div>
             <h1 className="text-sm md:text-base font-semibold">
               Hyra - Trợ lý học tập
