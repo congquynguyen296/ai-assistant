@@ -78,7 +78,7 @@ const DocumentListPage = () => {
       fectchDocuments();
     } catch (error) {
       console.error("Tải lên tài liệu thất bại:", error);
-      toast.error("Tải lên tài liệu không thành công");
+      toast.error(error.message || "Tải lên tài liệu không thành công");
     } finally {
       setUploading(false);
     }
@@ -227,7 +227,7 @@ const DocumentListPage = () => {
               {/* File input */}
               <div className="space-y-2">
                 <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wide">
-                  PDF File
+                  File (PDF, DOCX, XLSX)
                 </label>
                 <div className="relative border-2 border-dashed border-slate-300 rounded-xl bg-slate-50/50 hover:border-emerald-400 hover:bg-slate-50/30 cursor-pointer transition-all duration-200">
                   <input
@@ -235,7 +235,7 @@ const DocumentListPage = () => {
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                     id="file-upload"
                     onChange={handleFileChange}
-                    accept=".pdf"
+                    accept=".pdf, .docx, .xlsx"
                   />
                   <div className="flex flex-col items-center justify-center py-10 px-6">
                     <div className="w-14 h-14 rounded-xl bg-linear-to-br from-emerald-100 to-teal-100 flex items-center justify-center mb-4">

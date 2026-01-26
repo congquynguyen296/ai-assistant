@@ -3,7 +3,6 @@ import Quiz from "../models/Quiz.js";
 import Flashcard from "../models/Flashcard.js";
 import ChatHistory from "../models/ChatHistory.js";
 import * as geminiUtil from "../utils/geminiUtil.js";
-import * as groqUtil from "../utils/groqUtil.js";
 
 import { AppError } from "../middlewares/errorHandle.js";
 import { findRelevantChunks } from "../utils/textChunker.js";

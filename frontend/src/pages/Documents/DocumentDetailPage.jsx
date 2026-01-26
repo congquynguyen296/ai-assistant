@@ -7,7 +7,7 @@ import { ArrowLeft } from "lucide-react";
 import PageHeader from "../../components/common/PageHeader";
 import Tabs from "../../components/common/Tabs";
 import ChatInterface from "../../components/chat/ChatInterface";
-import PDFViewer from "../../components/documents/PDFViewer";
+import FileViewer from "../../components/documents/viewers/FileViewer";
 import AIActions from "../../components/ai/AIActions";
 import FlashcardManager from "../../components/flashcards/FlashcardManager";
 import QuizManager from "../../components/quizzes/QuizManager";
@@ -64,8 +64,15 @@ const DocumentDetailPage = () => {
       return <div className="">Không thể hiển thị tài liệu.</div>;
     }
 
-    // const pdfUrl = getFileUrl(document.filePath);
-    return <PDFViewer pdfUrl={document.fileUrl} />;
+    // Use smart FileViewer for PDF, DOCX, etc.
+    return (
+      <FileViewer
+        url={document.fileUrl}
+        mimeType={document.mimeType}
+        fileName={document.fileName}
+        className="min-h-[70vh]"
+      />
+    );
   };
 
   // Render chat AI

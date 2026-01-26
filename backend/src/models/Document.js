@@ -19,12 +19,16 @@ const documentSchema = new mongoose.Schema(
     },
     filePath: {
       type: String,
-      required: [true, "Đường dẫn file không được để trống"],
-    }, // Locaion file at server storage
+      required: [true, "Đường dẫn storage path không được để trống"],
+    }, // Path in Supabase Storage (e.g., userId/file.pdf)
     fileUrl: {
       type: String,
-      required: [true, "URL file không được để trống"],
-    }, // File URL for user access document
+      // URL is dynamic (Signed URL), not stored permanently
+    }, 
+    mimeType: {
+      type: String,
+      default: "application/pdf"
+    },
     fileSize: {
       type: Number,
       required: true,

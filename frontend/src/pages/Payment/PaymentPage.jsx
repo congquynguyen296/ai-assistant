@@ -28,11 +28,10 @@ const PaymentPage = () => {
       period: "trọn đời",
       icon: <Star size={24} />,
       features: [
-        "Tải lên tối đa 3 tài liệu/ngày",
+        "Tải lên không giới hạn tài liệu/ngày",
         "Tạo Flashcard cơ bản",
         "Tạo Quiz trắc nghiệm",
-        "Lưu trữ 100MB",
-        "Hỗ trợ cộng đồng",
+        "Lưu trữ 100MB"
       ],
       buttonText: "Đang sử dụng",
       isPopular: false,
@@ -41,14 +40,13 @@ const PaymentPage = () => {
     {
       name: "Nâng cao",
       description: "Tốt nhất cho học tập",
-      price: "39.000đ",
+      price: "29.600đ",
       period: "tháng",
       icon: <Zap size={24} />,
       features: [
         "Tải lên không giới hạn",
         "Tạo Flashcard & Quiz không giới hạn",
         "Chat với AI thông minh hơn",
-        "Phân tích tiến độ học tập",
         "Lưu trữ 1GB",
         "Hỗ trợ ưu tiên 24/7",
       ],
@@ -66,8 +64,8 @@ const PaymentPage = () => {
       features: [
         "Mọi tính năng của gói Nâng cao",
         "Quản lý thành viên nhóm",
-        "Báo cáo thống kê chi tiết",
-        "Hỗ trợ kỹ thuật 1-1",
+        "Phân tích tiến độ học tập",
+        "Báo cáo thống kê chi tiết"
       ],
       buttonText: "Liên hệ tư vấn",
       isPopular: false,

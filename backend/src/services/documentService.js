@@ -3,65 +3,96 @@ import Document from "../models/Document.js";
 import Flashcard from "../models/Flashcard.js";
 import Quiz from "../models/Quiz.js";
 import { extractTextFromPDF } from "../utils/pdfParser.js";
+import { extractTextFromDOCX, extractTextFromExcel } from "../utils/officeParser.js";
 import { chunkText } from "../utils/textChunker.js";
 import { AppError } from "../middlewares/errorHandle.js";
-import cloudinary from "../config/cloudinary.js";
-import { Readable } from "stream";
+// import cloudinary from "../config/cloudinary.js"; // Old Cloudinary config
+import supabase from "../config/supabase.js"; // New Supabase config
+
+const BUCKET_NAME = "documents";
+
+/**
+ * Helper: Generate Signed URL for Supabase Storage
+ * @param {string} storagePath
+ * @param {number} expiresIn Seconds (default 1h)
+ */
+export const generateSignedUrl = async (storagePath, expiresIn = 3600) => {
+  try {
+    if (!storagePath) return null;
+    const { data, error } = await supabase.storage
+      .from(BUCKET_NAME)
+      .createSignedUrl(storagePath, expiresIn);
+
+    if (error) throw error;
+    return data.signedUrl;
+  } catch (error) {
+    console.error("Error generating signed URL:", error);
+    return null;
+  }
+};
 
 export const uploadDocumentService = async ({ userId, title, file }) => {
   // Generate a new ObjectId for the document
   const documentId = new mongoose.Types.ObjectId();
 
-  // Upload to Cloudinary
+  /* === REMOVED CLOUDINARY LOGIC ===
   const uploadStream = (buffer) => {
     return new Promise((resolve, reject) => {
-      const stream = cloudinary.uploader.upload_stream(
-        {
-          public_id: documentId.toString(), // Just the ID, let folder/asset_folder handle the path
-          folder: `hyra/${userId}`, // For URL structure (legacy/standard)
-          asset_folder: `hyra/${userId}`, // For Media Library folder structure (new)
-          resource_type: "auto",
-          overwrite: true,
-          unique_filename: false,
-        },
-        (error, result) => {
-          if (error) {
-            console.error("[Upload] Cloudinary Error:", error);
-            return reject(error);
-          }
-          resolve(result);
-        }
-      );
+      const stream = cloudinary.uploader.upload_stream(...)
       Readable.from(buffer).pipe(stream);
     });
   };
+  */
 
-  let uploadResult;
+  // === NEW SUPABASE LOGIC ===
+  // Create unique path: userId/timestamp_filename
+  // Sanitize filename to act as a clean storage key
+  const sanitizedFileName = file.originalname.replace(/[^a-zA-Z0-9.-]/g, "_");
+  const storagePath = `${userId}/${Date.now()}_${sanitizedFileName}`;
+
   try {
-    uploadResult = await uploadStream(file.buffer);
+    const { data, error } = await supabase.storage
+      .from(BUCKET_NAME)
+      .upload(storagePath, file.buffer, {
+        contentType: file.mimetype,
+        upsert: false,
+      });
+
+    if (error) throw error;
   } catch (error) {
-    console.error("Cloudinary upload error:", error);
-    throw new AppError("Lỗi khi upload file lên Cloudinary", 500);
+    console.error("Supabase upload error:", error);
+    throw new AppError("Lỗi khi upload file lên Storage", 500);
   }
+
+  // Generate a temporary signed URL to return immediately
+  const signedUrl = await generateSignedUrl(storagePath);
 
   // Create new document record
   const document = await Document.create({
     _id: documentId,
     userId,
     title,
-    fileUrl: uploadResult.secure_url,
+    // For Supabase, we don't store permanent URL.
+    // Legacy Cloudinary docs have fileUrl. New ones will have it null/undefined in DB.
+    fileUrl: null, 
     fileName: file.originalname,
-    filePath: uploadResult.public_id, // Store public_id for deletion
+    filePath: storagePath, // Path in Supabase bucket
     fileSize: file.size,
+    mimeType: file.mimetype,
     status: "processing",
   });
 
-  // Process document in backgroud
-  processDocument(document._id, file.buffer).catch((error) => {
+  // Process document in background (extract text, etc.)
+  // Note: Support PDF, DOCX, XLSX
+  processDocument(document._id, file.buffer, file.mimetype).catch((error) => {
     console.error("Lỗi khi tải tài liệu: ", error);
   });
 
-  return document;
+  // Return object with the signed URL
+  return {
+    ...document.toObject(),
+    fileUrl: signedUrl,
+  };
 };
 
 export const getDocumentByIdService = async ({ userId, documentId }) => {
@@ -88,8 +119,16 @@ export const getDocumentByIdService = async ({ userId, documentId }) => {
   document.lastAccessed = Date.now();
   await document.save();
 
+  // Determine URL (Legacy Cloudinary vs New Supabase)
+  let finalUrl = document.fileUrl;
+  // If fileUrl is null (Post-migration) AND we have filePath, use Supabase Signed URL
+  if (!finalUrl && document.filePath) {
+    finalUrl = await generateSignedUrl(document.filePath);
+  }
+
   return {
     ...document.toObject(),
+    fileUrl: finalUrl,
     flashcardCount,
     quizCount,
   };
@@ -131,8 +170,20 @@ export const getDocumentsService = async ({ userId }) => {
     { $sort: { uploadDate: -1 } },
   ]);
 
+  // Map to add signed URLs for Supabase docs
+  const documentsWithUrls = await Promise.all(
+    documents.map(async (doc) => {
+      let url = doc.fileUrl;
+      // If fileUrl is missing (new Supabase flow), generate signed URL
+      if (!url && doc.filePath) {
+        url = await generateSignedUrl(doc.filePath);
+      }
+      return { ...doc, fileUrl: url };
+    })
+  );
+
   return {
-    documents,
+    documents: documentsWithUrls,
     count: documents.length,
   };
 };
@@ -147,7 +198,13 @@ export const updateDocumentService = async ({ documentId, userId, title }) => {
   document.title = title || document.title;
   await document.save();
 
-  return document;
+  // Return with Signed URL if needed
+  let finalUrl = document.fileUrl;
+  if (!finalUrl && document.filePath) {
+    finalUrl = await generateSignedUrl(document.filePath);
+  }
+
+  return { ...document.toObject(), fileUrl: finalUrl };
 };
 
 export const deleteDocumentService = async ({ documentId, userId }) => {
@@ -156,16 +213,25 @@ export const deleteDocumentService = async ({ documentId, userId }) => {
     throw new AppError("Tài liệu không tồn tại", 404);
   }
 
-  // Delete file from Cloudinary
+  // Delete file from Storage
   if (document.filePath) {
-    try {
-      // Try deleting as image (default for auto/pdf)
-      await cloudinary.uploader.destroy(document.filePath);
-      // If it was raw, we might need to specify resource_type: 'raw'
-      // But since we used 'auto', it's likely 'image' or 'raw'.
-      // We can try both or just ignore error.
-    } catch (error) {
-      console.error("Lỗi khi xóa file trên Cloudinary: ", error);
+    // Check if Cloudinary (has fileUrl) or Supabase (no fileUrl)
+    if (document.fileUrl) {
+      /* === OLD CLOUDINARY ===
+      try {
+        await cloudinary.uploader.destroy(document.filePath);
+      } catch (error) { ... }
+      */
+    } else {
+      // === NEW SUPABASE ===
+      try {
+        const { error } = await supabase.storage
+          .from(BUCKET_NAME)
+          .remove([document.filePath]);
+        if (error) console.error("Supabase delete error:", error);
+      } catch (error) {
+        console.error("Lỗi khi xóa file trên Supabase: ", error);
+      }
     }
   }
 
@@ -178,9 +244,27 @@ export const deleteDocumentService = async ({ documentId, userId }) => {
 };
 
 // Helper function to process document in background
-const processDocument = async (documentId, fileBuffer) => {
+const processDocument = async (documentId, fileBuffer, mimeType) => {
   try {
-    const { text } = await extractTextFromPDF(fileBuffer);
+    let text = "";
+    if (mimeType === "application/pdf") {
+      const result = await extractTextFromPDF(fileBuffer);
+      text = result.text;
+    } else if (
+      mimeType ===
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    ) {
+      text = await extractTextFromDOCX(fileBuffer);
+    } else if (
+      mimeType ===
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    ) {
+      text = await extractTextFromExcel(fileBuffer);
+    }
+
+    if (!text) {
+        throw new Error("Không thể trích xuất văn bản từ tài liệu này.");
+    }
 
     // Create chunks
     const chunks = chunkText(text, 500, 50);
