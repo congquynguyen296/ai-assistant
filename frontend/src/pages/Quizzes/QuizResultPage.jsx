@@ -12,6 +12,27 @@ import {
 import quizService from "../../services/quizService";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
 
+const CORRECT_MESSAGES = [
+  "Quá giỏi, nào gặp anh thưởng.",
+  "Xuất sắc, 11 điểm.",
+  "Đã hee.",
+  "Đủ quao ròi đó.",
+  "Tuyệt vời ông mặt trăng.",
+  "KỸ SƯ HÓA PHÂN TÍCH.",
+  "Đem ngay câu khó hơn tới đây.",
+];
+
+const INCORRECT_MESSAGES = [
+  "Gần đúng rồi, cố lên.",
+  "Tiếc quá, sai một đống thôi.",
+  "Thất bại là bị đòn.",
+  "Cố gắng lần sau nha, nhưng tiếc là bài này làm một lần thôi.",
+  "Không sao, sai thì bị đòn.",
+  "Note lại đi bé iu.",
+  "Rồi xong, chịu mấy cây?",
+  "😌 😌 😌 😌 😌"
+];
+
 const QuizResultPage = () => {
   const { quizId } = useParams();
   const [resultData, setResultData] = useState(null);
@@ -93,7 +114,7 @@ const QuizResultPage = () => {
           {/* Center: Score Circle */}
           <div
             className={`flex flex-col items-center justify-center w-36 h-36 rounded-full border-4 ${getScoreColor(
-              percentage
+              percentage,
             )}`}
           >
             <span className="text-3xl font-bold">{percentage}%</span>
@@ -152,10 +173,23 @@ const QuizResultPage = () => {
                   {item.question}
                 </h3>
 
-                {!item.isCorrect && (
+                {!item.isCorrect ? (
                   <div className="mt-2 text-sm text-red-600 bg-red-50 px-3 py-1.5 rounded-md inline-flex items-center gap-2">
-                    <XCircle className="w-4 h-4" />
-                    Gần đúng rồi, cố lên.
+                    {/* <XCircle className="w-4 h-4" /> */}
+                    {
+                      INCORRECT_MESSAGES[
+                        Math.floor(Math.random() * INCORRECT_MESSAGES.length)
+                      ]
+                    }
+                  </div>
+                ) : (
+                  <div className="mt-2 text-sm text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-md inline-flex items-center gap-2">
+                    {/* <CheckCircle className="w-4 h-4" /> */}
+                    {
+                      CORRECT_MESSAGES[
+                        Math.floor(Math.random() * CORRECT_MESSAGES.length)
+                      ]
+                    }
                   </div>
                 )}
               </div>

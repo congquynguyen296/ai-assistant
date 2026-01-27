@@ -148,7 +148,6 @@ const LoginPage = () => {
             {/* Submit button */}
             <button
               type="submit"
-              onClick={handleSubmit}
               disabled={loading}
               className="group relative w-full h-12 bg-linear-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 active:scale-[0.98] text-white font-semibold rounded-xl transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-emerald-500/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 shadow-lg shadow-emerald-500/25 overflow-hidden"
             >
@@ -200,12 +199,13 @@ const LoginPage = () => {
             <p className="text-center text-sm text-slate-600">
               Chưa có tài khoản?{" "}
               <Link
-                to={"/login"}
+                to={"/register"}
                 className="font-semibold text-emerald-600 hover:text-emerald-700 transition-colors duration-200"
                 onClick={() => {
-                  toast.info(
-                    "Tính năng đang được bảo trì. Chúng tôi xin lỗi vì sự bất tiện này. Bạn có thể đăng ký bằng Google."
-                  );
+                  // toast.info(
+                  //   "Tính năng đang được bảo trì. Chúng tôi xin lỗi vì sự bất tiện này. Bạn có thể đăng ký bằng Google."
+                  // );
+
                 }}
               >
                 Đăng ký
