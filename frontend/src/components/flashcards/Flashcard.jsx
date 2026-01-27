@@ -120,6 +120,25 @@ const Flashcard = ({ flashcardSet, onBack, onUpdateSet }) => {
     }
   };
 
+  // Handle keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.code === "Space") {
+        e.preventDefault(); // Prevent page scrolling
+        handleFlipCard();
+      } else if (e.key === "ArrowLeft") {
+        handlePrevCard();
+      } else if (e.key === "ArrowRight") {
+        handleNextCard();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [currentCardIndex, isFlipped, flashcardSet]); // Re-attach when state changes
+
   if (!flashcardSet || !flashcardSet.cards || flashcardSet.cards.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16">

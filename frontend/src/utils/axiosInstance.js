@@ -33,9 +33,9 @@ axiosInstance.interceptors.response.use(
   (error) => {
     console.error('API Error:', error.response?.status, error.response?.data || error.message);
     if (error.response) {
-      if (error.response.status === 401) {
+      if (error.response.status === 401 && window.location.pathname !== "/login") {
         localStorage.removeItem("token");
-        window.location.href = "/auth/login";
+        window.location.href = "/login";
       } else if (error.response.status === 500) {
         console.error(`Lỗi hệ thống: ${error.response.data.message}`);
       }
