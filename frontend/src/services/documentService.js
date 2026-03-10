@@ -39,6 +39,18 @@ const deleteDocument = async (documentId) => {
   }
 };
 
+const renameDocument = async (documentId, title) => {
+  try {
+    const response = await axiosInstance.put(
+      API_PATHS.DOCUMENTS.RENAME_DOCUMENT(documentId),
+      { title }
+    );
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || "Đổi tên tài liệu thất bại";
+  }
+};
+
 const getDocumentById = async (documentId) => {
   try {
     const response = await axiosInstance.get(
@@ -55,5 +67,6 @@ const documentService = {
   uploadDocument,
   deleteDocument,
   getDocumentById,
+  renameDocument,
 };
 export default documentService;

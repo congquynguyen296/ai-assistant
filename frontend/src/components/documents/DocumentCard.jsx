@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
 import moment from "moment";
-import { BookOpen, BrainCircuit, Clock, FileText, Trash2 } from "lucide-react";
-import Button from "../common/Button";
+import { BookOpen, BrainCircuit, Clock, FileText, MoreVertical, Pencil, Trash2 } from "lucide-react";
 
 // Func to format file size
 const formatFileSize = (bytes) => {
@@ -19,8 +19,10 @@ const formatFileSize = (bytes) => {
   return `${size.toFixed(1)} ${units[unitIndex]}`;
 };
 
-const DocumentCard = ({ document, onDelete }) => {
+const DocumentCard = ({ document, onDelete, onRename }) => {
   const navigate = useNavigate();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef(null);
 
   const handleNavigate = () => {
     navigate(`/documents/${document._id}`);
@@ -28,8 +30,34 @@ const DocumentCard = ({ document, onDelete }) => {
 
   const handleDelete = (e) => {
     e.stopPropagation();
+    setMenuOpen(false);
     onDelete(document);
   };
+
+  const handleRename = (e) => {
+    e.stopPropagation();
+    setMenuOpen(false);
+    onRename(document);
+  };
+
+  const toggleMenu = (e) => {
+    e.stopPropagation();
+    setMenuOpen((prev) => !prev);
+  };
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setMenuOpen(false);
+      }
+    };
+    if (menuOpen) {
+      window.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => window.removeEventListener("mousedown", handleClickOutside);
+  }, [menuOpen]);
+
   return (
     <div
       className="group relative bg-white/80 backdrop-blur-xl border border-slate-200/60 rounded-2xl p-5 hover:border-emerald-600/50 transition-all duration-300 flex flex-col justify-between cursor-pointer"
@@ -41,13 +69,34 @@ const DocumentCard = ({ document, onDelete }) => {
           <div className="shrink-0 w-12 h-12 bg-linear-to-br from-emerald-500 to-cyan-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-500/25 group-hover:scale-100 transition-transform duration-300">
             <FileText className="w-6 h-6 text-white" strokeWidth={2} />
           </div>
-          <button
-            onClick={handleDelete}
-            className="opacity-0 group-hover:opacity-100 w-8 h-8 flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all duration-200 cursor-pointer"
-            title="Xóa tài liệu"
-          >
-            <Trash2 className="w-4 h-4" strokeWidth={2} />
-          </button>
+          {/* 3-dot menu */}
+          <div ref={menuRef} className="relative">
+            <button
+              onClick={toggleMenu}
+              className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-all duration-200 cursor-pointer"
+            >
+              <MoreVertical className="w-4 h-4" strokeWidth={2} />
+            </button>
+
+            {menuOpen && (
+              <div className="absolute right-0 top-9 z-20 w-44 bg-white border border-slate-200 rounded-xl shadow-lg shadow-slate-200/50 py-1 overflow-hidden">
+                <button
+                  onClick={handleRename}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors duration-150"
+                >
+                  <Pencil className="w-4 h-4 text-slate-400" strokeWidth={2} />
+                  Đổi tên
+                </button>
+                <button
+                  onClick={handleDelete}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors duration-150"
+                >
+                  <Trash2 className="w-4 h-4 text-red-500" strokeWidth={2} />
+                  Xóa tài liệu
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Title */}
