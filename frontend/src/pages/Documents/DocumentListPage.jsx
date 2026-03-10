@@ -256,7 +256,7 @@ const DocumentListPage = () => {
                         </>
                       )}
                     </p>
-                    <p className="text-xs text-slate-500">Hỗ trợ tối đa 10MB</p>
+                    <p className="text-xs text-slate-500">Hỗ trợ tối đa 20MB</p>
                   </div>
                 </div>
               </div>

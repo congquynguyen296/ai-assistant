@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js"
+    "dev": "nodemon --exec \"node --env-file=.env.development\" server.js",
+    "dev:prod": "nodemon --exec \"node --env-file=.env\" server.js"
   },
   "license": "MIT",
   "dependencies": {
@@ -29,6 +30,7 @@
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
+    "cross-env": "^10.1.0",
     "nodemon": "^3.1.11"
   }
 }

@@ -4,9 +4,10 @@ import { useAuth } from "../../context/AuthContext";
 import { toast } from "sonner";
 import authService from "../../services/authService";
 import { validateLogin } from "../../utils/validation";
-import { ArrowRight, BrainCircuit, Lock, Mail } from "lucide-react";
+import { ArrowRight, Lock, Mail } from "lucide-react";
 import GoogleButton from "../../components/auth/GoogleButton";
 import FacebookButton from "../../components/auth/FacebookButton";
+import Logo from "../../assets/logo.svg";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
@@ -69,8 +70,8 @@ const LoginPage = () => {
         <div className="bg-white/80 backdrop-blur-xl border border-slate-200/60 shadow-xl shadow-slate-200/50 p-10 rounded-2xl">
           {/* Header */}
           <div className="text-center mb-10">
-            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-linear-to-br from-emerald-400 to-emerald-500 shadow-lg shadow-emerald-500/25 mb-6">
-              <BrainCircuit className="w-7 h-7 text-white" strokeWidth={2} />
+            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-6">
+              <img src={Logo} className="w-14 h-14" />
             </div>
             <h1 className="text-2xl font-medium text-slate-900 tracking-tight mb-2">
               Chào mừng trở lại

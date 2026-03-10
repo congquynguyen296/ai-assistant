@@ -5,6 +5,8 @@ import App from "./App.jsx";
 import { AuthProvider } from "./context/AuthContext.jsx";
 import { Toaster } from "sonner";
 
+console.log(`[ENV] Running in mode: ${import.meta.env.MODE}`);
+
 const rootElement = document.getElementById("root");
 
 if (rootElement) {
