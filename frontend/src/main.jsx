@@ -11,7 +11,7 @@ const rootElement = document.getElementById("root");
 if (rootElement) {
   createRoot(rootElement).render(
     <AuthProvider>
-      <Toaster richColors position="top-right" duration={3000} />
+      <Toaster richColors position="top-center" duration={3000} />
       <App />
     </AuthProvider>
   );

@@ -1,7 +1,17 @@
 import { useNavigate } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import moment from "moment";
-import { BookOpen, BrainCircuit, Clock, FileText, MoreVertical, Pencil, Trash2 } from "lucide-react";
+import {
+  BookOpen,
+  BrainCircuit,
+  Clock,
+  FileText,
+  MoreVertical,
+  Pencil,
+  Trash2,
+  Share2,
+} from "lucide-react";
+import { toast } from "sonner";
 
 // Func to format file size
 const formatFileSize = (bytes) => {
@@ -38,6 +48,12 @@ const DocumentCard = ({ document, onDelete, onRename }) => {
     e.stopPropagation();
     setMenuOpen(false);
     onRename(document);
+  };
+
+  const handleShare = (e) => {
+    e.stopPropagation();
+    setMenuOpen(false);
+    toast.info("Chức năng chia sẻ đang được phát triển. Vui lòng chờ cập nhật!");
   };
 
   const toggleMenu = (e) => {
@@ -79,13 +95,20 @@ const DocumentCard = ({ document, onDelete, onRename }) => {
             </button>
 
             {menuOpen && (
-              <div className="absolute right-0 top-9 z-20 w-44 bg-white border border-slate-200 rounded-xl shadow-lg shadow-slate-200/50 py-1 overflow-hidden">
+              <div className="absolute right-4 top-10 z-20 w-50 bg-white border border-slate-200 rounded-xl shadow-lg shadow-slate-200/50 py-1 overflow-hidden">
                 <button
                   onClick={handleRename}
                   className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors duration-150"
                 >
                   <Pencil className="w-4 h-4 text-slate-400" strokeWidth={2} />
                   Đổi tên
+                </button>
+                <button
+                  onClick={handleShare}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors duration-150"
+                >
+                  <Share2 className="w-4 h-4 text-slate-400" strokeWidth={2} />
+                  Chia sẻ
                 </button>
                 <button
                   onClick={handleDelete}
