@@ -1,12 +1,9 @@
 import nodemailer from "nodemailer";
-import dotenv from "dotenv";
 import {
   otpEmailTemplate,
   welcomeEmailTemplate,
   welcomeWithGoogleEmailTemplate,
 } from "../templates/emails/authTemplate.js";
-
-dotenv.config();
 
 // Remove spaces from GMAIL_PASS if present
 const gmailPass = process.env.GMAIL_PASS

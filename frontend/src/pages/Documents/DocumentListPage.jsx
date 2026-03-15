@@ -23,6 +23,11 @@ const DocumentListPage = () => {
   const [selectedDocument, setSelectedDocument] = useState(null);
   const [deleting, setDeleting] = useState(false);
 
+  // State for rename modal
+  const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
+  const [renameTitle, setRenameTitle] = useState("");
+  const [renaming, setRenaming] = useState(false);
+
   if (loading) {
     return <LoadingSpinner />;
   }
@@ -90,6 +95,34 @@ const DocumentListPage = () => {
     setIsDeleteModalOpen(true);
   };
 
+  // Handle rename request function
+  const handleRenameRequest = (document) => {
+    setSelectedDocument(document);
+    setRenameTitle(document.title || "");
+    setIsRenameModalOpen(true);
+  };
+
+  // Handle confirm rename function
+  const handleConfirmRename = async (e) => {
+    e.preventDefault();
+    if (!renameTitle.trim() || !selectedDocument) return;
+    setRenaming(true);
+    try {
+      await documentService.renameDocument(selectedDocument._id, renameTitle.trim());
+      toast.success("Đổi tên tài liệu thành công");
+      setDocuments(documents.map((doc) =>
+        doc._id === selectedDocument._id ? { ...doc, title: renameTitle.trim() } : doc
+      ));
+      setIsRenameModalOpen(false);
+      setSelectedDocument(null);
+    } catch (error) {
+      console.error("Đổi tên tài liệu thất bại:", error);
+      toast.error("Đổi tên tài liệu không thành công");
+    } finally {
+      setRenaming(false);
+    }
+  };
+
   // Handle confirm delete function
   const handleConfirmDelete = async () => {
     if (!selectedDocument) return;
@@ -150,6 +183,7 @@ const DocumentListPage = () => {
             key={document._id}
             document={document}
             onDelete={handleDeleteRequest}
+            onRename={handleRenameRequest}
           />
         ))}
       </div>
@@ -256,7 +290,7 @@ const DocumentListPage = () => {
                         </>
                       )}
                     </p>
-                    <p className="text-xs text-slate-500">Hỗ trợ tối đa 10MB</p>
+                    <p className="text-xs text-slate-500">Hỗ trợ tối đa 20MB</p>
                   </div>
                 </div>
               </div>
@@ -285,6 +319,55 @@ r:to-teal-600 text-white rounded-xl text-sm font-semibold shadow-lg shadow-emera
                     </span>
                   ) : (
                     "Tải lên"
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Rename modal */}
+      {isRenameModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+          <div className="relative w-full max-w-md bg-white/95 backdrop-blur-xl border border-slate-200/60 rounded-2xl shadow-lg shadow-slate-900/20 p-6">
+            <h2 className="text-xl font-medium text-slate-900 tracking-tight mb-1">
+              Đổi tên tài liệu
+            </h2>
+            <p className="text-sm text-slate-500 mb-5">
+              Nhập tên mới cho tài liệu
+            </p>
+            <form onSubmit={handleConfirmRename} className="space-y-4">
+              <input
+                type="text"
+                value={renameTitle}
+                onChange={(e) => setRenameTitle(e.target.value)}
+                required
+                autoFocus
+                className="w-full h-11 px-4 border border-slate-300 rounded-xl bg-slate-50/50 text-slate-900 text-sm font-medium focus:outline-none focus:border-emerald-500 focus:bg-white transition-all duration-200"
+                placeholder="Nhập tên mới..."
+              />
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => { setIsRenameModalOpen(false); setSelectedDocument(null); }}
+                  disabled={renaming}
+                  className="flex-1 h-11 px-4 border-2 border-slate-200 rounded-xl bg-white text-slate-700 text-sm font-semibold hover:bg-slate-50 hover:border-slate-300 transition-all duration-200 disabled:opacity-50"
+                >
+                  Hủy
+                </button>
+                <button
+                  type="submit"
+                  disabled={renaming || !renameTitle.trim()}
+                  className="flex-1 h-11 px-4 bg-linear-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white rounded-xl text-sm font-semibold shadow-lg shadow-emerald-500/25 transition-all duration-200 disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {renaming ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      Đang lưu...
+                    </span>
+                  ) : (
+                    "Lưu"
                   )}
                 </button>
               </div>

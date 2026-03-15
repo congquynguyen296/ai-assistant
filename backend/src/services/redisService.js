@@ -2,7 +2,7 @@ import redisClient from "../config/redis.js";
 
 class RedisService {
   constructor() {
-    this.refreshTtl = 300; // Default 5 minutes
+    this.refreshTtl = parseInt(process.env.REDIS_TTL || 3600);
   }
 
   /**
@@ -79,26 +79,14 @@ class RedisService {
   async setField(key, field, value) {
     try {
       let meta = await this.getObject(key);
-      if (meta === null) {
+
+      if (!meta || typeof meta !== "object") {
         meta = {};
-      } else if (typeof meta !== "object") {
-        // If existing value is not an object, we can't set a field on it easily
-        // unless we overwrite it. Assuming we treat it as a map/object.
-        meta = { originalValue: meta };
       }
 
-      // Update field
       meta[field] = value;
 
-      // Get current TTL
-      let ttl = await redisClient.ttl(key);
-
-      // If key doesn't exist or has no TTL (-1), use default refreshTtl
-      // ttl = -2 means key does not exist
-      // ttl = -1 means key exists but has no expiry
-      const timeout = ttl === -2 || ttl === -1 ? this.refreshTtl : ttl;
-
-      await this.setObject(key, meta, timeout);
+      await this.setObject(key, meta, this.refreshTtl);
     } catch (e) {
       console.error(`Error setting field ${field} for key ${key}:`, e);
       throw e;

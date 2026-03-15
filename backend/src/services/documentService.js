@@ -3,11 +3,14 @@ import Document from "../models/Document.js";
 import Flashcard from "../models/Flashcard.js";
 import Quiz from "../models/Quiz.js";
 import { extractTextFromPDF } from "../utils/pdfParser.js";
-import { extractTextFromDOCX, extractTextFromExcel } from "../utils/officeParser.js";
+import {
+  extractTextFromDOCX,
+  extractTextFromExcel,
+} from "../utils/officeParser.js";
 import { chunkText } from "../utils/textChunker.js";
 import { AppError } from "../middlewares/errorHandle.js";
-// import cloudinary from "../config/cloudinary.js"; // Old Cloudinary config
-import supabase from "../config/supabase.js"; // New Supabase config
+import supabase from "../config/supabase.js";
+import { redisService } from "./redisService.js";
 
 const BUCKET_NAME = "documents";
 
@@ -31,18 +34,13 @@ export const generateSignedUrl = async (storagePath, expiresIn = 3600) => {
   }
 };
 
+// TODO:
+// 1. Add pagination for getDocumentsService
+// 2. Refactor to use Redis for caching document metadata and extracted text for faster access
+// 3. Implement background job processing (e.g., BullMQ) for document processing to improve responsiveness
 export const uploadDocumentService = async ({ userId, title, file }) => {
   // Generate a new ObjectId for the document
   const documentId = new mongoose.Types.ObjectId();
-
-  /* === REMOVED CLOUDINARY LOGIC ===
-  const uploadStream = (buffer) => {
-    return new Promise((resolve, reject) => {
-      const stream = cloudinary.uploader.upload_stream(...)
-      Readable.from(buffer).pipe(stream);
-    });
-  };
-  */
 
   // === NEW SUPABASE LOGIC ===
   // Create unique path: userId/timestamp_filename
@@ -72,9 +70,7 @@ export const uploadDocumentService = async ({ userId, title, file }) => {
     _id: documentId,
     userId,
     title,
-    // For Supabase, we don't store permanent URL.
-    // Legacy Cloudinary docs have fileUrl. New ones will have it null/undefined in DB.
-    fileUrl: null, 
+    fileUrl: null,
     fileName: file.originalname,
     filePath: storagePath, // Path in Supabase bucket
     fileSize: file.size,
@@ -96,6 +92,19 @@ export const uploadDocumentService = async ({ userId, title, file }) => {
 };
 
 export const getDocumentByIdService = async ({ userId, documentId }) => {
+  // Check in redis cache first
+  const cacheKey = `document:${userId}:${documentId}`;
+  const cacheData = await redisService.getObject(cacheKey);
+
+  if (cacheData) {
+    console.log(`Cache HIT for document ${documentId} (key: ${cacheKey})`);
+    return cacheData;
+  }
+
+  // If not found, query MongoDB
+  console.log(
+    `Cache MISS for document ${documentId} (key: ${cacheKey}), querying MongoDB`,
+  );
   const document = await Document.findOne({
     _id: documentId,
     userId,
@@ -119,22 +128,39 @@ export const getDocumentByIdService = async ({ userId, documentId }) => {
   document.lastAccessed = Date.now();
   await document.save();
 
-  // Determine URL (Legacy Cloudinary vs New Supabase)
+  // Resolve file URL (handle both Cloudinary and Supabase)
   let finalUrl = document.fileUrl;
-  // If fileUrl is null (Post-migration) AND we have filePath, use Supabase Signed URL
   if (!finalUrl && document.filePath) {
     finalUrl = await generateSignedUrl(document.filePath);
   }
 
-  return {
+  const response = {
     ...document.toObject(),
     fileUrl: finalUrl,
     flashcardCount,
     quizCount,
   };
+
+  // Save to Redis cache with TTL
+  await redisService.setObject(cacheKey, response, process.env.REDIS_TTL);
+  console.log(`Document ${documentId} cached in Redis with key ${cacheKey}`);
+
+  return response;
 };
 
 export const getDocumentsService = async ({ userId }) => {
+  // Check in redis cache first
+  const cacheKey = `documents:${userId}`;
+  const cacheDate = await redisService.getObject(cacheKey);
+
+  if (cacheDate) {
+    console.log(`Cache HIT for documents list (key: ${cacheKey})`);
+    return cacheDate;
+  }
+
+  console.log(
+    `Cache MISS for documents list (key: ${cacheKey}), querying MongoDB`,
+  );
   const documents = await Document.aggregate([
     { $match: { userId: new mongoose.Types.ObjectId(userId) } },
     {
@@ -179,15 +205,24 @@ export const getDocumentsService = async ({ userId }) => {
         url = await generateSignedUrl(doc.filePath);
       }
       return { ...doc, fileUrl: url };
-    })
+    }),
   );
 
-  return {
+  const response = {
     documents: documentsWithUrls,
     count: documents.length,
   };
+
+  // Save to Redis cache with TTL
+  await redisService.setObject(cacheKey, response, process.env.REDIS_TTL);
+  console.log(`Documents list cached in Redis with key ${cacheKey}`);
+
+  return response;
 };
 
+// TODO:
+// 1. Clear cached document
+// 2. Có thể tham khảo cách vào cache redis và xóa đúng phần tử bị xóa thay vì xóa toàn bộ cache
 export const updateDocumentService = async ({ documentId, userId, title }) => {
   const document = await Document.findOne({ _id: documentId, userId });
   if (!document) {
@@ -207,6 +242,9 @@ export const updateDocumentService = async ({ documentId, userId, title }) => {
   return { ...document.toObject(), fileUrl: finalUrl };
 };
 
+// TODO:
+// 1. Clear cached document
+// 2. Có thể tham khảo cách vào cache redis và xóa đúng phần tử bị xóa thay vì xóa toàn bộ cache
 export const deleteDocumentService = async ({ documentId, userId }) => {
   const document = await Document.findOne({ _id: documentId, userId });
   if (!document) {
@@ -215,16 +253,7 @@ export const deleteDocumentService = async ({ documentId, userId }) => {
 
   // Delete file from Storage
   if (document.filePath) {
-    // Check if Cloudinary (has fileUrl) or Supabase (no fileUrl)
-    if (document.fileUrl) {
-      /* === OLD CLOUDINARY ===
-      try {
-        await cloudinary.uploader.destroy(document.filePath);
-      } catch (error) { ... }
-      */
-    } else {
-      // === NEW SUPABASE ===
-      try {
+    try {
         const { error } = await supabase.storage
           .from(BUCKET_NAME)
           .remove([document.filePath]);
@@ -232,7 +261,6 @@ export const deleteDocumentService = async ({ documentId, userId }) => {
       } catch (error) {
         console.error("Lỗi khi xóa file trên Supabase: ", error);
       }
-    }
   }
 
   // Optionally, delete related flashcards and quizzes
@@ -263,7 +291,7 @@ const processDocument = async (documentId, fileBuffer, mimeType) => {
     }
 
     if (!text) {
-        throw new Error("Không thể trích xuất văn bản từ tài liệu này.");
+      throw new Error("Không thể trích xuất văn bản từ tài liệu này.");
     }
 
     // Create chunks

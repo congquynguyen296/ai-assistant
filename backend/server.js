@@ -1,4 +1,3 @@
-import dotenv from "dotenv";
 import express from "express";
 import cors from "cors";
 import path from "path";
@@ -13,9 +12,6 @@ import aiRoutes from "./src/routes/aiRoutes.js";
 import quizRoutes from "./src/routes/quizRoutes.js";
 import processRoutes from "./src/routes/progressRoute.js";
 
-// Load env variables
-dotenv.config();
-
 // ES6 module __dirname alternative
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -25,6 +21,7 @@ const app = express();
 
 // Connect db
 await connectDB();
+
 // Connect Redis
 await connectRedis();
 
@@ -34,24 +31,24 @@ app.use(
     origin: function (origin, callback) {
       // Allow requests with no origin (mobile apps, curl, postman)
       if (!origin) return callback(null, true);
-      
+
       const allowedOrigins = [
-        // "https://hyra-six.vercel.app",
+        "https://hyra-six.vercel.app",
         "http://localhost:5173",
         "http://localhost:3000",
       ];
-      
+
       // Allow all Vercel preview deployments
-      if (origin.endsWith('.vercel.app') || allowedOrigins.includes(origin)) {
+      if (origin.endsWith(".vercel.app") || allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
-      
-      return callback(new Error('Not allowed by CORS'));
+
+      return callback(new Error("Not allowed by CORS"));
     },
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
-  })
+  }),
 );
 
 app.use(express.json());

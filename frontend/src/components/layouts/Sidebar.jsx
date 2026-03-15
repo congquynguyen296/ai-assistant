@@ -47,14 +47,14 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar }) => {
         }`}
       >
         {/* Logo and close button for mobile */}
-        <div className="flex items-center justify-between h-16 px-5 border-b border-slate-200/60">
+        <div className="flex items-center min-h-16 justify-between px-5 border-b border-slate-200/60">
           <div className="flex items-center gap-3">
             <div className="flex items-center justify-center w-9 h-9">
               <Link to="/">
                 <img
                   src={Logo}
                   alt="logo"
-                  className="text-white"
+                  className="text-white h-9 w-auto"
                   size={18}
                   strokeWidth={2.5}
                 />
