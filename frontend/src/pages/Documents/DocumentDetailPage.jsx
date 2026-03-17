@@ -6,7 +6,7 @@ import LoadingSpinner from "../../components/common/LoadingSpinner";
 import { ArrowLeft } from "lucide-react";
 import PageHeader from "../../components/common/PageHeader";
 import Tabs from "../../components/common/Tabs";
-import ChatInterface from "../../components/chat/ChatInterface";
+import ChatInterface from "../../components/messages/ChatInterface";
 import FileViewer from "../../components/documents/viewers/FileViewer";
 import AIActions from "../../components/ai/AIActions";
 import FlashcardManager from "../../components/flashcards/FlashcardManager";

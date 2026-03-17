@@ -6,6 +6,7 @@ import {
   FileText,
   LayoutDashboard,
   LogOut,
+  MessageCircle,
   User,
   X,
 } from "lucide-react";
@@ -26,6 +27,7 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar }) => {
     { to: "/dashboard", icon: LayoutDashboard, text: "Thống kê" },
     { to: "/documents", icon: FileText, text: "Tài liệu" },
     // { to: "/flashcards", icon: BookOpen, text: "Thẻ ghi nhớ" },
+    { to: "/messages", icon: MessageCircle, text: "Tin nhắn" },
     { to: "/quizzes", icon: BrainCircuit, text: "Trắc nghiệm" },
     { to: "/payment", icon: Banknote, text: "Thanh toán" },
     { to: "/profile", icon: User, text: "Cá nhân" },
