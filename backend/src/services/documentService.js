@@ -78,6 +78,9 @@ export const uploadDocumentService = async ({ userId, title, file }) => {
     status: "processing",
   });
 
+  // Invalidate documents list cache
+  await invalidateDocumentsListCache(userId);
+
   // Process document in background (extract text, etc.)
   // Note: Support PDF, DOCX, XLSX
   processDocument(document._id, file.buffer, file.mimetype).catch((error) => {
@@ -142,7 +145,7 @@ export const getDocumentByIdService = async ({ userId, documentId }) => {
   };
 
   // Save to Redis cache with TTL
-  await redisService.setObject(cacheKey, response, process.env.REDIS_TTL);
+  await redisService.setObject(cacheKey, response);
   console.log(`Document ${documentId} cached in Redis with key ${cacheKey}`);
 
   return response;
@@ -214,15 +217,12 @@ export const getDocumentsService = async ({ userId }) => {
   };
 
   // Save to Redis cache with TTL
-  await redisService.setObject(cacheKey, response, process.env.REDIS_TTL);
+  await redisService.setObject(cacheKey, response);
   console.log(`Documents list cached in Redis with key ${cacheKey}`);
 
   return response;
 };
 
-// TODO:
-// 1. Clear cached document
-// 2. Có thể tham khảo cách vào cache redis và xóa đúng phần tử bị xóa thay vì xóa toàn bộ cache
 export const updateDocumentService = async ({ documentId, userId, title }) => {
   const document = await Document.findOne({ _id: documentId, userId });
   if (!document) {
@@ -233,6 +233,14 @@ export const updateDocumentService = async ({ documentId, userId, title }) => {
   document.title = title || document.title;
   await document.save();
 
+  // Invalidate documents list cache
+  await invalidateDocumentsListCache(userId);
+
+  // Invalidate document detail cache
+  const cacheKey = `document:${userId}:${documentId}`;
+  await redisService.deleteObject(cacheKey);
+  console.log(`Invalidated cache for document ${documentId} (key: ${cacheKey})`);
+
   // Return with Signed URL if needed
   let finalUrl = document.fileUrl;
   if (!finalUrl && document.filePath) {
@@ -242,9 +250,6 @@ export const updateDocumentService = async ({ documentId, userId, title }) => {
   return { ...document.toObject(), fileUrl: finalUrl };
 };
 
-// TODO:
-// 1. Clear cached document
-// 2. Có thể tham khảo cách vào cache redis và xóa đúng phần tử bị xóa thay vì xóa toàn bộ cache
 export const deleteDocumentService = async ({ documentId, userId }) => {
   const document = await Document.findOne({ _id: documentId, userId });
   if (!document) {
@@ -254,13 +259,13 @@ export const deleteDocumentService = async ({ documentId, userId }) => {
   // Delete file from Storage
   if (document.filePath) {
     try {
-        const { error } = await supabase.storage
-          .from(BUCKET_NAME)
-          .remove([document.filePath]);
-        if (error) console.error("Supabase delete error:", error);
-      } catch (error) {
-        console.error("Lỗi khi xóa file trên Supabase: ", error);
-      }
+      const { error } = await supabase.storage
+        .from(BUCKET_NAME)
+        .remove([document.filePath]);
+      if (error) console.error("Supabase delete error:", error);
+    } catch (error) {
+      console.error("Lỗi khi xóa file trên Supabase: ", error);
+    }
   }
 
   // Optionally, delete related flashcards and quizzes
@@ -269,6 +274,24 @@ export const deleteDocumentService = async ({ documentId, userId }) => {
 
   // Delete document record
   await document.deleteOne();
+
+  // Invalidate documents list cache
+  await invalidateDocumentsListCache(userId);
+};
+
+// Helper function to invalidate documents list cache for a user
+const invalidateDocumentsListCache = async (userId) => {
+  const cacheKey = `documents:${userId}`;
+  try {
+    await redisService.deleteObject(cacheKey);
+    console.log(`Invalidated documents list cache (key: ${cacheKey})`);
+  } catch (error) {
+    // Do not block the main flow if cache invalidation fails.
+    console.error(
+      `Failed to invalidate documents cache (key: ${cacheKey})`,
+      error,
+    );
+  }
 };
 
 // Helper function to process document in background
