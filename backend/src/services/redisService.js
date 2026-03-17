@@ -2,7 +2,26 @@ import redisClient from "../config/redis.js";
 
 class RedisService {
   constructor() {
-    this.refreshTtl = parseInt(process.env.REDIS_TTL || 3600);
+    this.defaultTtl = 3600;
+    this.refreshTtl = this.normalizeTtl(process.env.REDIS_TTL);
+  }
+
+  /**
+   * Normalize TTL value (seconds) to a safe positive integer.
+   * @param {string|number|undefined|null} ttl
+   * @returns {number}
+   */
+  normalizeTtl(ttl) {
+    if (ttl === undefined || ttl === null || ttl === "") {
+      return this.defaultTtl;
+    }
+
+    const parsed = Number.parseInt(ttl, 10);
+    if (Number.isNaN(parsed) || parsed <= 0) {
+      return this.defaultTtl;
+    }
+
+    return parsed;
   }
 
   /**
@@ -27,7 +46,7 @@ class RedisService {
    * Set object in Redis with TTL
    * @param {string} key
    * @param {any} value
-   * @param {number} timeout in seconds
+   * @param {number|string} timeout in seconds
    */
   async setObject(key, value, timeout) {
     if (value === null || value === undefined) {
@@ -36,10 +55,11 @@ class RedisService {
 
     try {
       const json = JSON.stringify(value);
-      await redisClient.setEx(key, timeout, json);
+      const ttl = this.normalizeTtl(timeout);
+      await redisClient.setEx(key, ttl, json);
     } catch (e) {
       console.error(`Error setting object for key ${key}:`, e);
-      throw new Error("Failed to serialize object to JSON", e);
+      throw new Error(`Failed to cache object in Redis: ${e.message}`);
     }
   }
 
@@ -111,7 +131,7 @@ class RedisService {
       return obj[field];
     } catch (e) {
       console.error(`Error getting field ${field} for key ${key}:`, e);
-      throw new Error("Failed to deserialize field value", e);
+      throw new Error(`Failed to deserialize field value: ${e.message}`);
     }
   }
 
