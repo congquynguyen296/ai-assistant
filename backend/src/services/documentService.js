@@ -144,9 +144,14 @@ export const getDocumentByIdService = async ({ userId, documentId }) => {
     quizCount,
   };
 
-  // Save to Redis cache with TTL
-  await redisService.setObject(cacheKey, response);
-  console.log(`Document ${documentId} cached in Redis with key ${cacheKey}`);
+  if (response._id) {
+    try {
+      await redisService.setObject(cacheKey, response);
+      console.log(`Document ${documentId} cached in Redis (key: ${cacheKey})`);
+    } catch (cacheErr) {
+      console.warn(`Failed to cache document ${documentId}:`, cacheErr.message);
+    }
+  }
 
   return response;
 };
@@ -216,9 +221,16 @@ export const getDocumentsService = async ({ userId }) => {
     count: documents.length,
   };
 
-  // Save to Redis cache with TTL
-  await redisService.setObject(cacheKey, response);
-  console.log(`Documents list cached in Redis with key ${cacheKey}`);
+  if (response.count > 0) {
+    try {
+      await redisService.setObject(cacheKey, response);
+      console.log(`Documents list cached in Redis (key: ${cacheKey}), count: ${response.count}`);
+    } catch (cacheErr) {
+      console.warn(`Failed to cache documents list:`, cacheErr.message);
+    }
+  } else {
+    console.log(`Documents list is empty (key: ${cacheKey}), skipping cache.`);
+  }
 
   return response;
 };

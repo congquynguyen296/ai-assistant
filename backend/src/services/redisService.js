@@ -6,11 +6,6 @@ class RedisService {
     this.refreshTtl = this.normalizeTtl(process.env.REDIS_TTL);
   }
 
-  /**
-   * Normalize TTL value (seconds) to a safe positive integer.
-   * @param {string|number|undefined|null} ttl
-   * @returns {number}
-   */
   normalizeTtl(ttl) {
     if (ttl === undefined || ttl === null || ttl === "") {
       return this.defaultTtl;
@@ -24,11 +19,19 @@ class RedisService {
     return parsed;
   }
 
-  /**
-   * Get object from Redis
-   * @param {string} key
-   * @returns {Promise<any>}
-   */
+  isEmptyValue(value) {
+    if (value === null || value === undefined) return true;
+    if (Array.isArray(value) && value.length === 0) return true;
+    if (
+      typeof value === "object" &&
+      !Array.isArray(value) &&
+      Object.keys(value).length === 0
+    )
+      return true;
+    if (typeof value === "string" && value.trim() === "") return true;
+    return false;
+  }
+
   async getObject(key) {
     try {
       const json = await redisClient.get(key);
@@ -42,15 +45,10 @@ class RedisService {
     }
   }
 
-  /**
-   * Set object in Redis with TTL
-   * @param {string} key
-   * @param {any} value
-   * @param {number|string} timeout in seconds
-   */
   async setObject(key, value, timeout) {
-    if (value === null || value === undefined) {
-      throw new Error("Do not set object: value is null or undefined");
+    if (this.isEmptyValue(value)) {
+      console.warn(`setObject skipped for key "${key}": value is empty or null.`);
+      return;
     }
 
     try {
@@ -63,10 +61,6 @@ class RedisService {
     }
   }
 
-  /**
-   * Delete object from Redis
-   * @param {string} key
-   */
   async deleteObject(key) {
     try {
       await redisClient.del(key);
@@ -75,11 +69,6 @@ class RedisService {
     }
   }
 
-  /**
-   * Check if key exists
-   * @param {string} key
-   * @returns {Promise<boolean>}
-   */
   async exists(key) {
     try {
       const count = await redisClient.exists(key);
@@ -90,12 +79,6 @@ class RedisService {
     }
   }
 
-  /**
-   * Update a specific field in the stored object
-   * @param {string} key
-   * @param {string} field
-   * @param {any} value
-   */
   async setField(key, field, value) {
     try {
       let meta = await this.getObject(key);
@@ -113,17 +96,8 @@ class RedisService {
     }
   }
 
-  /**
-   * Get a specific field from the stored object
-   * @param {string} key
-   * @param {string} field
-   * @returns {Promise<any>}
-   */
   async getField(key, field) {
     try {
-      // Note: The Java implementation used opsForHash().get() which implies a Redis Hash.
-      // However, setObject uses opsForValue().set() (JSON string).
-      // To be consistent with setObject, we retrieve the JSON and access the field.
       const obj = await this.getObject(key);
       if (!obj) {
         return null;
@@ -135,11 +109,6 @@ class RedisService {
     }
   }
 
-  /**
-   * Get TTL of a key
-   * @param {string} key
-   * @returns {Promise<number>}
-   */
   async getTtl(key) {
     try {
       return await redisClient.ttl(key);
