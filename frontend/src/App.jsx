@@ -73,7 +73,7 @@ export default function App() {
           />
 
           <Route path="/payment" element={<PaymentPage />} />
-          <Route path="/messages" element={<MessagePage />} />
+          {/* <Route path="/messages" element={<MessagePage />} /> */}
 
           <Route path="/quizzes" element={<QuizzesPage />} />
           <Route path="/quizzes/:quizId" element={<QuizTakePage />} />

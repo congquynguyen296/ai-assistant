@@ -15,7 +15,7 @@ const INITIAL_CONVERSATIONS = [
   },
   {
     id: "conv-2",
-    name: "Nguyễn Linh",
+    name: "MyHuyen",
     time: "11:18",
     members: "Online 20 phút trước",
     avatar:
