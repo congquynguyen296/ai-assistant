@@ -180,7 +180,7 @@ const ProfilePage = () => {
 
   const GeneralTab = (
     <div className="max-w-2xl mx-auto">
-      <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm space-y-8">
+      <div className="bg-white border border-slate-200 rounded-2xl p-5 md:p-8 shadow-sm space-y-8">
         <div className="flex flex-col items-center gap-4">
           <div
             className={`relative group cursor-pointer select-none transition-all duration-200 ${isDragging ? "scale-105" : ""}`}
@@ -285,7 +285,7 @@ const ProfilePage = () => {
           </div>
 
           <div className="pt-2 flex justify-end">
-            <Button type="submit" disabled={loading}>
+            <Button type="submit" disabled={loading} className="w-full sm:w-auto">
               {loading ? (
                 <>Đang lưu...</>
               ) : (
@@ -303,7 +303,7 @@ const ProfilePage = () => {
 
   const SecurityTab = (
     <div className="max-w-2xl mx-auto">
-      <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm">
+      <div className="bg-white border border-slate-200 rounded-2xl p-5 md:p-8 shadow-sm">
         <div className="flex items-start gap-3 mb-6 p-4 rounded-xl bg-blue-50 border border-blue-100">
           <CheckCircle2 size={18} className="text-blue-500 mt-0.5 shrink-0" />
           <p className="text-sm text-blue-700">
@@ -381,7 +381,7 @@ const ProfilePage = () => {
           )}
 
           <div className="pt-2 flex justify-end">
-            <Button type="submit" disabled={loading}>
+            <Button type="submit" disabled={loading} className="w-full sm:w-auto">
               {loading ? (
                 <>Đang cập nhật...</>
               ) : (
@@ -406,7 +406,7 @@ const ProfilePage = () => {
     <div className="relative min-h-screen w-full bg-slate-50/50">
       <div className="absolute inset-0 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] bg-[size:16px_16px] pointer-events-none z-0" />
 
-      <div className="relative z-10 max-w-5xl mx-auto p-6">
+      <div className="relative z-10 max-w-5xl mx-auto p-4 md:p-6">
         <PageHeader
           title="Hồ sơ cá nhân"
           subTitle="Quản lý thông tin và bảo mật tài khoản của bạn"

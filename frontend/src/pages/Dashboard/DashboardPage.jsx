@@ -113,7 +113,7 @@ const DashboardPage = () => {
         </div>
 
         {/* Recent activity */}
-        <div className="bg-white/80 backdrop-blur-xl boder border-slate-200/60 rounded-2xl shadow-xl shadow-slate-200/50 p-6">
+        <div className="bg-white/80 backdrop-blur-xl border border-slate-200/60 rounded-2xl shadow-xl shadow-slate-200/50 p-4 sm:p-6">
           <div className="flex items-center gap-3 mb-6">
             <div className="h-10 w-10 rounded-xl bg-linear-to-br from-slate-100 to-slate-200 flex items-center justify-center">
               <Clock className="w-5 h-5 text-slate-600" strokeWidth={2} />

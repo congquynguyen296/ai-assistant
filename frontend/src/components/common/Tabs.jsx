@@ -1,8 +1,8 @@
 const Tabs = ({ tabs, activeTab, setActiveTab }) => {
   return (
     <div className="w-full">
-      <div className="relative border-b-2 border-slate-100">
-        <nav className="flex gap-2">
+      <div className="relative border-b-2 border-slate-100 overflow-x-auto">
+        <nav className="flex gap-2 min-w-max">
           {tabs.map((tab) => (
             <button
               key={tab.name}

@@ -266,7 +266,7 @@ const ChatInterface = () => {
                 }
               }
             }}
-            placeholder="Hỏi bất kỳ điều gì trong tài liệu"
+            placeholder="Hỏi bất kỳ điều gì"
             className="flex-1 min-h-12 max-h-32 py-3 px-4 border-2 border-slate-200 rounded-xl bg-slate-50/50 text-slate-900 placeholder-slate-400 text-sm font-medium focus:outline-none focus:border-emerald-500 transition-all duration-200 resize-none overflow-y-auto"
             disabled={loading}
             rows={1}

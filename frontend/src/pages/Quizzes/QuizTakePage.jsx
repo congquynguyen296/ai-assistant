@@ -188,7 +188,7 @@ const QuizTakePage = () => {
   const currentQuestion = quiz.questions[currentQuestionIndex];
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-8">
+    <div className="max-w-5xl mx-auto px-4 py-4 md:py-8">
       <StartQuizModal
         isOpen={showStartModal}
         onClose={() => navigate(-1)}
@@ -311,18 +311,43 @@ const QuizTakePage = () => {
           </div>
         </div>
 
-        {/* Footer Nav */}
-        <div className="p-4 border-t border-slate-100 bg-slate-50 rounded-b-xl flex items-center justify-between">
-          <button
-            onClick={() =>
-              setCurrentQuestionIndex((prev) => Math.max(0, prev - 1))
-            }
-            disabled={currentQuestionIndex === 0}
-            className="flex items-center gap-2 px-4 py-2 text-slate-600 font-medium hover:bg-white hover:text-slate-900 hover:shadow-sm rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Trước
-          </button>
+        {/* Footer Nav & Question Grid */}
+        <div className="p-4 border-t border-slate-100 bg-slate-50 rounded-b-xl flex flex-col gap-4">
+          
+          {/* Question Number Grid */}
+          <div className="flex flex-wrap gap-2 justify-center pb-2 border-b border-slate-200/60 pb-4 mb-2">
+            {quiz.questions.map((_, idx) => {
+              const isAnswered = selectedAnswers[idx] !== undefined;
+              const isActive = currentQuestionIndex === idx;
+              return (
+                <button
+                  key={idx}
+                  onClick={() => setCurrentQuestionIndex(idx)}
+                  className={`w-8 h-8 rounded-lg text-xs font-semibold flex items-center justify-center transition-all duration-200 ${
+                    isActive
+                      ? "bg-emerald-600 text-white shadow-md shadow-emerald-500/20 ring-2 ring-emerald-600 ring-offset-2"
+                      : isAnswered
+                      ? "bg-emerald-100/80 text-emerald-700 border border-emerald-200 hover:bg-emerald-200"
+                      : "bg-white text-slate-500 border border-slate-200 hover:border-emerald-300 hover:text-emerald-600"
+                  }`}
+                >
+                  {idx + 1}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="flex items-center justify-between">
+            <button
+              onClick={() =>
+                setCurrentQuestionIndex((prev) => Math.max(0, prev - 1))
+              }
+              disabled={currentQuestionIndex === 0}
+              className="flex items-center gap-2 px-4 py-2 text-slate-600 font-medium hover:bg-white hover:text-slate-900 hover:shadow-sm rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span className="hidden sm:inline">Trước</span>
+            </button>
 
           {currentQuestionIndex === quiz.questions.length - 1 ? (
             <button
@@ -339,12 +364,14 @@ const QuizTakePage = () => {
                   Math.min(quiz.questions.length - 1, prev + 1)
                 )
               }
-              className="flex items-center gap-2 px-6 py-2 bg-slate-800 hover:bg-slate-900 text-white font-medium rounded-lg shadow-sm transition-all text-sm"
+              className="flex items-center gap-2 px-4 sm:px-6 py-2 bg-slate-800 hover:bg-slate-900 text-white font-medium rounded-lg shadow-sm transition-all text-sm"
             >
-              Tiếp theo
+              <span className="hidden sm:inline">Tiếp theo</span>
+              <span className="sm:hidden">Tiếp</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           )}
+          </div>
         </div>
       </div>
     </div>

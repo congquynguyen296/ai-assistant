@@ -73,7 +73,7 @@ const AIActions = () => {
         <div className="p-6 space-y-6">
           {/* Generate summary */}
           <div className="group p-5 bg-linear-to-br from-slate-50/50 to-white rounded-xl border border-slate-200/60 hover:border-slate-300/60 hover:shadow-md transition-all duration-200">
-            <div className="flex items-center justify-center gap-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="w-8 h-8 rounded-lg bg-linear-to-br from-blue-50 to-cyan-100 flex items-center justify-center">
@@ -89,7 +89,7 @@ const AIActions = () => {
                 </p>
               </div>
               <button
-                className="shrink-0 h-10 px-5 bg-linear-to-r from-teal-500 to-teal-600 text-white rounded-xl text-sm font-semibold transition-all duration-200 shadow-lg shadow-blue-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full sm:w-auto shrink-0 h-10 px-5 bg-linear-to-r from-teal-500 to-teal-600 text-white rounded-xl text-sm font-semibold transition-all duration-200 shadow-lg shadow-blue-500/25 disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center"
                 onClick={handleGenerateSummary}
                 disabled={loadingAction === "summary"}
               >
