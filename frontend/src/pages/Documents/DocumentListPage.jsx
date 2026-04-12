@@ -196,7 +196,7 @@ const DocumentListPage = () => {
       <div className="absolute inset-0 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] bg-size-[16px_16px] pointer-events-none z-0" />
       <div className="relative max-w-7xl mx-auto">
         {/* Header */}
-        <div className="flex items-center justify-between mb-10">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-10">
           <div>
             <h1 className="text-2xl font-medium text-slate-900 tracking-tight mb-2">
               Quản lý tài liệu
@@ -209,10 +209,12 @@ const DocumentListPage = () => {
             </p>
           </div>
           {documents && documents.length > 0 && (
-            <Button onClick={() => setIsUploadModalOpen(true)}>
-              <Plus className="w-4 h-4" strokeWidth={2.5} />
-              Tải lên
-            </Button>
+            <div className="w-full sm:w-auto">
+              <Button onClick={() => setIsUploadModalOpen(true)} className="w-full sm:w-auto">
+                <Plus className="w-4 h-4" strokeWidth={2.5} />
+                Tải lên
+              </Button>
+            </div>
           )}
         </div>
 
@@ -222,7 +224,7 @@ const DocumentListPage = () => {
       {/* Upload modal */}
       {isUploadModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
-          <div className="relative w-full max-w-lg bg-white/95 backdrop-blur-xl border border-slate-200/60 rounded-2xl shadow-lg shadow-slate-900/20 p-4">
+          <div className="relative w-full max-w-lg bg-white/95 backdrop-blur-xl border border-slate-200/60 rounded-2xl shadow-lg shadow-slate-900/20 p-5 sm:p-6">
             {/* Close button */}
             <button
               className="absolute top-6 right-6 h-8 w-8 flex items-center justify-center rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all duration-200"
@@ -330,7 +332,7 @@ r:to-teal-600 text-white rounded-xl text-sm font-semibold shadow-lg shadow-emera
       {/* Rename modal */}
       {isRenameModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
-          <div className="relative w-full max-w-md bg-white/95 backdrop-blur-xl border border-slate-200/60 rounded-2xl shadow-lg shadow-slate-900/20 p-6">
+          <div className="relative w-full max-w-md bg-white/95 backdrop-blur-xl border border-slate-200/60 rounded-2xl shadow-lg shadow-slate-900/20 p-5 sm:p-6">
             <h2 className="text-xl font-medium text-slate-900 tracking-tight mb-1">
               Đổi tên tài liệu
             </h2>

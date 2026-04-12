@@ -160,12 +160,10 @@ export const updateProfile = async (req, res, next) => {
     }
 
     const { username, profileImage } = req.body;
-    if (!username || !profileImage) {
+    if (!username) {
       return res.status(400).json({
         success: false,
-        error: !username
-          ? "Username không được trống"
-          : "Profile image không được trống",
+        error: "Username không được trống",
         statusCode: 400,
       });
     }
@@ -205,9 +203,9 @@ export const changePassword = async (req, res, next) => {
     if (!currentPassword || !newPassword) {
       return res.status(400).json({
         success: false,
-        error: !changePassword
-          ? "Mật khẩu hiện tại không được trống"
-          : "Mật khẩu mới không được trống",
+        error: !currentPassword
+          ? "Mật khẩu hiện tại không được trống"
+          : "Mật khẩu mới không được trống",
         statusCode: 400,
       });
     }

@@ -43,7 +43,7 @@ const Header = ({ toggleSidebar }) => {
 
   return (
     <header className="sticky top-0 z-30 w-full h-16 bg-white/80 backdrop-blur-xl border-b border-slate-200">
-      <div className="flex items-center justify-between h-full px-6">
+      <div className="flex items-center justify-between h-full px-4 md:px-6">
         {/* Mobile menu */}
         <button
           onClick={toggleSidebar}
@@ -100,11 +100,11 @@ const Header = ({ toggleSidebar }) => {
                   <User size={20} strokeWidth={2.5} />
                 </div>
               )}
-              <div>
+              <div className="hidden sm:block">
                 <p className="text-sm font-semibold text-slate-900">
                   {user ? user.username : "User"}
                 </p>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-slate-500 max-w-[150px] truncate">
                   {user?.email || "user@example.com"}
                 </p>
               </div>

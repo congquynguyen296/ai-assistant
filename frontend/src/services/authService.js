@@ -81,15 +81,15 @@ const updateProfile = async (userData) => {
   }
 };
 
-const changePassword = async (oldPassword, newPassword) => {
+const changePassword = async (currentPassword, newPassword) => {
   try {
-    const response = await axiosInstance.post(API_PATHS.AUTH.CHANGE_PASSWORD, {
-      oldPassword,
+    const response = await axiosInstance.put(API_PATHS.AUTH.CHANGE_PASSWORD, {
+      currentPassword,
       newPassword,
     });
     return response.data;
   } catch (error) {
-    throw error.response?.data || "Thay đổi mật khẩu thất bại";
+    throw error.response?.data || "Thay đổi mật khẩu thất bại";
   }
 };
 

@@ -1,0 +1,21 @@
+# Python virtual environment
+venv/
+.venv/
+env/
+__pycache__/
+*.pyc
+*.pyo
+
+# ChromaDB persistent storage
+chroma_db/
+
+# Sentence-transformers model cache
+.cache/
+models/
+
+# Environment files
+.env
+
+# IDE
+.vscode/
+.idea/

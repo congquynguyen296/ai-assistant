@@ -11,6 +11,7 @@ import { chunkText } from "../utils/textChunker.js";
 import { AppError } from "../middlewares/errorHandle.js";
 import supabase from "../config/supabase.js";
 import { redisService } from "./redisService.js";
+import { ingestDocument, deleteDocumentVectors } from "./ragClientService.js";
 
 const BUCKET_NAME = "documents";
 
@@ -144,9 +145,14 @@ export const getDocumentByIdService = async ({ userId, documentId }) => {
     quizCount,
   };
 
-  // Save to Redis cache with TTL
-  await redisService.setObject(cacheKey, response);
-  console.log(`Document ${documentId} cached in Redis with key ${cacheKey}`);
+  if (response._id) {
+    try {
+      await redisService.setObject(cacheKey, response);
+      console.log(`Document ${documentId} cached in Redis (key: ${cacheKey})`);
+    } catch (cacheErr) {
+      console.warn(`Failed to cache document ${documentId}:`, cacheErr.message);
+    }
+  }
 
   return response;
 };
@@ -216,9 +222,16 @@ export const getDocumentsService = async ({ userId }) => {
     count: documents.length,
   };
 
-  // Save to Redis cache with TTL
-  await redisService.setObject(cacheKey, response);
-  console.log(`Documents list cached in Redis with key ${cacheKey}`);
+  if (response.count > 0) {
+    try {
+      await redisService.setObject(cacheKey, response);
+      console.log(`Documents list cached in Redis (key: ${cacheKey}), count: ${response.count}`);
+    } catch (cacheErr) {
+      console.warn(`Failed to cache documents list:`, cacheErr.message);
+    }
+  } else {
+    console.log(`Documents list is empty (key: ${cacheKey}), skipping cache.`);
+  }
 
   return response;
 };
@@ -275,6 +288,11 @@ export const deleteDocumentService = async ({ documentId, userId }) => {
   // Delete document record
   await document.deleteOne();
 
+  // ── RAG: remove vectors from Qdrant Cloud (fire-and-forget) ─────────────────
+  deleteDocumentVectors(String(documentId)).catch((err) => {
+    console.error(`[RAG] deleteDocumentVectors failed for ${documentId}:`, err.message);
+  });
+
   // Invalidate documents list cache
   await invalidateDocumentsListCache(userId);
 };
@@ -327,7 +345,14 @@ const processDocument = async (documentId, fileBuffer, mimeType) => {
       status: "ready",
     });
 
-    console.log(`Xử lý tài liệu ${documentId} hoàn tất`);
+    console.log(`Xử lý tài liệu ${documentId} hoàn tất`);
+
+    // ── RAG: push vectors to Qdrant Cloud (fire-and-forget) ──────────────────
+    // Runs after MongoDB is already updated — failure here never affects document status.
+    const ragDoc = await Document.findById(documentId).select("fileName").lean();
+    ingestDocument(String(documentId), ragDoc?.fileName || "unknown", text).catch((err) => {
+      console.error(`[RAG] ingestDocument failed for ${documentId}:`, err.message);
+    });
   } catch (error) {
     console.error("Lỗi khi xử lý tài liệu: ", error);
 

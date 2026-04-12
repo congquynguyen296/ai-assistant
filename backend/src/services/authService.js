@@ -159,7 +159,10 @@ export const updateProfileService = async ({
 
   // Update fields
   user.username = username || user.username;
-  user.profileImage = profileImage || user.profileImage;
+  // Allow clearing the image by sending explicit empty string
+  if (profileImage !== undefined) {
+    user.profileImage = profileImage || null;
+  }
 
   await user.save();
 
