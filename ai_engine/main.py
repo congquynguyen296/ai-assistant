@@ -71,6 +71,16 @@ class IngestRequest(BaseModel):
 
 # ── Routes ────────────────────────────────────────────────────────────────────
 
+@app.get("/health-check", tags=["Health"])
+def root():
+    """Root endpoint for basic liveness probes."""
+    return {"message": "AI Engine is running", "status": "ok"}
+
+@app.head("/", tags=["Health"])
+def root_head():
+    """HEAD method for faster platform ping checks."""
+    return {}
+
 @app.get("/health", response_model=HealthResponse, tags=["Health"])
 def health_check():
     """Liveness + readiness check. Returns Qdrant collection stats."""
