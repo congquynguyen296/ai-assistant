@@ -428,13 +428,18 @@ export const generateSummary = async (text, language) => {
  * - If the answer is not in the context, respond with "I don't know" (or in the same language).
  * @param {string} question
  * @param {Array<{content: string}>} chunks
+ * @param {string} [ragContextText]
  * @returns {Promise<string>}
  */
-export const chatWithContext = async (question, chunks) => {
-  // Chuẩn bị context
-  const contextText = chunks
-    .map((c) => `[Trang ${c.pageNumber || 0}]:\n${c.content}`)
-    .join("\n\n---\n\n");
+export const chatWithContext = async (question, chunks, ragContextText = null) => {
+  // Chuẩn bị context:
+  // - Nếu có ragContextText (từ RAG semantic search) → dùng trực tiếp (chất lượng cao hơn)
+  // - Fallback: xây dựng context từ mảng chunks (keyword-search hoặc full-doc)
+  const contextText = ragContextText
+    ? ragContextText
+    : chunks
+        .map((c) => `[Trang ${c.pageNumber || 0}]:\n${c.content}`)
+        .join("\n\n---\n\n");
 
   const prompt = `
     Bạn là một trợ lý AI thông minh, chuyên về phân tích tài liệu, nhưng có tính cách thân thiện, cởi mở và tự nhiên (như một người đồng nghiệp giỏi).

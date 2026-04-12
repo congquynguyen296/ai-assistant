@@ -1,4 +1,4 @@
-# AI Assistant Frontend
+# AI Assistant - Frontend UI
 
 Giao diện người dùng cho ứng dụng AI Assistant, được xây dựng bằng React và Vite, tập trung vào trải nghiệm học tập thông minh với Flashcards và Quizzes.
 

@@ -1,4 +1,4 @@
-# AI Assistant Backend
+# AI Assistant - Backend API
 
 Backend API cho ứng dụng AI Assistant, cung cấp các tính năng quản lý tài liệu, tạo flashcard/quiz tự động bằng AI, và hệ thống xác thực người dùng.
 

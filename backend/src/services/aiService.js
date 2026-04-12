@@ -6,6 +6,7 @@ import * as geminiUtil from "../utils/geminiUtil.js";
 
 import { AppError } from "../middlewares/errorHandle.js";
 import { findRelevantChunks } from "../utils/textChunker.js";
+import { retrieveContext } from "./ragClientService.js";
 
 export const generateFlashcardsService = async ({
   userId,
@@ -115,12 +116,29 @@ export const chatService = async ({ userId, documentId, question }) => {
   });
 
   if (!document) {
-    throw new AppError("Tài liệu không tồn tại", 404);
+    throw new AppError("Tài liệu không tồn tại", 404);
   }
 
-  const relevantChunks = findRelevantChunks(document.chunks, question, 3);
+  // ── RAG: try semantic retrieval first ──────────────────────────────────────────
+  let ragContext = await retrieveContext(documentId, question, 8);
 
-  const chunkIndices = relevantChunks.map((chunk) => chunk.chunkIndex);
+  let relevantChunks;
+  let chunkIndices;
+  let contextForGemini;
+
+  if (ragContext) {
+    // RAG path — semantic search succeeded
+    console.log(`[chatService] RAG strategy: ${ragContext.strategy_used} — ${ragContext.chunks?.length} chunks`);
+    contextForGemini = ragContext.context_text;
+    chunkIndices = ragContext.chunks?.map((c) => c.chunk_index) ?? [];
+    relevantChunks = null; // not used in RAG path
+  } else {
+    // Fallback — Python service down or document not yet indexed
+    console.log(`[chatService] RAG unavailable — falling back to keyword search.`);
+    relevantChunks = findRelevantChunks(document.chunks, question, 3);
+    chunkIndices = relevantChunks.map((chunk) => chunk.chunkIndex);
+    contextForGemini = null; // geminiUtil will build context from chunks array
+  }
 
   let chatHistory = await ChatHistory.findOne({
     userId,
@@ -135,7 +153,10 @@ export const chatService = async ({ userId, documentId, question }) => {
     });
   }
 
-  const answer = await geminiUtil.chatWithContext(question, relevantChunks);
+  // Call Gemini with whichever context path is active
+  const answer = ragContext
+    ? await geminiUtil.chatWithContext(question, null, contextForGemini)
+    : await geminiUtil.chatWithContext(question, relevantChunks);
 
   chatHistory.messages.push(
     {
@@ -178,12 +199,27 @@ export const explainConceptService = async ({
     status: "ready",
   });
   if (!document) {
-    throw new AppError("Tài liệu không tồn tại", 404);
+    throw new AppError("Tài liệu không tồn tại", 404);
   }
 
-  // Find revalant chunks
-  const revalantChunks = findRelevantChunks(document.chunks, concept, 3);
-  const context = revalantChunks.map((chunk) => chunk.content).join("\n\n");
+  // ── RAG: try semantic retrieval first ──────────────────────────────────────────
+  let ragContext = await retrieveContext(documentId, concept, 5);
+
+  let context;
+  let relevantChunkIndices;
+
+  if (ragContext) {
+    // RAG path
+    console.log(`[explainConceptService] RAG strategy: ${ragContext.strategy_used}`);
+    context = ragContext.context_text;
+    relevantChunkIndices = ragContext.chunks?.map((c) => c.chunk_index) ?? [];
+  } else {
+    // Fallback — keyword search
+    console.log(`[explainConceptService] RAG unavailable — falling back to keyword search.`);
+    const relevantChunks = findRelevantChunks(document.chunks, concept, 3);
+    context = relevantChunks.map((chunk) => chunk.content).join("\n\n");
+    relevantChunkIndices = relevantChunks.map((chunk) => chunk.chunkIndex);
+  }
 
   // Generate explanation using Gemini API
   const explanation = await geminiUtil.explainConcept(concept, context);
@@ -191,7 +227,7 @@ export const explainConceptService = async ({
   return {
     concept,
     explanation,
-    revalantChunks: revalantChunks.map((chunk) => chunk.chunkIndex),
+    revalantChunks: relevantChunkIndices,
   };
 };
 
