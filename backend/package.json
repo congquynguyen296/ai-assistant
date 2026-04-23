@@ -1,12 +1,13 @@
 {
   "name": "backend",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "dist/server.js",
   "type": "module",
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon --exec \"node --env-file=.env.development\" server.js",
-    "dev:prod": "nodemon --exec \"node --env-file=.env\" server.js"
+    "build": "tsc -p tsconfig.json && tsc-alias -p tsconfig.json",
+    "start": "node dist/server.js",
+    "dev": "tsx watch --env-file=.env.development server.ts",
+    "dev:prod": "tsx watch --env-file=.env server.ts"
   },
   "license": "MIT",
   "dependencies": {
@@ -30,7 +31,20 @@
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
+    "@types/bcrypt": "^5.0.2",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/jsonwebtoken": "^9.0.6",
+    "@types/multer": "^1.4.11",
+    "@types/node": "^20.12.8",
+    "@types/nodemailer": "^6.4.14",
+    "@types/pdf-parse": "^1.1.4",
     "cross-env": "^10.1.0",
-    "nodemon": "^3.1.11"
+    "nodemon": "^3.1.11",
+    "ts-node": "^10.9.2",
+    "tsc-alias": "^1.8.10",
+    "tsconfig-paths": "^4.2.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.6.3"
   }
 }

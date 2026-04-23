@@ -65,12 +65,7 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar }) => {
               Hyra - Trợ lý học tập
             </h1>
           </div>
-          <button
-            className="md:hidden text-slate-500 hover:text-slate-50"
-            onClick={toggleSidebar}
-          >
-            <X size={24} />
-          </button>
+
         </div>
 
         {/* Navigation */}

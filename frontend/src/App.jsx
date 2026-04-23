@@ -18,6 +18,7 @@ import QuizTakePage from "@/pages/Quizzes/QuizTakePage";
 import QuizResultPage from "@/pages/Quizzes/QuizResultPage";
 import QuizReviewPage from "@/pages/Quizzes/QuizReviewPage";
 import QuizzesPage from "@/pages/Quizzes/QuizzesPage";
+import StudyRoomPage from "@/pages/StudyRooms/StudyRoomPage";
 import { useAuth } from "@/context/AuthContext";
 import DashboardPage from "./pages/Dashboard/DashboardPage";
 import ProfilePage from "./pages/Profile/ProfilePage";
@@ -79,6 +80,7 @@ export default function App() {
           <Route path="/quizzes/:quizId" element={<QuizTakePage />} />
           <Route path="/quizzes/:quizId/review" element={<QuizReviewPage />} />
           <Route path="/quizzes/:quizId/result" element={<QuizResultPage />} />
+          <Route path="/study-rooms/:roomId" element={<StudyRoomPage />} />
         </Route>
 
         <Route path="*" element={<NotFoundPage />} />

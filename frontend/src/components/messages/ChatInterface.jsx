@@ -2,10 +2,11 @@ import { useEffect, useRef, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useParams } from "react-router-dom";
 import aiService from "../../services/aiService";
-import { MessageSquare, Send, Sparkles, Trash2 } from "lucide-react";
+import { MessageSquare, Send, Trash2 } from "lucide-react";
 import MarkdownRenderer from "../common/MarkdownRerender";
 import ConfirmModal from "../common/ConfirmModal";
 import { toast } from "sonner";
+import logo from "../../assets/logo.svg";
 
 const ChatInterface = () => {
   // Define props and state
@@ -50,6 +51,14 @@ const ChatInterface = () => {
 
   // Scroll to bottom helper
   const messageEndRef = useRef(null);
+  const formatTime = (timestamp) => {
+    if (!timestamp) return "";
+    return new Date(timestamp).toLocaleTimeString("vi-VN", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
   const scrollToBottom = () => {
     if (messageEndRef.current) {
       messageEndRef.current.scrollIntoView({ behavior: "smooth" });
@@ -137,24 +146,24 @@ const ChatInterface = () => {
     return (
       <div
         key={index}
-        className={`flex items-start gap-3 my-4 ${
+        className={`flex items-end gap-3 my-5 ${
           isUser ? "justify-end" : "justify-start"
         }`}
       >
         {/* 1. AI Avatar (Chỉ hiện bên TRÁI khi KHÔNG phải user) */}
         {!isUser && (
-          <div className="w-9 h-9 rounded-xl bg-linear-to-br from-emerald-400 to-teal-500 shadow-lg shadow-emerald-500/25 flex items-center justify-center shrink-0">
-            <Sparkles className="w-4 h-4 text-white" strokeWidth={2} />
+          <div className="w-9 h-9 rounded-xl bg-white border border-emerald-200 shadow-lg shadow-emerald-500/15 flex items-center justify-center shrink-0 p-1">
+            <img src={logo} alt="Hyra" className="w-full h-full object-contain" />
           </div>
         )}
 
         {/* 2. Message Bubble (Nội dung tin nhắn) */}
         <div
-          className={`max-w-lg p-4 rounded-2xl shadow-sm
+          className={`max-w-2xl p-4 rounded-2xl shadow-sm backdrop-blur-sm
             ${
               isUser
-                ? "bg-linear-to-br from-emerald-400 to-teal-500 text-white rounded-br-md"
-                : "bg-white border border-slate-200/60 rounded-bl-md"
+                ? "bg-linear-to-br from-emerald-500 to-teal-500 text-white rounded-br-md shadow-emerald-500/25"
+                : "bg-white/95 border border-slate-200/70 rounded-bl-md shadow-slate-200/70"
             }`}
         >
           {isUser ? (
@@ -164,12 +173,19 @@ const ChatInterface = () => {
               <MarkdownRenderer content={msg.content} />
             </div>
           )}
+          <p
+            className={`mt-2 text-[11px] ${
+              isUser ? "text-emerald-50/90" : "text-slate-400"
+            }`}
+          >
+            {formatTime(msg.timestamp)}
+          </p>
         </div>
 
         {/* 3. User Avatar (Chỉ hiện bên PHẢI khi LÀ user) */}
         {isUser && (
           <div className="w-9 h-9 rounded-xl bg-linear-to-br from-slate-200 to-slate-300 flex items-center justify-center text-slate-700 font-semibold text-sm shrink-0 shadow-sm">
-            {(user?.username?.charAt(0) || "U").toUpperCase()}
+            {user?.profileImage ? <img src={user.profileImage} alt="User Avatar" className="w-full h-full object-cover rounded-xl" /> : "U"}
           </div>
         )}
       </div>
@@ -179,7 +195,7 @@ const ChatInterface = () => {
   // Return UI
   if (initialLoading) {
     return (
-      <div className="flex flex-col h-[70vh] bg-white/80 backdrop-blur-xl border border-slate-200/60 rounded-2xl items-center justify-center shadow-xl shadow-slate-200/50">
+      <div className="flex flex-col h-[70vh] bg-white/90 backdrop-blur-xl border border-slate-200/60 rounded-3xl items-center justify-center shadow-xl shadow-slate-200/50">
         <div className="w-14 h-14 flex items-center justify-center bg-linear-to-br from-emerald-100 to-teal-100 rounded-2xl ">
           <MessageSquare className="w-7 h-7 text-emerald-600" strokeWidth={2} />
         </div>
@@ -191,21 +207,45 @@ const ChatInterface = () => {
   }
 
   return (
-    <div className="flex flex-col h-[70vh] bg-white/80 backdrop-blur-xl border border-slate-200/60 rounded-2xl p-6 shadow-xl shadow-slate-200/50 overflow-hidden">
+    <div className="flex flex-col h-[72vh] bg-white/90 backdrop-blur-xl border border-slate-200/70 rounded-3xl shadow-2xl shadow-slate-200/50 overflow-hidden">
+      <div className="px-6 py-4 border-b border-slate-200/70 bg-linear-to-r from-white via-emerald-50/40 to-teal-50/40">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div>
+              <h3 className="text-sm font-semibold text-slate-900">Hyra</h3>
+              <p className="text-xs text-slate-500">
+                Trò chuyện theo ngữ cảnh tài liệu của bạn
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={handleDeleteRequest}
+            className="shrink-0 h-10 px-3 bg-white hover:bg-rose-50 border border-slate-200 hover:border-rose-200 rounded-xl flex items-center gap-2 text-slate-600 hover:text-rose-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            title="Xóa lịch sử chat"
+          >
+            <Trash2 className="w-4 h-4" strokeWidth={2} />
+            <span className="text-xs font-medium">Xóa chat</span>
+          </button>
+        </div>
+      </div>
+
       {/* Message area */}
-      <div className="flex-1 overflow-y-auto p-6 bg-linear-to-br from-slate-50/50 via-white/50 to-slate-50/50">
+      <div className="flex-1 overflow-y-auto px-6 py-5 bg-linear-to-br from-slate-50/70 via-white to-slate-100/50">
         {history.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center">
-            <div className="w-16 h-16 rounded-2xl bg-linear-to-br from-emerald-100 to-teal-100 flex items-center justify-center mb-4 shadow-lg shadow-emerald-200/50">
+            <div className="w-20 h-20 rounded-3xl bg-linear-to-br from-emerald-100 to-teal-100 flex items-center justify-center mb-5 shadow-lg shadow-emerald-200/50">
               <MessageSquare
-                className="w-8 h-8 text-emerald-600"
+                className="w-9 h-9 text-emerald-600"
                 strokeWidth={2}
               />
             </div>
-            <h3 className="text-base font-semibold text-slate-900 mb-2">
+            <h3 className="text-lg font-semibold text-slate-900 mb-2">
               Bắt đầu cuộc trò chuyện
             </h3>
-            <p className="text-sm text-slate-500">Embee một ngày tốt lành 💚 </p>
+            <p className="text-sm text-slate-500 max-w-md">
+              Hỏi bất kỳ điều gì liên quan đến tài liệu. AI sẽ trả lời dựa trên
+              nội dung đã được phân tích.
+            </p>
           </div>
         ) : (
           history.map(renderMessages)
@@ -216,10 +256,10 @@ const ChatInterface = () => {
 
         {loading && (
           <div className="flex items-center gap-3 my-4">
-            <div className="w-9 h-9 rounded-xl bg-linear-to-br from-emerald-500 to-teal-500 flex items-center justify-center shadow-lg shadow-emerald-500/25">
-              <Sparkles className="w-4 h-4 text-white" strokeWidth={2} />
+            <div className="w-9 h-9 rounded-xl bg-white border border-emerald-200 flex items-center justify-center shadow-lg shadow-emerald-500/15 p-1">
+              <img src={logo} alt="Hyra" className="w-full h-full object-contain" />
             </div>
-            <div className="flex items-center gap-2 px-4 py-3 rounded-2xl rounded-bl-md bg-white border border-slate-200/60">
+            <div className="flex items-center gap-2 px-4 py-3 rounded-2xl rounded-bl-md bg-white border border-slate-200/60 shadow-sm">
               <div className="flex gap-1">
                 <span
                   className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce"
@@ -234,24 +274,17 @@ const ChatInterface = () => {
                   style={{ animationDelay: "300ms" }}
                 ></span>
               </div>
+              <span className="text-xs text-slate-400 ml-1">Đang phản hồi...</span>
             </div>
           </div>
         )}
       </div>
 
       {/* Input area */}
-      <div className="px-5 py-4 border-t border-slate-200/60 bg-white/80 flex items-end gap-3">
-        <button
-          onClick={handleDeleteRequest}
-          className="shrink-0 w-12 h-12 bg-linear-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 rounded-xl flex items-center justify-center shadow-lg shadow-red-500/25 transition-all duration-200 disabled:opacity-50 text-white disabled:cursor-not-allowed"
-        >
-          <Trash2 className="" strokeWidth={2} />
-        </button>
-
-        {/* Form: Thêm flex-1 để chiếm hết không gian còn lại */}
+      <div className="px-5 py-4 border-t border-slate-200/70 bg-white/80">
         <form
           onSubmit={handleSendMessage}
-          className="flex-1 flex items-end gap-3"
+          className="flex items-end gap-3 p-2 rounded-2xl border border-slate-200 bg-white shadow-lg shadow-slate-100/80"
         >
           <textarea
             value={message}
@@ -267,7 +300,7 @@ const ChatInterface = () => {
               }
             }}
             placeholder="Hỏi bất kỳ điều gì"
-            className="flex-1 min-h-12 max-h-32 py-3 px-4 border-2 border-slate-200 rounded-xl bg-slate-50/50 text-slate-900 placeholder-slate-400 text-sm font-medium focus:outline-none focus:border-emerald-500 transition-all duration-200 resize-none overflow-y-auto"
+            className="flex-1 min-h-12 max-h-36 py-3 px-4 border border-transparent rounded-xl bg-slate-50/70 text-slate-900 placeholder-slate-400 text-sm font-medium focus:outline-none focus:bg-white focus:border-emerald-200 transition-all duration-200 resize-none overflow-y-auto"
             disabled={loading}
             rows={1}
           />
@@ -275,7 +308,8 @@ const ChatInterface = () => {
           <button
             type="submit"
             disabled={loading || !message.trim()}
-            className="shrink-0 w-12 h-12 bg-linear-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/25 transition-all duration-200 disabled:opacity-50 text-white disabled:cursor-not-allowed"
+            className="shrink-0 w-12 h-12 bg-linear-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/25 transition-all duration-200 disabled:opacity-50 text-white disabled:cursor-not-allowed disabled:shadow-none"
+            title="Gửi tin nhắn"
           >
             <Send className="" strokeWidth={2} />
           </button>

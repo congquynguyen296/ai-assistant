@@ -1,0 +1,17 @@
+import mongoose from "mongoose";
+
+const connectDB = async (): Promise<void> => {
+  try {
+    const conn = await mongoose.connect(process.env.MONGODB_URI as string, {
+      dbName: process.env.DATABASE_NAME,
+    });
+    console.log(
+      `Kết nối database thành công: ${conn.connection.name} trên ${conn.connection.host}`,
+    );
+  } catch (error) {
+    console.error(`Lỗi kết nối database: ${(error as Error).message}`);
+    process.exit(1);
+  }
+};
+
+export default connectDB;
