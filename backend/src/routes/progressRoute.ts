@@ -1,0 +1,11 @@
+import express from "express";
+import protect from "@/middlewares/auth.js";
+import { getDashboard } from "@/controllers/progressController.js";
+
+const route = express.Router();
+
+route.use(protect);
+
+route.get("/dashboard", getDashboard);
+
+export default route;
