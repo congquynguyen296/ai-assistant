@@ -25,6 +25,7 @@ import ProfilePage from "./pages/Profile/ProfilePage";
 import PaymentPage from "./pages/Payment/PaymentPage";
 import ConfirmOTPPage from "./pages/Auth/ConfirmOTPPage";
 import MessagePage from "./pages/Messages/MessagePage";
+import LandingPage from "./pages/LandingPage";
 
 export default function App() {
   const { isAuthenticated, loading } = useAuth();
@@ -46,7 +47,7 @@ export default function App() {
             isAuthenticated ? (
               <Navigate to="/dashboard" replace />
             ) : (
-              <Navigate to="/login" replace />
+              <LandingPage />
             )
           }
         />
