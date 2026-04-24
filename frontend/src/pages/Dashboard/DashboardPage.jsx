@@ -2,10 +2,13 @@ import { useState, useEffect } from "react";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
 import progressService from "../../services/progressService";
 import {
+  Activity,
   BookOpen,
   BrainCircuit,
+  CalendarClock,
   Clock,
   FileText,
+  Layers,
   TrendingUp,
 } from "lucide-react";
 
@@ -46,31 +49,81 @@ const DashboardPage = () => {
     );
   }
 
-  // Data stastics
+  const overview = dashboardData.overview;
+  const recentDocuments = dashboardData.recentActivity?.documents || [];
+  const recentQuizzes = dashboardData.recentActivity?.quizzes || [];
+  const recentItems = [
+    ...recentDocuments.map((doc) => ({
+      id: doc._id,
+      timestamp: doc.lastAccessed,
+    })),
+    ...recentQuizzes.map((quiz) => ({
+      id: quiz._id,
+      timestamp: quiz.lastAttempted || quiz.completedAt,
+    })),
+  ].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+  const totalItems =
+    overview.totalDocuments + overview.totalFlashcards + overview.totalQuizzes;
+  const lastActivity = recentItems[0]?.timestamp;
+
   const stats = [
     {
-      label: "Documents",
-      value: dashboardData.overview.totalDocuments,
+      label: "Tổng mục học tập",
+      value: totalItems,
+      subtext: `${overview.totalDocuments} tài liệu · ${overview.totalFlashcards} thẻ · ${overview.totalQuizzes} quiz`,
+      icon: Layers,
+      accent: "from-slate-900/5 via-slate-100/40 to-white",
+      iconStyle: "text-slate-700",
+      borderColor: "hover:border-slate-400/60",
+    },
+    {
+      label: "Tài liệu",
+      value: overview.totalDocuments,
+      subtext: "Nguồn tri thức của bạn",
       icon: FileText,
-      gradient: "from-blue-400 to-cyan-500",
-      shadowColor: "shadow-blue-500/25",
-      borderColor: "hover:border-blue-500/50",
+      accent: "from-sky-500/10 via-cyan-400/10 to-white",
+      iconStyle: "text-sky-600",
+      borderColor: "hover:border-sky-400/50",
     },
     {
       label: "Flashcards",
-      value: dashboardData.overview.totalFlashcards,
+      value: overview.totalFlashcards,
+      subtext: "Luyện nhớ nhanh mỗi ngày",
       icon: BookOpen,
-      gradient: "from-purple-400 to-pink-500",
-      shadowColor: "shadow-purple-500/25",
-      borderColor: "hover:border-purple-500/50",
+      accent: "from-rose-500/10 via-pink-400/10 to-white",
+      iconStyle: "text-rose-500",
+      borderColor: "hover:border-rose-400/50",
     },
     {
       label: "Quizzes",
-      value: dashboardData.overview.totalQuizzes,
+      value: overview.totalQuizzes,
+      subtext: "Tự kiểm tra hiểu bài",
       icon: BrainCircuit,
-      gradient: "from-emerald-400 to-teal-500",
-      shadowColor: "shadow-emerald-500/25",
-      borderColor: "hover:border-emerald-500/50",
+      accent: "from-emerald-500/10 via-teal-400/10 to-white",
+      iconStyle: "text-emerald-600",
+      borderColor: "hover:border-emerald-400/50",
+    },
+    {
+      label: "Hoạt động gần đây",
+      value: recentItems.length,
+      subtext: "Lượt hoạt động mới nhất",
+      icon: Activity,
+      accent: "from-amber-500/10 via-orange-400/10 to-white",
+      iconStyle: "text-amber-600",
+      borderColor: "hover:border-amber-400/50",
+    },
+    {
+      label: "Lần cuối hoạt động",
+      value: lastActivity
+        ? new Date(lastActivity).toLocaleDateString()
+        : "Chưa có",
+      subtext: lastActivity
+        ? new Date(lastActivity).toLocaleTimeString()
+        : "Hãy bắt đầu một phiên học",
+      icon: CalendarClock,
+      accent: "from-violet-500/10 via-indigo-400/10 to-white",
+      iconStyle: "text-indigo-600",
+      borderColor: "hover:border-indigo-400/50",
     },
   ];
 
@@ -79,34 +132,44 @@ const DashboardPage = () => {
       <div className="absolute inset-0 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] bg-size-[16px_16px] pointer-events-none z-0"></div>
       <div className="relative max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-2xl font-medium text-slate-900 tracking-tight mb-2">
-            Thống kê tổng quan
-          </h1>
-          <p className="text-slate-500 text-sm">
-            Tổng quan về hoạt động học tập của bạn.
-          </p>
+        <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h1 className="text-2xl font-medium text-slate-900 tracking-tight">
+              Thống kê tổng quan
+            </h1>
+            <p className="text-slate-500 text-sm">
+              Bức tranh nhanh về nhịp học tập và tiến trình của bạn.
+            </p>
+          </div>
+          <div className="inline-flex items-center gap-2 rounded-full border border-slate-200/70 bg-white/80 px-4 py-2 text-xs font-semibold text-slate-600 shadow-sm">
+            <span className="h-2 w-2 rounded-full bg-emerald-400"></span>
+            Dữ liệu cập nhật tự động
+          </div>
         </div>
 
         {/* Stats grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mb-5">
-          {stats.map((stast, index) => (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-6">
+          {stats.map((stat, index) => (
             <div
-              className={`group relative bg-white/80 backdrop-blur-xl border border-slate-200/50 rounded-2xl shadow-xl shadow-slate-200/50 p-6 hover:shadow-slate-300/50 transition-all duration-300 ${stast.borderColor}`}
+              className={`group relative overflow-hidden bg-white/85 backdrop-blur-xl border border-slate-200/60 rounded-2xl shadow-lg shadow-slate-200/40 p-5 transition-all duration-300 ${stat.borderColor}`}
               key={index}
             >
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
-                  {stast.label}
-                </span>
-                <div
-                  className={`w-11 h-11 rounded-xl bg-linear-to-br ${stast.gradient} shadow-lg ${stast.shadowColor} flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}
-                >
-                  <stast.icon className="w-5 h-5 text-white" strokeWidth={2} />
+              <div
+                className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-linear-to-br ${stat.accent}`}
+              ></div>
+              <div className="relative flex items-start justify-between gap-4">
+                <div>
+                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                    {stat.label}
+                  </span>
+                  <div className="text-3xl font-semibold text-slate-900 tracking-tight mt-2">
+                    {stat.value}
+                  </div>
+                  <p className="text-xs text-slate-500 mt-2">{stat.subtext}</p>
                 </div>
-              </div>
-              <div className="text-3xl font-semibold text-slate-900 tracking-tight">
-                {stast.value}
+                <div className="h-11 w-11 rounded-2xl bg-slate-100/80 border border-slate-200/70 flex items-center justify-center">
+                  <stat.icon className={`w-5 h-5 ${stat.iconStyle}`} strokeWidth={2} />
+                </div>
               </div>
             </div>
           ))}

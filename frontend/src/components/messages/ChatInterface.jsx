@@ -7,6 +7,7 @@ import MarkdownRenderer from "../common/MarkdownRerender";
 import ConfirmModal from "../common/ConfirmModal";
 import { toast } from "sonner";
 import logo from "../../assets/logo.svg";
+import LoadingSpinner from "../common/LoadingSpinner";
 
 const ChatInterface = () => {
   // Define props and state
@@ -117,7 +118,7 @@ const ChatInterface = () => {
     try {
       const response = await aiService.chat(
         documentId,
-        escapeRegExp(userMessage.content)
+        escapeRegExp(userMessage.content),
       );
       const assistantMessage = {
         role: "assistant",
@@ -153,7 +154,11 @@ const ChatInterface = () => {
         {/* 1. AI Avatar (Chỉ hiện bên TRÁI khi KHÔNG phải user) */}
         {!isUser && (
           <div className="w-9 h-9 rounded-xl bg-white border border-emerald-200 shadow-lg shadow-emerald-500/15 flex items-center justify-center shrink-0 p-1">
-            <img src={logo} alt="Hyra" className="w-full h-full object-contain" />
+            <img
+              src={logo}
+              alt="Hyra"
+              className="w-full h-full object-contain"
+            />
           </div>
         )}
 
@@ -185,7 +190,15 @@ const ChatInterface = () => {
         {/* 3. User Avatar (Chỉ hiện bên PHẢI khi LÀ user) */}
         {isUser && (
           <div className="w-9 h-9 rounded-xl bg-linear-to-br from-slate-200 to-slate-300 flex items-center justify-center text-slate-700 font-semibold text-sm shrink-0 shadow-sm">
-            {user?.profileImage ? <img src={user.profileImage} alt="User Avatar" className="w-full h-full object-cover rounded-xl" /> : "U"}
+            {user?.profileImage ? (
+              <img
+                src={user.profileImage}
+                alt="User Avatar"
+                className="w-full h-full object-cover rounded-xl"
+              />
+            ) : (
+              "U"
+            )}
           </div>
         )}
       </div>
@@ -196,12 +209,7 @@ const ChatInterface = () => {
   if (initialLoading) {
     return (
       <div className="flex flex-col h-[70vh] bg-white/90 backdrop-blur-xl border border-slate-200/60 rounded-3xl items-center justify-center shadow-xl shadow-slate-200/50">
-        <div className="w-14 h-14 flex items-center justify-center bg-linear-to-br from-emerald-100 to-teal-100 rounded-2xl ">
-          <MessageSquare className="w-7 h-7 text-emerald-600" strokeWidth={2} />
-        </div>
-        <p className="text-sm text-slate-500 mt-3 font-medium">
-          Đang tải nội dung đoạn chat...
-        </p>
+        <LoadingSpinner />;
       </div>
     );
   }
@@ -257,7 +265,11 @@ const ChatInterface = () => {
         {loading && (
           <div className="flex items-center gap-3 my-4">
             <div className="w-9 h-9 rounded-xl bg-white border border-emerald-200 flex items-center justify-center shadow-lg shadow-emerald-500/15 p-1">
-              <img src={logo} alt="Hyra" className="w-full h-full object-contain" />
+              <img
+                src={logo}
+                alt="Hyra"
+                className="w-full h-full object-contain"
+              />
             </div>
             <div className="flex items-center gap-2 px-4 py-3 rounded-2xl rounded-bl-md bg-white border border-slate-200/60 shadow-sm">
               <div className="flex gap-1">
@@ -274,7 +286,9 @@ const ChatInterface = () => {
                   style={{ animationDelay: "300ms" }}
                 ></span>
               </div>
-              <span className="text-xs text-slate-400 ml-1">Đang phản hồi...</span>
+              <span className="text-xs text-slate-400 ml-1">
+                Đang phản hồi...
+              </span>
             </div>
           </div>
         )}
