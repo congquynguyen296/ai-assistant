@@ -2,7 +2,7 @@ import { useState } from "react";
 import type { ReactNode } from "react";
 import Sidebar from "@/components/layouts/Sidebar";
 import Header from "@/components/layouts/Header";
-import { Analytics } from "@vercel/analytics/next";
+import { Analytics } from "@vercel/analytics/react";
 
 interface AppLayoutProps {
   children: ReactNode;
