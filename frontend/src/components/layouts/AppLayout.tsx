@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { ReactNode } from "react";
 import Sidebar from "@/components/layouts/Sidebar";
 import Header from "@/components/layouts/Header";
+import { Analytics } from "@vercel/analytics/react";
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -15,6 +16,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
   };
   return (
     <div className="flex h-screen bg-neutral-50 text-neutral-900">
+      <Analytics />
       <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header toggleSidebar={toggleSidebar} />
