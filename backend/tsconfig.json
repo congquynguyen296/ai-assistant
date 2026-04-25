@@ -16,7 +16,8 @@
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "types": ["node"]
+    "types": ["node"],
+    "ignoreDeprecations": "6.0"
   },
   "include": ["server.ts", "src/**/*.ts", "src/types/**/*.d.ts"],
   "exclude": ["node_modules", "dist"]
