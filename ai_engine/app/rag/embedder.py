@@ -9,12 +9,20 @@ does not need any changes.
 from __future__ import annotations
 
 import logging
+import random
 import time
 from typing import List
 
 import google.genai as genai
 
-from ..core.config import GEMINI_API_KEY, EMBEDDING_MODEL
+from ..core.config import (
+    GEMINI_API_KEY,
+    EMBEDDING_MODEL,
+    EMBEDDING_BATCH_SIZE,
+    EMBEDDING_INTER_BATCH_DELAY,
+    EMBEDDING_MAX_RETRIES,
+    EMBEDDING_RETRY_BASE_DELAY,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -32,11 +40,19 @@ def _get_client() -> genai.Client:
     return _client
 
 
-# ── Batching helper ───────────────────────────────────────────────────────────
-# Gemini free-tier: 100 requests/minute. We batch up to 100 texts per call
-# and add a small delay between batches only when needed.
-_BATCH_SIZE = 100
-_INTER_BATCH_DELAY = 0.6  # seconds — conservative, keeps us under 100 rpm
+def _is_batch_not_supported(message: str) -> bool:
+    msg = message.lower()
+    return "batchembedcontents" in msg or "not found" in msg or "404" in msg
+
+
+def _is_retryable(message: str) -> bool:
+    msg = message.lower()
+    return any(token in msg for token in ["429", "503", "rate", "quota", "unavailable", "timeout"])
+
+
+def _backoff_delay(attempt: int) -> float:
+    base = EMBEDDING_RETRY_BASE_DELAY
+    return (base * (2 ** attempt)) + random.uniform(0, base)
 
 
 def embed_texts(texts: List[str], task_type: str = "RETRIEVAL_DOCUMENT") -> List[List[float]]:
@@ -54,41 +70,67 @@ def embed_texts(texts: List[str], task_type: str = "RETRIEVAL_DOCUMENT") -> List
     client = _get_client()
     all_vectors: List[List[float]] = []
 
-    for i in range(0, len(texts), _BATCH_SIZE):
-        batch = texts[i : i + _BATCH_SIZE]
-        try:
-            result = client.models.embed_content(
-                model=EMBEDDING_MODEL,
-                contents=batch,
-                config={"task_type": task_type},
-            )
-            # result.embeddings is a list of ContentEmbedding objects
-            all_vectors.extend([e.values for e in result.embeddings])
-        except Exception as exc:
-            msg = str(exc)
-            logger.error("Gemini embed_content failed for batch %d: %s", i // _BATCH_SIZE, exc)
+    for i in range(0, len(texts), EMBEDDING_BATCH_SIZE):
+        batch = texts[i : i + EMBEDDING_BATCH_SIZE]
+        batch_result = None
 
-            # Fallback: some projects return 404 for batchEmbedContents; try single requests.
-            if "404" in msg or "Not Found" in msg or "batchEmbedContents" in msg:
-                for text in batch:
-                    single = client.models.embed_content(
-                        model=EMBEDDING_MODEL,
-                        contents=text,
-                        config={"task_type": task_type},
-                    )
-                    if hasattr(single, "embedding") and single.embedding:
-                        all_vectors.append(single.embedding.values)
-                    elif hasattr(single, "embeddings") and single.embeddings:
-                        all_vectors.append(single.embeddings[0].values)
-                    else:
-                        raise RuntimeError("Unexpected Gemini embedding response format.")
-                    time.sleep(0.1)
-            else:
+        for attempt in range(EMBEDDING_MAX_RETRIES):
+            try:
+                batch_result = client.models.embed_content(
+                    model=EMBEDDING_MODEL,
+                    contents=batch,
+                    config={"task_type": task_type},
+                )
+                break
+            except Exception as exc:
+                msg = str(exc)
+                logger.error(
+                    "Gemini embed_content failed for batch %d (attempt %d/%d): %s",
+                    i // EMBEDDING_BATCH_SIZE,
+                    attempt + 1,
+                    EMBEDDING_MAX_RETRIES,
+                    exc,
+                )
+                if _is_batch_not_supported(msg):
+                    batch_result = None
+                    break
+                if _is_retryable(msg) and attempt < EMBEDDING_MAX_RETRIES - 1:
+                    time.sleep(_backoff_delay(attempt))
+                    continue
                 raise
 
+        if batch_result is not None:
+            all_vectors.extend([e.values for e in batch_result.embeddings])
+        else:
+            # Fallback: some projects return 404 for batchEmbedContents; try single requests.
+            for text in batch:
+                single_result = None
+                for attempt in range(EMBEDDING_MAX_RETRIES):
+                    try:
+                        single_result = client.models.embed_content(
+                            model=EMBEDDING_MODEL,
+                            contents=text,
+                            config={"task_type": task_type},
+                        )
+                        break
+                    except Exception as exc:
+                        msg = str(exc)
+                        if _is_retryable(msg) and attempt < EMBEDDING_MAX_RETRIES - 1:
+                            time.sleep(_backoff_delay(attempt))
+                            continue
+                        raise
+
+                if hasattr(single_result, "embedding") and single_result.embedding:
+                    all_vectors.append(single_result.embedding.values)
+                elif hasattr(single_result, "embeddings") and single_result.embeddings:
+                    all_vectors.append(single_result.embeddings[0].values)
+                else:
+                    raise RuntimeError("Unexpected Gemini embedding response format.")
+                time.sleep(0.1)
+
         # Rate-limit guard: sleep between batches (skip for last batch)
-        if i + _BATCH_SIZE < len(texts):
-            time.sleep(_INTER_BATCH_DELAY)
+        if i + EMBEDDING_BATCH_SIZE < len(texts):
+            time.sleep(EMBEDDING_INTER_BATCH_DELAY)
 
     return all_vectors
 
