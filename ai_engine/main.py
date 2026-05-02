@@ -11,7 +11,6 @@ Endpoints:
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
 from typing import Optional
 
 import uvicorn
@@ -19,8 +18,8 @@ from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
-from app.chunker import chunk_text
 from app.core.config import PORT, QDRANT_COLLECTION, VECTOR_SIZE, EMBEDDING_MODEL
+from app.core.logging_config import setup_logging
 from app.core.security import verify_internal_key
 from app.models import (
     DeleteResponse,
@@ -30,18 +29,16 @@ from app.models import (
     RetrieveRequest,
     RetrieveResponse,
 )
-from app.rag.embedder import embed_texts, embed_query
+from app.rag.embedder import embed_query
+from app.rag.ingest_service import ingest_text
 from app.rag.retriever import retrieve
 from app.rag.vector_store import (
     delete_document,
-    document_exists,
     get_client,
-    list_documents,
-    store_chunks,
 )
 
 # ── Logging ───────────────────────────────────────────────────────────────────
-logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(name)s — %(message)s")
+setup_logging()
 logger = logging.getLogger(__name__)
 
 # ── App ───────────────────────────────────────────────────────────────────────
@@ -121,27 +118,12 @@ def ingest_document(body: IngestRequest):
     if not body.text or not body.text.strip():
         raise HTTPException(status_code=400, detail="text field is empty.")
 
-    # 1. Chunk
-    chunks = chunk_text(body.text, source_name=body.filename)
-    if not chunks:
-        raise HTTPException(status_code=422, detail="Could not produce any chunks from text.")
-
-    # 2. Embed all chunks (batched, via Gemini API)
-    contents = [c.content for c in chunks]
     try:
-        embeddings = embed_texts(contents, task_type="RETRIEVAL_DOCUMENT")
+        stored, total_words = ingest_text(body.document_id, body.filename, body.text)
     except Exception as exc:
         logger.error("Embedding failed for document %s: %s", body.document_id, exc)
         raise HTTPException(status_code=502, detail=f"Embedding error: {exc}")
 
-    # 3. Store in Qdrant
-    metadata = {
-        "filename": body.filename,
-        "created_at": datetime.now(timezone.utc).isoformat(),
-    }
-    stored = store_chunks(body.document_id, chunks, embeddings, metadata)
-
-    total_words = sum(c.word_count for c in chunks)
     logger.info("Ingested document %s — %d chunks, %d words", body.document_id, stored, total_words)
 
     return IngestResponse(

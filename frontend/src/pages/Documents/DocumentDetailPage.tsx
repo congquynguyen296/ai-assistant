@@ -11,6 +11,7 @@ import FileViewer from "@/components/documents/viewers/FileViewer";
 import AIActions from "@/components/ai/AIActions";
 import FlashcardManager from "@/components/flashcards/FlashcardManager";
 import QuizManager from "@/components/quizzes/QuizManager";
+import DocumentNetworkTab from "@/components/documents/network/DocumentNetworkTab";
 import type { Document } from "@/types/models";
 
 const DocumentDetailPage = () => {
@@ -37,23 +38,6 @@ const DocumentDetailPage = () => {
 
     fetchDocument();
   }, [documentId]);
-
-  // Helper func to get URL PDF file
-  // const getFileUrl = (localPath) => {
-  //   if (!localPath) return "";
-
-  //   if (localPath.startsWith("http")) return localPath;
-  //   const serverBaseUrl = "http://localhost:8000";
-
-  //   const normalizedPath = localPath.replace(/\\/g, "/");
-  //   const relativePath = normalizedPath.split("/uploads/")[1];
-
-  //   if (relativePath) {
-  //     return `${serverBaseUrl}/uploads/${relativePath}`;
-  //   }
-
-  //   return localPath;
-  // };
 
   // Render content file PDF
   const renderContent = () => {
@@ -97,9 +81,15 @@ const DocumentDetailPage = () => {
     return <QuizManager documentId={documentId as string} />;
   };
 
+  // Render network tab
+  const renderNetwork = () => {
+    return <DocumentNetworkTab />;
+  };
+
   // Tabs
   const tabs = [
     { name: "content", label: "Nội dung", content: renderContent() },
+    { name: "network", label: "Network", content: renderNetwork() },
     { name: "chat", label: "Chat", content: renderChat() },
     { name: "ai-actions", label: "AI", content: renderAIAction() },
     { name: "flashcards", label: "Flashcards", content: renderFlashcards() },
