@@ -39,23 +39,6 @@ const DocumentDetailPage = () => {
     fetchDocument();
   }, [documentId]);
 
-  // Helper func to get URL PDF file
-  // const getFileUrl = (localPath) => {
-  //   if (!localPath) return "";
-
-  //   if (localPath.startsWith("http")) return localPath;
-  //   const serverBaseUrl = "http://localhost:8000";
-
-  //   const normalizedPath = localPath.replace(/\\/g, "/");
-  //   const relativePath = normalizedPath.split("/uploads/")[1];
-
-  //   if (relativePath) {
-  //     return `${serverBaseUrl}/uploads/${relativePath}`;
-  //   }
-
-  //   return localPath;
-  // };
-
   // Render content file PDF
   const renderContent = () => {
     if (loading) {
