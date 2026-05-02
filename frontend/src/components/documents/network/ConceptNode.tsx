@@ -1,30 +1,29 @@
 import { Handle, Position, type NodeProps } from "@xyflow/react";
 import type { ConceptNodeData } from "./types";
 
-export type ConceptFlowNodeData = {
-  concept: ConceptNodeData;
+export type ConceptFlowNodeData = ConceptNodeData & {
   selected?: boolean;
 };
 
-export default function ConceptNode(props: NodeProps<ConceptFlowNodeData>) {
-  const { data } = props;
-  const concept = data.concept;
+export default function ConceptNode(props: NodeProps) {
+  const { data } = props as NodeProps;
+  const conceptData = data as ConceptFlowNodeData;
 
-  const size = concept.importance === 3 ? 74 : concept.importance === 2 ? 64 : 56;
+  const size = conceptData.importance === 3 ? 74 : conceptData.importance === 2 ? 64 : 56;
   const ring =
-    concept.importance === 3
+    conceptData.importance === 3
       ? "ring-4 ring-emerald-200/70"
-      : concept.importance === 2
+      : conceptData.importance === 2
         ? "ring-2 ring-emerald-200/60"
         : "ring-1 ring-emerald-200/50";
   const fill =
-    concept.importance === 3
+    conceptData.importance === 3
       ? "from-emerald-500 to-teal-500"
-      : concept.importance === 2
+      : conceptData.importance === 2
         ? "from-emerald-400 to-teal-400"
         : "from-emerald-300 to-teal-300";
 
-  const isSelected = Boolean(data.selected);
+  const isSelected = Boolean(conceptData.selected);
 
   return (
     <div
@@ -52,7 +51,7 @@ export default function ConceptNode(props: NodeProps<ConceptFlowNodeData>) {
       >
         <div className="px-2 text-center">
           <div className="text-[11px] leading-tight font-semibold text-white drop-shadow-sm line-clamp-2">
-            {concept.label}
+            {conceptData.label}
           </div>
         </div>
       </div>

@@ -19,7 +19,7 @@ export default function DashboardLearningPulse({ data }: Props) {
         <div className="text-sm font-semibold text-slate-900">Learning Pulse</div>
         <div className="text-xs font-semibold text-slate-500">This Week</div>
       </div>
-      <div className="h-[240px] rounded-2xl border border-slate-200 bg-white overflow-hidden">
+      <div className="h-60 rounded-2xl border border-slate-200 bg-white overflow-hidden">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={data} margin={{ top: 14, right: 18, bottom: 10, left: 8 }}>
             <CartesianGrid stroke="#e5e7eb" strokeDasharray="6 6" />

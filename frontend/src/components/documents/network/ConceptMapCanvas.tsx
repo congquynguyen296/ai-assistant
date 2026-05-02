@@ -135,7 +135,7 @@ function FlowInner({
         id: c.id,
         type: "concept",
         position: { x: baseX, y: baseY },
-        data: { concept: c, selected: false },
+        data: { ...c, selected: false },
         sourcePosition: Position.Bottom,
         targetPosition: Position.Top,
       };
@@ -201,7 +201,7 @@ function FlowInner({
       const currentEdges = reactFlow.getEdges();
 
       for (const n of currentNodes) {
-        const imp = (n.data as ConceptFlowNodeData | undefined)?.concept?.importance ?? 1;
+        const imp = (n.data as ConceptFlowNodeData | undefined)?.importance ?? 1;
         const size = imp === 3 ? 74 : imp === 2 ? 64 : 56;
         g.setNode(n.id, { width: size + 30, height: size + 30 });
       }
@@ -274,7 +274,7 @@ function FlowInner({
 
     const radiusById = new Map<string, number>();
     for (const n of current) {
-      const imp = (n.data as ConceptFlowNodeData | undefined)?.concept?.importance ?? 1;
+      const imp = (n.data as ConceptFlowNodeData | undefined)?.importance ?? 1;
       const r = imp === 3 ? 44 : imp === 2 ? 38 : 34;
       radiusById.set(n.id, r);
     }
