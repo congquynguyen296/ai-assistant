@@ -10,26 +10,24 @@ Endpoints:
 """
 from __future__ import annotations
 
-import logging
-from typing import Optional
+import time
 
-import uvicorn
-from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi import Depends, FastAPI, HTTPException, status, Request
+from loguru import logger
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
-from app.core.config import PORT, QDRANT_COLLECTION, VECTOR_SIZE, EMBEDDING_MODEL
+from app.core.config import PORT, QDRANT_COLLECTION, EMBEDDING_MODEL
 from app.core.logging_config import setup_logging
 from app.core.security import verify_internal_key
 from app.models import (
     DeleteResponse,
-    DocumentInfo,
     HealthResponse,
     IngestResponse,
     RetrieveRequest,
     RetrieveResponse,
 )
-from app.rag.embedder import embed_query
+
 from app.rag.ingest_service import ingest_text
 from app.rag.retriever import retrieve
 from app.rag.vector_store import (
@@ -39,7 +37,6 @@ from app.rag.vector_store import (
 
 # ── Logging ───────────────────────────────────────────────────────────────────
 setup_logging()
-logger = logging.getLogger(__name__)
 
 # ── App ───────────────────────────────────────────────────────────────────────
 app = FastAPI(
@@ -57,6 +54,33 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    start_time = time.time()
+    response = await call_next(request)
+    process_time = time.time() - start_time
+    
+    # Create an API logger by binding extra context
+    api_logger = logger.bind(type="api")
+    
+    log_data = {
+        "service": "ai_engine",
+        "method": request.method,
+        "url": str(request.url.path),
+        "clientIp": request.client.host if request.client else None,
+        "statusCode": response.status_code,
+        "responseTimeMs": int(process_time * 1000),
+        "userAgent": request.headers.get("user-agent", "")
+    }
+    
+    msg = f"{request.method} {request.url.path} - {response.status_code} ({log_data['responseTimeMs']}ms)"
+    
+    if response.status_code >= 400:
+        api_logger.error(msg, **log_data)
+    else:
+        api_logger.info(msg, **log_data)
+        
+    return response
 
 # ── Request schemas ───────────────────────────────────────────────────────────
 
@@ -86,7 +110,7 @@ def health_check():
         info = client.get_collection(QDRANT_COLLECTION)
         total_points = info.points_count or 0
     except Exception as exc:
-        logger.warning("Qdrant health check failed: %s", exc)
+        logger.warning("Qdrant health check failed: {}", exc)
         return HealthResponse(
             status="degraded",
             embedding_model=EMBEDDING_MODEL,
@@ -121,10 +145,10 @@ def ingest_document(body: IngestRequest):
     try:
         stored, total_words = ingest_text(body.document_id, body.filename, body.text)
     except Exception as exc:
-        logger.error("Embedding failed for document %s: %s", body.document_id, exc)
+        logger.error("Embedding failed for document {}: {}", body.document_id, exc)
         raise HTTPException(status_code=502, detail=f"Embedding error: {exc}")
 
-    logger.info("Ingested document %s — %d chunks, %d words", body.document_id, stored, total_words)
+    logger.info("Ingested document {} — {} chunks, {} words", body.document_id, stored, total_words)
 
     return IngestResponse(
         document_id=body.document_id,
@@ -153,7 +177,7 @@ def retrieve_context(body: RetrieveRequest):
         # document_id not found in Qdrant
         raise HTTPException(status_code=404, detail=str(exc))
     except Exception as exc:
-        logger.error("Retrieve failed for document %s: %s", body.document_id, exc)
+        logger.error("Retrieve failed for document {}: {}", body.document_id, exc)
         raise HTTPException(status_code=502, detail=f"Retrieval error: {exc}")
 
     return result
@@ -180,4 +204,5 @@ def delete_document_vectors(document_id: str):
 
 # ── Entrypoint ────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
+    import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=PORT, reload=False)

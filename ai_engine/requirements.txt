@@ -5,3 +5,4 @@ qdrant-client==1.14.2
 google-genai==1.10.0
 python-dotenv==1.1.0
 redis==5.0.4
+loguru==0.7.3

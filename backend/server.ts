@@ -11,6 +11,8 @@ import flashcardRoutes from "@/routes/flashcardRoutes.js";
 import aiRoutes from "@/routes/aiRoutes.js";
 import quizRoutes from "@/routes/quizRoutes.js";
 import processRoutes from "@/routes/progressRoute.js";
+import { requestLogger } from "@/middlewares/requestLogger.js";
+import { appLogger } from "@/utils/logger.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -47,6 +49,9 @@ app.use(
 app.use(express.json({ limit: "5mb" }));
 app.use(express.urlencoded({ extended: true, limit: "5mb" }));
 
+// Integrate API request logger
+app.use(requestLogger);
+
 app.get("/health-check", (_req: Request, res: Response) => {
   res.status(200).send("OK");
 });
@@ -72,10 +77,10 @@ app.use((_req: Request, res: Response, _next: NextFunction) => {
 
 const PORT = process.env.PORT || 8000;
 app.listen(PORT, () => {
-  console.log(`Server đang chạy ở cổng: ${PORT}`);
+  appLogger.info(`Server đang chạy ở cổng: ${PORT}`);
 });
 
 process.on("uncaughtException", (err) => {
-  console.error("Uncaught Exception:", err.message);
+  appLogger.error("Uncaught Exception:", err);
   process.exit(1);
 });
