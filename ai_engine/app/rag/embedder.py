@@ -47,7 +47,12 @@ def _is_batch_not_supported(message: str) -> bool:
 
 def _is_retryable(message: str) -> bool:
     msg = message.lower()
-    return any(token in msg for token in ["429", "503", "rate", "quota", "unavailable", "timeout"])
+    retry_tokens = [
+        "429", "503", "rate", "quota", "unavailable", "timeout",
+        "connection reset", "104", "connection aborted", "connection closed", 
+        "eof", "broken pipe", "10054"
+    ]
+    return any(token in msg for token in retry_tokens)
 
 
 def _backoff_delay(attempt: int) -> float:

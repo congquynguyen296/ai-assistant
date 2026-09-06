@@ -17,7 +17,7 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "types": ["node"],
-    "ignoreDeprecations": "5.0"
+    "ignoreDeprecations": "6.0"
   },
   "include": ["server.ts", "src/**/*.ts", "src/types/**/*.d.ts"],
   "exclude": ["node_modules", "dist"]

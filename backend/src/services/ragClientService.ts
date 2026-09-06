@@ -11,16 +11,54 @@ const internalHeaders = {
 
 const TIMEOUT_MS = 30_000;
 
-const fetchWithTimeout = (
+import { apiLogger } from '@/utils/logger.js';
+
+const fetchWithTimeout = async (
   url: string,
   options: RequestInit,
   timeoutMs = TIMEOUT_MS,
 ): Promise<Response> => {
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeoutMs);
-  return fetch(url, { ...options, signal: controller.signal }).finally(() =>
-    clearTimeout(id),
-  );
+  
+  const start = Date.now();
+  let res: Response | null = null;
+  let error: any = null;
+
+  try {
+    res = await fetch(url, { ...options, signal: controller.signal });
+    return res;
+  } catch (err) {
+    error = err;
+    throw err;
+  } finally {
+    clearTimeout(id);
+    const duration = Date.now() - start;
+    
+    const logData: any = {
+      method: options.method || 'GET',
+      url,
+      statusCode: res?.status || 500,
+      responseTimeMs: duration,
+      requestBody: options.body ? JSON.parse(options.body as string) : undefined,
+    };
+
+    if (error) {
+      logData.error = error.message;
+      apiLogger.error('Outgoing request failed', logData);
+    } else if (res && !res.ok) {
+      // Clone response to read body without consuming it for the caller
+      const resClone = res.clone();
+      try {
+        logData.responseBody = await resClone.json();
+      } catch {
+        logData.responseBody = await resClone.text();
+      }
+      apiLogger.error('Outgoing request returned error status', logData);
+    } else {
+      apiLogger.info('Outgoing request successful', logData);
+    }
+  }
 };
 
 export const ingestDocument = async (

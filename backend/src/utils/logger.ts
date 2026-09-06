@@ -2,36 +2,36 @@ import winston from 'winston';
 import DailyRotateFile from 'winston-daily-rotate-file';
 import util from 'util';
 
-// Format để trích xuất file và dòng code từ Error stack
 const addCallerInfo = winston.format((info) => {
+  let stackLines: string[] = [];
   if (info instanceof Error) {
     info.stackTrace = info.stack;
-    const stackLines = info.stack?.split('\n') || [];
-    // Tùy theo nơi Error được tạo ra mà stack sẽ có format khác nhau
-    // Thường stackLines[1] chứa thông tin hàm gọi
-    const callerLine = stackLines[1] || '';
-    const match = callerLine.match(/\((.*):(\d+):(\d+)\)/) || callerLine.match(/at (.*):(\d+):(\d+)/);
-    if (match) {
-      info.file = match[1];
-      info.line = parseInt(match[2], 10);
-    }
+    stackLines = info.stack?.split('\n') || [];
+  } else if (info._mockStack) {
+    stackLines = (info._mockStack as string).split('\n') || [];
+    delete info._mockStack;
   } else {
-    // Nếu không phải Error, giả lập một Error để lấy stack trace
-    // Hơi tốn tài nguyên một chút nhưng đáp ứng yêu cầu application.log
     const stackObj: any = {};
     Error.captureStackTrace(stackObj);
-    const stackLines = stackObj.stack?.split('\n') || [];
-    // Bỏ qua dòng Error, dòng trong logger này, và dòng gọi logger. Thường là dòng thứ 4
-    let callerLine = stackLines[3] || '';
-    if (callerLine.includes('winston/lib/winston/logger.js')) {
-      callerLine = stackLines[4] || '';
-    }
-    const match = callerLine.match(/\((.*):(\d+):(\d+)\)/) || callerLine.match(/at (.*):(\d+):(\d+)/);
-    if (match) {
-      info.file = match[1];
-      info.line = parseInt(match[2], 10);
+    stackLines = stackObj.stack?.split('\n') || [];
+  }
+
+  // Tìm dòng đầu tiên không thuộc về node_modules/winston, utils/logger.ts, hay internal node
+  let callerLine = '';
+  for (let i = 1; i < stackLines.length; i++) {
+    const line = stackLines[i];
+    if (line && !line.includes('winston') && !line.includes('utils/logger.ts') && !line.includes('node:internal')) {
+      callerLine = line;
+      break;
     }
   }
+
+  const match = callerLine.match(/\((.*):(\d+):(\d+)\)/) || callerLine.match(/at (.*):(\d+):(\d+)/);
+  if (match) {
+    info.file = match[1];
+    info.line = parseInt(match[2], 10);
+  }
+
   return info;
 });
 
@@ -92,9 +92,13 @@ const originalConsoleLog = console.log;
 const originalConsoleError = console.error;
 
 console.log = (...args) => {
-  appLogger.info(util.format(...args));
+  const stackObj: any = {};
+  Error.captureStackTrace(stackObj);
+  appLogger.info(util.format(...args), { _mockStack: stackObj.stack });
 };
 
 console.error = (...args) => {
-  appLogger.error(util.format(...args));
+  const stackObj: any = {};
+  Error.captureStackTrace(stackObj);
+  appLogger.error(util.format(...args), { _mockStack: stackObj.stack });
 };

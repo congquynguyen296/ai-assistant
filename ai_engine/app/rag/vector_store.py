@@ -113,7 +113,19 @@ def store_chunks(
         for i, (chunk, embedding) in enumerate(zip(chunks, embeddings))
     ]
 
-    client.upsert(collection_name=QDRANT_COLLECTION, points=points)
+    import time
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            client.upsert(collection_name=QDRANT_COLLECTION, points=points)
+            break
+        except Exception as exc:
+            if attempt < max_retries - 1:
+                logger.warning("Qdrant upsert failed (attempt %d): %s. Retrying...", attempt + 1, exc)
+                time.sleep(2 ** attempt)
+            else:
+                raise
+                
     logger.info("Stored %d chunks for document: %s", len(chunks), document_id)
     return len(chunks)
 
@@ -126,14 +138,26 @@ def query_chunks(
     """Semantic search — returns top_k chunks for a specific document."""
     client = get_client()
 
-    search_result = client.search(
-        collection_name=QDRANT_COLLECTION,
-        query_vector=query_embedding,
-        query_filter=Filter(
-            must=[FieldCondition(key="document_id", match=MatchValue(value=document_id))]
-        ),
-        limit=top_k,
-    )
+    import time
+    search_result = None
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            search_result = client.search(
+                collection_name=QDRANT_COLLECTION,
+                query_vector=query_embedding,
+                query_filter=Filter(
+                    must=[FieldCondition(key="document_id", match=MatchValue(value=document_id))]
+                ),
+                limit=top_k,
+            )
+            break
+        except Exception as exc:
+            if attempt < max_retries - 1:
+                logger.warning("Qdrant search failed (attempt %d): %s. Retrying...", attempt + 1, exc)
+                time.sleep(2 ** attempt)
+            else:
+                raise
 
     if not search_result:
         if not document_exists(document_id):
