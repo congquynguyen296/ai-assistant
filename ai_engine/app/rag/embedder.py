@@ -24,6 +24,7 @@ from ..core.config import (
     EMBEDDING_INTER_BATCH_DELAY,
     EMBEDDING_MAX_RETRIES,
     EMBEDDING_RETRY_BASE_DELAY,
+    VECTOR_SIZE,
 )
 
 logger = logging.getLogger(__name__)
@@ -94,10 +95,15 @@ def embed_texts(texts: List[str], task_type: str = "RETRIEVAL_DOCUMENT") -> List
         for attempt in range(EMBEDDING_MAX_RETRIES):
             try:
                 # With OpenAI, passing an array of strings returns an array of embeddings
-                batch_result = client.embeddings.create(
-                    model=AZURE_OPENAI_DEPLOYMENT_NAME,
-                    input=batch,
-                )
+                kwargs = {
+                    "model": AZURE_OPENAI_DEPLOYMENT_NAME,
+                    "input": batch,
+                }
+                # Azure's text-embedding-3 supports passing dimensions to reduce output size
+                if "3" in AZURE_OPENAI_DEPLOYMENT_NAME or VECTOR_SIZE != 768:
+                     kwargs["dimensions"] = VECTOR_SIZE
+                     
+                batch_result = client.embeddings.create(**kwargs)
                 break
             except Exception as exc:
                 msg = str(exc)
