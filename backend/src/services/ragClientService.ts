@@ -9,7 +9,8 @@ const internalHeaders = {
   "X-Internal-API-Key": INTERNAL_API_KEY,
 };
 
-const TIMEOUT_MS = 30_000;
+// Cold start
+const TIMEOUT_MS = 120_000;
 
 import { apiLogger } from '@/utils/logger.js';
 
