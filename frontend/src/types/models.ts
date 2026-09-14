@@ -106,12 +106,12 @@ export interface PaymentPlan {
 }
 
 export interface NotificationItem {
-  id: number | string;
+  _id: string;
   title: string;
   message: string;
-  type?: string;
-  time: string;
-  isRead?: boolean;
+  type: string;
+  createdAt: string;
+  isRead: boolean;
   link?: string | null;
 }
 

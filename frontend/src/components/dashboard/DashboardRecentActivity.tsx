@@ -6,7 +6,7 @@ export type DashboardRecentActivityItem = {
   title: string;
   subtitle: string;
   timestamp?: string;
-  accent: "emerald" | "rose" | "slate";
+  accent: "emerald" | "rose" | "slate" | "amber";
   link?: string;
 };
 
@@ -19,9 +19,9 @@ export default function DashboardRecentActivity({ items, viewAllHref }: Props) {
   return (
     <div className="bg-white/80 backdrop-blur-xl border border-slate-200/60 rounded-2xl shadow-xl shadow-slate-200/50 p-5">
       <div className="flex items-center justify-between gap-4 mb-4">
-        <div className="text-sm font-semibold text-slate-900">Recent Activity</div>
+        <div className="text-sm font-semibold text-slate-900">Hoạt động gần đây</div>
         <a href={viewAllHref} className="text-xs font-semibold text-emerald-700 hover:text-emerald-800">
-          View All
+          Xem tất cả
         </a>
       </div>
 
@@ -33,7 +33,9 @@ export default function DashboardRecentActivity({ items, viewAllHref }: Props) {
                 ? "bg-emerald-50 border-emerald-100 text-emerald-700"
                 : item.accent === "rose"
                   ? "bg-rose-50 border-rose-100 text-rose-600"
-                  : "bg-slate-50 border-slate-200 text-slate-600";
+                  : item.accent === "amber"
+                    ? "bg-amber-50 border-amber-100 text-amber-600"
+                    : "bg-slate-50 border-slate-200 text-slate-600";
 
             const Icon =
               item.type === "quiz" ? BrainCircuit : item.type === "flashcards" ? Activity : FileText;

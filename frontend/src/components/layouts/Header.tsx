@@ -4,6 +4,9 @@ import { useState } from "react";
 import NotificationDialog from "@/components/notification/NotificationDialog";
 import { toast } from "sonner";
 import type { NotificationItem } from "@/types/models";
+import { getNotifications, markAllAsRead, deleteAllRead, markAsRead } from "@/services/notificationService";
+import { useEffect } from "react";
+import { connectSocket, disconnectSocket } from "@/services/socketService";
 
 interface HeaderProps {
   toggleSidebar: () => void;
@@ -13,38 +16,78 @@ const Header = ({ toggleSidebar }: HeaderProps) => {
   const { user } = useAuth();
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
 
-  // Mock data notifications
-  const notifications: NotificationItem[] = [
-    {
-      id: 1,
-      title: "Bài Quiz chưa hoàn thành",
-      message:
-        "Bạn đang làm dở bài Quiz 'Lập trình ReactJS cơ bản'. Tiếp tục ngay để không quên kiến thức nhé!",
-      type: "quiz",
-      time: "2 giờ trước",
-      isRead: false,
-      link: "/quizzes",
-    },
-    {
-      id: 2,
-      title: "Flashcard mới được tạo",
-      message:
-        "Hệ thống đã tạo thành công bộ Flashcard từ tài liệu 'Giáo trình Triết học' của bạn.",
-      type: "flashcard",
-      time: "5 giờ trước",
-      isRead: false,
-      link: "/flashcards",
-    },
-    {
-      id: 3,
-      title: "Chào mừng bạn quay lại",
-      message: "Chúc bạn một ngày học tập hiệu quả cùng Hyra AI!",
-      type: "success",
-      time: "1 ngày trước",
-      isRead: true,
-      link: null,
-    },
-  ];
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      const userId = user?._id || (user as any)?.id;
+      if (!userId) return;
+      try {
+        const response = await getNotifications();
+        console.log("Fetched notifications from API:", response.data);
+        setNotifications(response.data || []);
+      } catch (error) {
+        console.error("Failed to fetch notifications", error);
+      }
+    };
+    
+    const userId = user?._id || (user as any)?.id;
+    if (userId) {
+      fetchNotifications();
+      
+      const socket = connectSocket(userId);
+      
+      socket.on("new_notification", (notification: NotificationItem) => {
+        console.log("Received new_notification from socket:", notification);
+        setTimeout(() => {
+          setNotifications((prev) => {
+            console.log("Previous notifications state:", prev);
+            const next = [notification, ...prev];
+            console.log("Next notifications state:", next);
+            return next;
+          });
+          toast[notification.type === 'error' ? 'error' : 'success'](notification.title, {
+            description: notification.message,
+          });
+        }, 5000);
+      });
+
+      return () => {
+        socket.off("new_notification");
+      };
+    }
+  }, [user]);
+
+  const handleMarkAllAsRead = async () => {
+    try {
+      await markAllAsRead();
+      setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+    } catch (error) {
+      console.error("Failed to mark all as read", error);
+    }
+  };
+
+  const handleDeleteAllRead = async () => {
+    try {
+      await deleteAllRead();
+      setNotifications((prev) => prev.filter((n) => !n.isRead));
+    } catch (error) {
+      console.error("Failed to delete all read", error);
+    }
+  };
+
+  const handleMarkAsRead = async (id: string) => {
+    try {
+      // Optimistic update
+      setNotifications((prev) =>
+        prev.map((n) => (n._id === id ? { ...n, isRead: true } : n))
+      );
+      await markAsRead(id);
+    } catch (error) {
+      console.error("Failed to mark as read", error);
+      // Optional: Revert optimistic update here if needed
+    }
+  };
 
   return (
     <header className="sticky top-0 z-30 w-full h-16 bg-white/80 backdrop-blur-xl border-b border-slate-200">
@@ -63,12 +106,11 @@ const Header = ({ toggleSidebar }: HeaderProps) => {
         <div className="flex items-center gap-3">
           <div className="relative">
             <button
-              // onClick={() => setIsNotificationOpen(!isNotificationOpen)}
-              onClick={() =>
-                toast.info(
-                  "Tính năng đang trong quá trình nghiên cứu và phát triển"
-                )
-              }
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsNotificationOpen((prev) => !prev);
+              }}
+              onMouseDown={(e) => e.stopPropagation()}
               className={`relative inline-flex items-center justify-center w-10 h-10 text-slate-600 hover:bg-slate-100 rounded-xl transition-all duration-200 group ${
                 isNotificationOpen ? "bg-slate-100 text-slate-900" : ""
               }`}
@@ -78,16 +120,19 @@ const Header = ({ toggleSidebar }: HeaderProps) => {
                 strokeWidth={2}
                 className="group-hover:scale-110 transition-transform duration-200"
               />
-              {notifications.some((n) => !n.isRead) && (
+              {!isNotificationOpen && notifications.some((n) => !n.isRead) && (
                 <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-emerald-500 rounded-full ring-2 ring-white"></span>
               )}
             </button>
 
-            {/* <NotificationDialog 
+            <NotificationDialog 
                 isOpen={isNotificationOpen} 
                 onClose={() => setIsNotificationOpen(false)}
                 notifications={notifications}
-            /> */}
+                onMarkAllAsRead={handleMarkAllAsRead}
+                onDeleteAllRead={handleDeleteAllRead}
+                onMarkAsRead={handleMarkAsRead}
+            />
           </div>
 
           {/* User profile */}

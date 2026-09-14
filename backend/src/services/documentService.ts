@@ -11,7 +11,8 @@ import { chunkText, type TextChunk } from "@/utils/textChunker.js";
 import { AppError } from "@/middlewares/errorHandle.js";
 import supabase from "@/config/supabase.js";
 import { redisService } from "@/services/redisService.js";
-import { ingestDocument, deleteDocumentVectors } from "@/services/ragClientService.js";
+import { deleteDocumentVectors } from "@/services/ragClientService.js";
+import { enqueueDocumentProcessing } from "@/queues/documentQueue.js";
 import { mapDocumentResponse } from "@/utils/dtoMapper.js";
 import type {
   DocumentListResponseDto,
@@ -352,16 +353,13 @@ const processDocument = async (
 
     console.log(`Xử lý tài liệu ${documentId} hoàn tất`);
 
-    const ragDoc = await Document.findById(documentId).select("fileName").lean();
-    ingestDocument(
-      String(documentId),
-      (ragDoc?.fileName as string) || "unknown",
+    const ragDoc = await Document.findById(documentId).select("fileName userId").lean();
+    await enqueueDocumentProcessing({
+      documentId: String(documentId),
+      userId: String(ragDoc?.userId),
+      fileName: (ragDoc?.fileName as string) || "unknown",
       text,
-    ).catch((err) => {
-      console.error(
-        `[RAG] ingestDocument failed for ${documentId}:`,
-        (err as Error).message,
-      );
+      chunks,
     });
   } catch (error) {
     console.error("Lỗi khi xử lý tài liệu: ", error);

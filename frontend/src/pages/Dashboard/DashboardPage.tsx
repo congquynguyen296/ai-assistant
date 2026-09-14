@@ -32,27 +32,11 @@ const DashboardPage = () => {
     fetchDashboardData();
   }, []);
 
-  if (loading) {
-    return <LoadingSpinner />;
-  }
 
-  // No data
-  if (!dashboardData || !dashboardData.overview) {
-    return (
-      <div className="min-h-screen bg-gradiennt-to-br from-slate-50 via-white to-slate-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-slate-100 mb-4">
-            <TrendingUp className="w-8 h-8 text-emerald-500" />
-          </div>
-          <p className="text-sm text-slate-600">Chưa có dữ liệu.</p>
-        </div>
-      </div>
-    );
-  }
 
-  const overview = dashboardData.overview;
-  const recentDocuments = dashboardData.recentActivity?.documents || [];
-  const recentQuizzes = dashboardData.recentActivity?.quizzes || [];
+  const overview = dashboardData?.overview;
+  const recentDocuments = dashboardData?.recentActivity?.documents || [];
+  const recentQuizzes = dashboardData?.recentActivity?.quizzes || [];
   const now = Date.now();
   const weekAgo = now - 7 * 24 * 60 * 60 * 1000;
   const countThisWeek = (items: any[], getTs: (x: any) => string | undefined) =>
@@ -69,8 +53,8 @@ const DashboardPage = () => {
     ...(recentQuizzes || []).map((quiz: any) => ({
       id: quiz._id,
       type: "quiz" as const,
-      title: `Completed Quiz: ${quiz.title ?? "Quiz"}`,
-      subtitle: quiz.score != null ? `Avg Score: ${quiz.score}%` : "Quiz activity",
+      title: `Đã hoàn thành bài kiểm tra: ${quiz.title ?? "Bài kiểm tra"}`,
+      subtitle: quiz.score != null ? `Điểm trung bình: ${quiz.score}%` : "Hoạt động bài kiểm tra",
       timestamp: quiz.lastAttempted || quiz.completedAt,
       accent: "emerald" as const,
       link: quiz._id ? `/quizzes/${quiz._id}` : undefined,
@@ -78,10 +62,10 @@ const DashboardPage = () => {
     ...(recentDocuments || []).map((doc: any) => ({
       id: doc._id,
       type: "document" as const,
-      title: `Uploaded '${doc.title ?? "Document"}'`,
-      subtitle: "PDF Document",
+      title: `Đã tải lên '${doc.title ?? "Tài liệu"}'`,
+      subtitle: "Tài liệu PDF",
       timestamp: doc.lastAccessed,
-      accent: "slate" as const,
+      accent: doc.status === "completed" ? ("emerald" as const) : doc.status === "failed" ? ("rose" as const) : doc.status === "processing" || doc.status === "pending" ? ("amber" as const) : ("slate" as const),
       link: doc._id ? `/documents/${doc._id}` : undefined,
     })),
   ]
@@ -89,11 +73,31 @@ const DashboardPage = () => {
     .sort((a, b) => new Date(b.timestamp ?? 0).getTime() - new Date(a.timestamp ?? 0).getTime())
     .slice(0, 5);
 
-  const focusTitle = "Neural Networks & Deep Learning";
-  const focusProgress = 75;
-  const focusNext = "Backpropagation";
-  const focusDesc =
-    "You are 75% through Module 3. Next up: Backpropagation algorithms and practical implementation.";
+  let focusTitle = "Bắt đầu hành trình học tập";
+  let focusDesc = "Tải lên tài liệu đầu tiên để hệ thống AI bóc tách kiến thức và tạo Flashcards giúp bạn.";
+  let focusProgress = 0;
+  let focusNext = "Tải tài liệu";
+  let resumeHref = "/documents";
+
+  if (recentDocuments && recentDocuments.length > 0) {
+    const latestDoc = recentDocuments[0];
+    focusTitle = latestDoc.title || latestDoc.fileName || "Tài liệu gần nhất";
+    
+    const flashcardsToReview = Math.max(0, overview.totalFlashcards - overview.reviviewedFlashcards);
+    
+    if (overview.totalFlashcards > 0) {
+      focusProgress = Math.round((overview.reviviewedFlashcards / overview.totalFlashcards) * 100);
+      focusDesc = flashcardsToReview > 0 
+        ? `Tích cực lên! Bạn còn ${flashcardsToReview} Flashcard cần ôn tập. Điểm trung bình Quiz hiện tại là ${overview.averageScore}%.` 
+        : `Tuyệt vời! Bạn đã hoàn thành ôn tập tất cả Flashcard. Điểm trung bình Quiz: ${overview.averageScore}%.`;
+      focusNext = flashcardsToReview > 0 ? "Ôn tập ngay" : "Xem sơ đồ kiến thức";
+      resumeHref = `/documents/${latestDoc._id}`;
+    } else {
+      focusDesc = "Tài liệu này đã được tải lên. Hãy khám phá Sơ đồ kiến thức hoặc tạo Flashcard từ tài liệu này nhé!";
+      focusNext = "Khám phá ngay";
+      resumeHref = `/documents/${latestDoc._id}`;
+    }
+  }
 
   // Learning pulse (this week)
   const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
@@ -106,7 +110,7 @@ const DashboardPage = () => {
     d.setDate(monday.getDate() + i);
     return d;
   });
-  const dayLabels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  const dayLabels = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"];
 
   const activityTimestamps: number[] = [
     ...recentDocuments.map((d: any) => new Date(d.lastAccessed).getTime()).filter((x: number) => Number.isFinite(x)),
@@ -126,13 +130,13 @@ const DashboardPage = () => {
     pulseSum > 0
       ? learningPulseData
       : [
-          { day: "Mon", value: 1 },
-          { day: "Tue", value: 2 },
-          { day: "Wed", value: 2 },
-          { day: "Thu", value: 3 },
-          { day: "Fri", value: 2 },
-          { day: "Sat", value: 4 },
-          { day: "Sun", value: 3 },
+          { day: "T2", value: 1 },
+          { day: "T3", value: 2 },
+          { day: "T4", value: 2 },
+          { day: "T5", value: 3 },
+          { day: "T6", value: 2 },
+          { day: "T7", value: 4 },
+          { day: "CN", value: 3 },
         ];
 
   return (
@@ -140,40 +144,65 @@ const DashboardPage = () => {
       <div className="absolute inset-0 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] bg-size-[16px_16px] pointer-events-none z-0"></div>
       <div className="relative max-w-7xl mx-auto">
         {/* Header */}
-
-        {/* Current focus */}
-        <DashboardCurrentFocusCard
-          title={focusTitle}
-          description={focusDesc}
-          progressPercent={focusProgress}
-          nextUp={focusNext}
-          resumeHref="/documents"
-        />
-
-        {/* Stats cards */}
-        <DashboardStatsCards
-          documents={{ value: overview.totalDocuments, thisWeek: docsThisWeek }}
-          flashcards={{
-            value: overview.totalFlashcards,
-            thisWeek: Math.max(0, Math.round(overview.totalFlashcards * 0.02)),
-          }}
-          quizzes={{
-            value: overview.totalQuizzes,
-            avgScoreText:
-              recentQuizzes?.[0]?.score != null
-                ? `Avg Score: ${recentQuizzes[0].score}%`
-                : `+ ${quizzesThisWeek} this week`,
-          }}
-        />
-
-        {/* Lower grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 pb-10">
-          {/* Learning pulse */}
-          <DashboardLearningPulse data={pulseData} />
-
-          {/* Recent activity */}
-          <DashboardRecentActivity items={recentActivityItems} viewAllHref="/documents" />
+        <div className="mb-8 pt-8 px-4 sm:px-0">
+          <h1 className="text-2xl font-medium text-slate-900 tracking-tight mb-2">
+            Tổng quan
+          </h1>
+          <p className="text-slate-500">
+            Theo dõi tiến độ và hoạt động học tập của bạn
+          </p>
         </div>
+
+        {loading ? (
+          <div className="flex items-center justify-center min-h-[400px]">
+            <LoadingSpinner variant="inline" />
+          </div>
+        ) : !dashboardData || !dashboardData.overview ? (
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-slate-100 mb-4">
+                <TrendingUp className="w-8 h-8 text-emerald-500" />
+              </div>
+              <p className="text-sm text-slate-600">Chưa có dữ liệu.</p>
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* Current focus */}
+            <DashboardCurrentFocusCard
+              title={focusTitle}
+              description={focusDesc}
+              progressPercent={focusProgress}
+              nextUp={focusNext}
+              resumeHref={resumeHref}
+            />
+
+            {/* Stats cards */}
+            <DashboardStatsCards
+              documents={{ value: overview.totalDocuments, thisWeek: docsThisWeek }}
+              flashcards={{
+                value: overview.totalFlashcards,
+                thisWeek: Math.max(0, Math.round(overview.totalFlashcards * 0.02)),
+              }}
+              quizzes={{
+                value: overview.totalQuizzes,
+                avgScoreText:
+                  recentQuizzes?.[0]?.score != null
+                    ? `Điểm TB: ${recentQuizzes[0].score}%`
+                    : `+ ${quizzesThisWeek} tuần này`,
+              }}
+            />
+
+            {/* Lower grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 pb-10">
+              {/* Learning pulse */}
+              <DashboardLearningPulse data={pulseData} />
+
+              {/* Recent activity */}
+              <DashboardRecentActivity items={recentActivityItems} viewAllHref="/documents" />
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

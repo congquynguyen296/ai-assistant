@@ -2,7 +2,7 @@ import Document from "@/models/Document.js";
 import Quiz from "@/models/Quiz.js";
 import Flashcard from "@/models/Flashcard.js";
 import ChatHistory from "@/models/ChatHistory.js";
-import * as geminiUtil from "@/utils/geminiUtil.js";
+import * as azureAiUtil from "@/utils/azureAiUtil.js";
 import { AppError } from "@/middlewares/errorHandle.js";
 import { findRelevantChunks, type TextChunk } from "@/utils/textChunker.js";
 import { retrieveContext } from "@/services/ragClientService.js";
@@ -28,7 +28,7 @@ export const generateFlashcardsService = async (input: {
     throw new AppError("Tài liệu không tồn tại", 404);
   }
 
-  const cards = await geminiUtil.generateFlashcards(
+  const cards = await azureAiUtil.generateFlashcards(
     document.extractedText,
     numFlashcards,
     requirements,
@@ -67,7 +67,7 @@ export const generateQuizService = async (input: {
     throw new AppError("Tài liệu không tồn tại", 404);
   }
 
-  const questions = await geminiUtil.generateQuiz(
+  const questions = await azureAiUtil.generateQuiz(
     document.extractedText,
     Number.parseInt(String(numQuizzes), 10),
     requirements,
@@ -101,7 +101,7 @@ export const generateSummaryService = async (input: {
     throw new AppError("Tài liệu không tồn tại", 404);
   }
 
-  const summary = await geminiUtil.generateSummary(
+  const summary = await azureAiUtil.generateSummary(
     document.extractedText,
     language || "VIETNAMESE",
   );
@@ -163,8 +163,8 @@ export const chatService = async (input: {
   }
 
   const answer = ragContext
-    ? await geminiUtil.chatWithContext(question, null, contextForGemini)
-    : await geminiUtil.chatWithContext(question, relevantChunks);
+    ? await azureAiUtil.chatWithContext(question, null, contextForGemini)
+    : await azureAiUtil.chatWithContext(question, relevantChunks);
 
   chatHistory.messages.push(
     {
@@ -241,7 +241,7 @@ export const explainConceptService = async (input: {
     relevantChunkIndices = relevantChunks.map((chunk) => chunk.chunkIndex);
   }
 
-  const explanation = await geminiUtil.explainConcept(concept, context);
+  const explanation = await azureAiUtil.explainConcept(concept, context);
 
   return {
     concept,

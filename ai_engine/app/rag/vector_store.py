@@ -23,7 +23,7 @@ from qdrant_client.http.models import (
     MatchValue,
 )
 
-from ..core.config import QDRANT_URL, QDRANT_API_KEY, QDRANT_COLLECTION, VECTOR_SIZE
+from ..core.config import QDRANT_URL, QDRANT_API_KEY, QDRANT_COLLECTION, VECTOR_SIZE, ENVIRONMENT
 from ..models import Chunk
 
 logger = logging.getLogger(__name__)
@@ -36,11 +36,15 @@ _client: Optional[QdrantClient] = None
 def get_client() -> QdrantClient:
     global _client
     if _client is None:
-        if not QDRANT_URL or not QDRANT_API_KEY:
-            raise RuntimeError("QDRANT_URL and QDRANT_API_KEY must be set in environment.")
+        if not QDRANT_URL:
+            raise RuntimeError("QDRANT_URL must be set in environment.")
 
-        _client = QdrantClient(url=QDRANT_URL, api_key=QDRANT_API_KEY, check_compatibility=False)
-        logger.info("Qdrant Cloud client initialised at: %s", QDRANT_URL)
+        if ENVIRONMENT == "production" and not QDRANT_API_KEY:
+            raise RuntimeError("QDRANT_API_KEY must be set in production environment.")
+
+        api_key_to_pass = QDRANT_API_KEY if QDRANT_API_KEY else None
+        _client = QdrantClient(url=QDRANT_URL, api_key=api_key_to_pass, check_compatibility=False)
+        logger.info("Qdrant client initialised at: %s", QDRANT_URL)
 
         # Ensure collection exists with correct vector size
         try:

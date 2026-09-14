@@ -1,14 +1,15 @@
 import { X } from "lucide-react";
-import type { ConceptCategory, ConceptNodeData } from "./types";
-import { categoryLabel } from "./types";
+import type { ConceptCategory, ConceptNode, ConceptEdge } from "@/types/network.types";
+import { categoryLabel } from "@/types/network.types";
 
 type Props = {
   isOpen: boolean;
-  concept: ConceptNodeData | null;
+  concept: ConceptNode | null;
   activeGroup: "all" | ConceptCategory;
-  getConceptById: (id: string) => ConceptNodeData | undefined;
+  getConceptById: (id: string) => ConceptNode | undefined;
   onSelectConcept: (id: string) => void;
   onClose: () => void;
+  edges: ConceptEdge[];
 };
 
 export default function ConceptDetailPanel({
@@ -18,7 +19,11 @@ export default function ConceptDetailPanel({
   getConceptById,
   onSelectConcept,
   onClose,
+  edges,
 }: Props) {
+  const connections = concept
+    ? edges.filter((e) => e.from === concept.id)
+    : [];
   return (
     <div
       data-network-ui
@@ -71,15 +76,15 @@ export default function ConceptDetailPanel({
                 Connected Concepts
               </div>
               <div className="space-y-2">
-                {concept.connections.map((c) => {
-                  const target = getConceptById(c.toId);
+                {connections.map((c) => {
+                  const target = getConceptById(c.to);
                   if (!target) return null;
                   if (activeGroup !== "all" && target.category !== activeGroup) return null;
                   return (
                     <button
-                      key={`${concept.id}-${c.toId}`}
+                      key={`${concept.id}-${c.to}`}
                       type="button"
-                      onClick={() => onSelectConcept(c.toId)}
+                      onClick={() => onSelectConcept(c.to)}
                       className="w-full text-left rounded-xl border border-slate-200 bg-white hover:bg-slate-50 px-3 py-2 transition-all"
                     >
                       <div className="flex items-center justify-between gap-3">
@@ -99,39 +104,6 @@ export default function ConceptDetailPanel({
               </div>
             </section>
 
-            <section className="space-y-2">
-              <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Citations
-              </div>
-              <div className="space-y-3">
-                {concept.citations.map((c) => (
-                  <div
-                    key={c.location}
-                    className="rounded-2xl border border-slate-200 bg-white p-4"
-                  >
-                    <div className="text-xs font-semibold text-slate-500 mb-2">
-                      {c.location}
-                    </div>
-                    <div className="text-sm text-slate-700 leading-relaxed">“{c.excerpt}”</div>
-                    <button
-                      type="button"
-                      className="mt-3 h-9 px-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-sm font-semibold transition-all"
-                    >
-                      Read in Document
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </section>
-          </div>
-
-          <div className="p-5 border-t border-slate-200">
-            <button
-              type="button"
-              className="w-full h-11 rounded-xl bg-linear-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white text-sm font-semibold shadow-lg shadow-emerald-500/25 transition-all"
-            >
-              Edit Concept
-            </button>
           </div>
         </div>
       )}

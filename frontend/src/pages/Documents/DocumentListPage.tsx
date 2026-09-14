@@ -11,7 +11,7 @@ import type { Document } from "@/types/models";
 const DocumentListPage = () => {
   // State for documents
   const [documents, setDocuments] = useState<Document[] | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   // State for upload modal
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
@@ -29,9 +29,7 @@ const DocumentListPage = () => {
   const [renameTitle, setRenameTitle] = useState("");
   const [renaming, setRenaming] = useState(false);
 
-  if (loading) {
-    return <LoadingSpinner />;
-  }
+
 
   // Fetch documents function
   const fectchDocuments = async () => {
@@ -147,7 +145,7 @@ const DocumentListPage = () => {
     if (loading) {
       return (
         <div className="flex items-center justify-center min-h-[400px]">
-          <LoadingSpinner />
+          <LoadingSpinner variant="inline" />
         </div>
       );
     }
@@ -293,7 +291,7 @@ const DocumentListPage = () => {
                         </>
                       )}
                     </p>
-                    <p className="text-xs text-slate-500">Hỗ trợ tối đa 20MB</p>
+                    <p className="text-xs text-slate-500">Hỗ trợ tối đa 10MB</p>
                   </div>
                 </div>
               </div>

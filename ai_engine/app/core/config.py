@@ -3,11 +3,16 @@ ai_engine/app/core/config.py
 Centralized configuration — reads from environment variables.
 """
 import os
+# pyrefly: ignore [missing-import]
 from dotenv import load_dotenv
 
-load_dotenv()
+if os.path.exists(".env.dev"):
+    load_dotenv(".env.dev")
+else:
+    load_dotenv()
 
 # ── Server ────────────────────────────────────────────────────────────────────
+ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")
 PORT: int = int(os.getenv("PORT", "8000"))
 
 # ── Logging ───────────────────────────────────────────────────────────────────
@@ -16,10 +21,10 @@ LOG_PATH: str = os.getenv("AI_ENGINE_LOG_PATH", "logs/ai_engine.log")
 # ── Internal Auth ─────────────────────────────────────────────────────────────
 INTERNAL_API_KEY: str = os.getenv("INTERNAL_API_KEY", "")
 
-# ── Gemini Embedding ──────────────────────────────────────────────────────────
-GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
-EMBEDDING_MODEL: str = os.getenv("EMBEDDING_MODEL", "models/gemini-embedding-001")
-EMBEDDING_TASK_TYPE: str = "RETRIEVAL_DOCUMENT"       # optimised for semantic retrieval
+# ── Azure OpenAI Embedding ────────────────────────────────────────────────────────
+AZURE_OPENAI_API_KEY: str = os.getenv("AZURE_OPENAI_API_KEY", "")
+AZURE_OPENAI_ENDPOINT: str = os.getenv("AZURE_OPENAI_ENDPOINT", "https://hyra-open-ai.services.ai.azure.com/openai/v1")
+EMBEDDING_MODEL: str = os.getenv("EMBEDDING_MODEL", "text-embedding-3-small")
 EMBEDDING_BATCH_SIZE: int = int(os.getenv("EMBEDDING_BATCH_SIZE", "100"))
 EMBEDDING_INTER_BATCH_DELAY: float = float(os.getenv("EMBEDDING_INTER_BATCH_DELAY", "0.6"))
 EMBEDDING_MAX_RETRIES: int = int(os.getenv("EMBEDDING_MAX_RETRIES", "3"))

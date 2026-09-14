@@ -16,14 +16,15 @@ import { useCallback, useEffect, useMemo, useRef } from "react";
 import { forceCollide, forceManyBody, forceSimulation, forceX, forceY } from "d3-force";
 import dagre from "dagre";
 import ConceptNode, { type ConceptFlowNodeData } from "./ConceptNode";
-import type { ConceptCategory, ConceptNodeData } from "./types";
+import type { ConceptCategory, ConceptNode as ConceptNodeType, ConceptEdge } from "@/types/network.types";
 
 type Props = {
   activeGroup: "all" | ConceptCategory;
-  concepts: ConceptNodeData[];
-  edges: Array<{ from: string; to: string }>;
+  concepts: ConceptNodeType[];
+  edges: ConceptEdge[];
   selectedId: string | null;
   onSelect: (id: string | null) => void;
+  onNodeReposition?: (id: string, x: number, y: number) => void;
   onNodesReposition?: (positions: Array<{ id: string; x: number; y: number }>) => void;
   onViewChange?: (v: {
     zoomPercent: number;
@@ -95,6 +96,7 @@ function FlowInner({
   edges,
   selectedId,
   onSelect,
+  onNodeReposition,
   onNodesReposition,
   onViewChange,
 }: Props) {
@@ -128,13 +130,11 @@ function FlowInner({
   const treeEdges = useMemo(() => buildSpanningTreeEdges(rootId, visibleRawEdges), [rootId, visibleRawEdges]);
 
   const flowNodes = useMemo<Node<ConceptFlowNodeData>[]>(() => {
-    return visibleConcepts.map((c, idx) => {
-      const baseX = (idx % 3) * 220 - 220;
-      const baseY = Math.floor(idx / 3) * 170 - 120;
+    return visibleConcepts.map((c) => {
       return {
         id: c.id,
         type: "concept",
-        position: { x: baseX, y: baseY },
+        position: c.position || { x: 0, y: 0 },
         data: { ...c, selected: false },
         sourcePosition: Position.Bottom,
         targetPosition: Position.Top,
@@ -143,16 +143,16 @@ function FlowInner({
   }, [visibleConcepts]);
 
   const flowEdges = useMemo<Edge[]>(() => {
-    // Tree mode by default: use spanning-tree edges to avoid cycles / clutter.
-    return treeEdges
-      .map((e) => ({
-        id: `${e.from}-${e.to}`,
+    return visibleRawEdges
+      .map((e: any) => ({
+        id: e.id || `${e.from}-${e.to}`,
         source: e.from,
         target: e.to,
         type: "smoothstep",
+        label: e.label,
         style: { stroke: "rgba(15, 118, 110, 0.35)", strokeWidth: 2 },
       }));
-  }, [treeEdges]);
+  }, [visibleRawEdges]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState(flowNodes);
   const [edgesState, setEdges, onEdgesChange] = useEdgesState(flowEdges);
@@ -257,10 +257,12 @@ function FlowInner({
   );
 
   useEffect(() => {
-    fit();
-    // keep graph tidy when switching groups
-    runAutoLayout("TB");
-  }, [activeGroup, fit, runAutoLayout]);
+    // Automatically run tree layout (Top-to-Bottom) when concepts load
+    const timer = setTimeout(() => {
+      runAutoLayout("TB");
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [concepts, runAutoLayout]);
 
   const runCollisionRelax = useCallback(() => {
     const current = reactFlow.getNodes();
@@ -313,7 +315,10 @@ function FlowInner({
         onEdgesChange={onEdgesChange}
         onNodeClick={(_, n) => onSelect(n.id)}
         onPaneClick={() => onSelect(null)}
-        onNodeDragStop={() => runCollisionRelax()}
+        onNodeDragStop={(_, n) => {
+          onNodeReposition?.(n.id, n.position.x, n.position.y);
+          // Optional: runCollisionRelax(); 
+        }}
         onMove={(_, viewport) => syncZoomPercent(viewport.zoom)}
         fitView
         fitViewOptions={{ padding: 0.25 }}

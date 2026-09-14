@@ -1,7 +1,7 @@
 import { Handle, Position, type NodeProps } from "@xyflow/react";
-import type { ConceptNodeData } from "./types";
+import type { ConceptNode as ConceptNodeType } from "@/types/network.types";
 
-export type ConceptFlowNodeData = ConceptNodeData & {
+export type ConceptFlowNodeData = ConceptNodeType & {
   selected?: boolean;
 };
 

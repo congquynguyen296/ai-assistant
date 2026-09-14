@@ -6,6 +6,7 @@ import LoadingSpinner from "@/components/common/LoadingSpinner";
 import { ArrowLeft } from "lucide-react";
 import PageHeader from "@/components/common/PageHeader";
 import Tabs from "@/components/common/Tabs";
+import NotFound from "@/components/common/NotFound";
 import ChatInterface from "@/components/messages/ChatInterface";
 import FileViewer from "@/components/documents/viewers/FileViewer";
 import AIActions from "@/components/ai/AIActions";
@@ -83,13 +84,13 @@ const DocumentDetailPage = () => {
 
   // Render network tab
   const renderNetwork = () => {
-    return <DocumentNetworkTab />;
+    return <DocumentNetworkTab documentId={documentId as string} />;
   };
 
   // Tabs
   const tabs = [
     { name: "content", label: "Nội dung", content: renderContent() },
-    { name: "network", label: "Network", content: renderNetwork() },
+    // { name: "network", label: "Network", content: renderNetwork() }, // Tạm tắt tính năng Network theo yêu cầu
     { name: "chat", label: "Chat", content: renderChat() },
     { name: "ai-actions", label: "AI", content: renderAIAction() },
     { name: "flashcards", label: "Flashcards", content: renderFlashcards() },
@@ -101,7 +102,14 @@ const DocumentDetailPage = () => {
   }
 
   if (!document) {
-    return <div className="text-center p-8">Không tìm thấy tài liệu.</div>;
+    return (
+      <NotFound
+        title="Không tìm thấy tài liệu"
+        message="Tài liệu bạn đang tìm kiếm không tồn tại hoặc đã bị xóa."
+        backUrl="/documents"
+        backText="Quay lại danh sách tài liệu"
+      />
+    );
   }
 
   return (

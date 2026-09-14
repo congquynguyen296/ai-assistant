@@ -16,8 +16,8 @@ export default function DashboardLearningPulse({ data }: Props) {
   return (
     <div className="lg:col-span-2 bg-white/80 backdrop-blur-xl border border-slate-200/60 rounded-2xl shadow-xl shadow-slate-200/50 p-5">
       <div className="flex items-center justify-between gap-4 mb-4">
-        <div className="text-sm font-semibold text-slate-900">Learning Pulse</div>
-        <div className="text-xs font-semibold text-slate-500">This Week</div>
+        <div className="text-sm font-semibold text-slate-900">Nhịp độ học tập</div>
+        <div className="text-xs font-semibold text-slate-500">Tuần này</div>
       </div>
       <div className="h-60 rounded-2xl border border-slate-200 bg-white overflow-hidden">
         <ResponsiveContainer width="100%" height="100%">
@@ -45,7 +45,7 @@ export default function DashboardLearningPulse({ data }: Props) {
               }}
               labelStyle={{ color: "#0f172a", fontWeight: 700 }}
               itemStyle={{ color: "#0f766e", fontWeight: 700 }}
-              formatter={(v: any) => [v, "Activities"]}
+              formatter={(v: any) => [v, "Hoạt động"]}
             />
             <Line
               type="monotone"
