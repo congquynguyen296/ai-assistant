@@ -54,6 +54,23 @@ export const enqueueDocumentProcessing = async (payload: {
   });
 };
 
+const createAndSendNotification = async (payload: {
+  userId: string;
+  title: string;
+  message: string;
+  type: "success" | "info" | "warning" | "error";
+  link?: string;
+}) => {
+  const notification = await Notification.create(payload);
+  try {
+    const io = getIO();
+    io.to(payload.userId).emit("new_notification", notification.toJSON());
+  } catch (err) {
+    console.error("Socket error", err);
+  }
+  return notification;
+};
+
 const processDocumentJob = async (data: {
   documentId: string;
   userId: string;
@@ -70,7 +87,7 @@ const processDocumentJob = async (data: {
     try {
       await ingestDocument(documentId, fileName, text);
       
-      const notification = await Notification.create({
+      await createAndSendNotification({
         userId,
         title: "Xử lý tài liệu thành công",
         message: `Hệ thống đã đọc và phân tích tài liệu "${fileName}" thành công. Bạn đã có thể bắt đầu trò chuyện.`,
@@ -78,31 +95,20 @@ const processDocumentJob = async (data: {
         link: `/documents/${documentId}`,
       });
       
-      try {
-        const io = getIO();
-        io.to(userId).emit("new_notification", notification.toJSON());
-      } catch (err) {
-        console.error("Socket error", err);
-      }
+      // Update document status to ready
+      await Document.findByIdAndUpdate(documentId, { status: "ready" });
     } catch (err) {
       console.error(
         `[RAG] ingestDocument failed for ${documentId}:`,
         (err as Error).message,
       );
       
-      const notification = await Notification.create({
+      await createAndSendNotification({
         userId,
         title: "Lỗi xử lý tài liệu",
         message: `Có lỗi xảy ra khi phân tích tài liệu "${fileName}".`,
         type: "error",
       });
-      
-      try {
-        const io = getIO();
-        io.to(userId).emit("new_notification", notification.toJSON());
-      } catch (socketErr) {
-        console.error("Socket error", socketErr);
-      }
     }
 
     // 2. Knowledge Graph Generation (Tạm tắt tính năng Network)
