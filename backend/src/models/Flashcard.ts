@@ -33,6 +33,18 @@ const flashcardSchema = new Schema<FlashcardDocument>(
           enum: ["easy", "medium", "hard"],
           default: "medium",
         },
+        nextReviewDate: {
+          type: Date,
+          default: Date.now,
+        },
+        interval: {
+          type: Number,
+          default: 0,
+        },
+        easeFactor: {
+          type: Number,
+          default: 2.5,
+        },
         lastReviewed: {
           type: Date,
           default: null,

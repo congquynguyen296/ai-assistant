@@ -14,7 +14,7 @@ import time
 from typing import List
 
 import openai
-from openai import OpenAI
+from openai import AzureOpenAI
 
 from ..core.config import (
     AZURE_OPENAI_API_KEY,
@@ -29,17 +29,24 @@ from ..core.config import (
 logger = logging.getLogger(__name__)
 
 # ── Singleton OpenAI client ───────────────────────────────────────────────────
-_client: OpenAI | None = None
+_client: AzureOpenAI | None = None
 
 
-def _get_client() -> OpenAI:
+def _get_client() -> AzureOpenAI:
     global _client
     if _client is None:
         if not AZURE_OPENAI_API_KEY:
             raise RuntimeError("AZURE_OPENAI_API_KEY is not set in environment.")
-        _client = OpenAI(
-            base_url=AZURE_OPENAI_ENDPOINT,
+        
+        # Parse endpoint: remove trailing /openai/v1 if exists
+        endpoint = AZURE_OPENAI_ENDPOINT
+        if "/openai" in endpoint:
+            endpoint = endpoint.split("/openai")[0]
+            
+        _client = AzureOpenAI(
+            azure_endpoint=endpoint,
             api_key=AZURE_OPENAI_API_KEY,
+            api_version="2024-02-01"
         )
         logger.info("Azure OpenAI client initialised (embedding model: %s)", EMBEDDING_MODEL)
     return _client
