@@ -24,6 +24,7 @@ INTERNAL_API_KEY: str = os.getenv("INTERNAL_API_KEY", "")
 # ── Azure OpenAI Embedding ────────────────────────────────────────────────────────
 AZURE_OPENAI_API_KEY: str = os.getenv("AZURE_OPENAI_API_KEY", "")
 AZURE_OPENAI_ENDPOINT: str = os.getenv("AZURE_OPENAI_ENDPOINT", "https://hyra-open-ai.services.ai.azure.com/openai/v1")
+AZURE_OPENAI_DEPLOYMENT_NAME: str = os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME", "text-embedding-3-small")
 EMBEDDING_MODEL: str = os.getenv("EMBEDDING_MODEL", "text-embedding-3-small")
 EMBEDDING_BATCH_SIZE: int = int(os.getenv("EMBEDDING_BATCH_SIZE", "100"))
 EMBEDDING_INTER_BATCH_DELAY: float = float(os.getenv("EMBEDDING_INTER_BATCH_DELAY", "0.6"))

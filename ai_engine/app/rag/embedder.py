@@ -19,7 +19,7 @@ from openai import AzureOpenAI
 from ..core.config import (
     AZURE_OPENAI_API_KEY,
     AZURE_OPENAI_ENDPOINT,
-    EMBEDDING_MODEL,
+    AZURE_OPENAI_DEPLOYMENT_NAME,
     EMBEDDING_BATCH_SIZE,
     EMBEDDING_INTER_BATCH_DELAY,
     EMBEDDING_MAX_RETRIES,
@@ -48,7 +48,7 @@ def _get_client() -> AzureOpenAI:
             api_key=AZURE_OPENAI_API_KEY,
             api_version="2024-02-01"
         )
-        logger.info("Azure OpenAI client initialised (embedding model: %s)", EMBEDDING_MODEL)
+        logger.info("Azure OpenAI client initialised (deployment name: %s)", AZURE_OPENAI_DEPLOYMENT_NAME)
     return _client
 
 
@@ -95,7 +95,7 @@ def embed_texts(texts: List[str], task_type: str = "RETRIEVAL_DOCUMENT") -> List
             try:
                 # With OpenAI, passing an array of strings returns an array of embeddings
                 batch_result = client.embeddings.create(
-                    model=EMBEDDING_MODEL,
+                    model=AZURE_OPENAI_DEPLOYMENT_NAME,
                     input=batch,
                 )
                 break
