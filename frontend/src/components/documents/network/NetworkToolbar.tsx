@@ -1,5 +1,5 @@
-import type { ConceptCategory } from "./types";
-import { categoryLabel } from "./types";
+import type { ConceptCategory } from "@/types/network.types";
+import { categoryLabel } from "@/types/network.types";
 
 type Props = {
   activeGroup: "all" | ConceptCategory;

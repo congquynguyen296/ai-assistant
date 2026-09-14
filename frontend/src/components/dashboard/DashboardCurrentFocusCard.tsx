@@ -24,23 +24,10 @@ export default function DashboardCurrentFocusCard({
             <span className="h-5 w-5 rounded-full border-2 border-emerald-600 flex items-center justify-center">
               <Target />
             </span>
-            Current Focus
+            Mục tiêu hiện tại
           </div>
           <div className="mt-2 text-lg font-semibold text-slate-900 truncate">{title}</div>
           <div className="mt-1 text-sm text-slate-600">{description}</div>
-
-          <div className="mt-4">
-            <div className="h-2 rounded-full bg-emerald-100 overflow-hidden">
-              <div
-                className="h-full bg-linear-to-r from-emerald-500 to-teal-500 rounded-full"
-                style={{ width: `${Math.max(0, Math.min(100, progressPercent))}%` }}
-              />
-            </div>
-            <div className="mt-2 text-xs text-slate-500">
-              {Math.round(progressPercent)}% through · Next up:{" "}
-              <span className="font-semibold text-slate-700">{nextUp}</span>
-            </div>
-          </div>
         </div>
 
         <a
@@ -48,7 +35,7 @@ export default function DashboardCurrentFocusCard({
           className="inline-flex items-center justify-center gap-2 h-10 px-4 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold shadow-md shadow-emerald-700/20 transition-colors whitespace-nowrap"
         >
           <Play className="h-4 w-4" />
-          Resume Module
+          Tiếp tục tìm hiểu
         </a>
       </div>
     </div>

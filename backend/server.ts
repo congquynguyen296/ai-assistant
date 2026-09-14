@@ -1,4 +1,5 @@
 import express, { type Request, type Response, type NextFunction } from "express";
+import http from "http";
 import cors from "cors";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -11,17 +12,23 @@ import flashcardRoutes from "@/routes/flashcardRoutes.js";
 import aiRoutes from "@/routes/aiRoutes.js";
 import quizRoutes from "@/routes/quizRoutes.js";
 import processRoutes from "@/routes/progressRoute.js";
+import knowledgeGraphRoutes from "@/routes/knowledgeGraphRoutes.js";
+import notificationRoutes from "@/routes/notificationRoutes.js";
 import { requestLogger } from "@/middlewares/requestLogger.js";
 import { appLogger } from "@/utils/logger.js";
+import { initRabbitMQ } from "@/queues/documentQueue.js";
+import { initSocketIO } from "@/services/socketService.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
+const httpServer = http.createServer(app);
+initSocketIO(httpServer);
 
 await connectDB();
-
 await connectRedis();
+await initRabbitMQ();
 
 app.use(
   cors({
@@ -64,6 +71,8 @@ app.use(`${process.env.API_PREFIX}/flashcards`, flashcardRoutes);
 app.use(`${process.env.API_PREFIX}/quizzes`, quizRoutes);
 app.use(`${process.env.API_PREFIX}/ai-generation`, aiRoutes);
 app.use(`${process.env.API_PREFIX}/progress`, processRoutes);
+app.use(`${process.env.API_PREFIX}/knowledge-graph`, knowledgeGraphRoutes);
+app.use(`${process.env.API_PREFIX}/notifications`, notificationRoutes);
 
 app.use(errorHandler);
 
@@ -76,7 +85,7 @@ app.use((_req: Request, res: Response, _next: NextFunction) => {
 });
 
 const PORT = process.env.PORT || 8000;
-app.listen(PORT, () => {
+httpServer.listen(PORT, () => {
   appLogger.info(`Server đang chạy ở cổng: ${PORT}`);
 });
 

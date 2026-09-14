@@ -5,9 +5,14 @@ import {
   reviewFlashcardService,
   toggleStarFlashcardService,
   deleteFlashcardSetService,
+  renameFlashcardSetService,
+  addFlashcardToSetService,
+  updateFlashcardInSetService,
+  deleteFlashcardFromSetService,
 } from "../services/flashcardService.js";
 import { getUserIdFromReq } from "@/utils/authUtil.js";
 import type { AuthRequest } from "@/types/request.js";
+import { Difficulty } from "@/types/enums.js";
 
 export const getFlashcards = async (
   req: AuthRequest,
@@ -131,6 +136,131 @@ export const deleteFlashcardSet = async (
     return res.status(200).json({
       success: true,
       message: "Xóa bộ flashcard thành công",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const renameFlashcardSet = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction,
+): Promise<Response | void> => {
+  try {
+    const userId = getUserIdFromReq(req);
+    const flashcardId = req.params.setId;
+    const { title } = req.body;
+
+    if (!title) {
+      return res.status(400).json({
+        success: false,
+        error: "Tiêu đề không được để trống",
+        statusCode: 400,
+      });
+    }
+
+    const result = await renameFlashcardSetService({ userId, flashcardId, title });
+    return res.status(200).json({
+      success: true,
+      message: "Đổi tên bộ flashcard thành công",
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const addFlashcardToSet = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction,
+): Promise<Response | void> => {
+  try {
+    const userId = getUserIdFromReq(req);
+    const flashcardId = req.params.setId;
+    const { question, answer, difficulty } = req.body;
+
+    if (!question || !answer) {
+      return res.status(400).json({
+        success: false,
+        error: "Câu hỏi và câu trả lời không được để trống",
+        statusCode: 400,
+      });
+    }
+
+    const result = await addFlashcardToSetService({
+      userId,
+      flashcardId,
+      question,
+      answer,
+      difficulty: difficulty || Difficulty.MEDIUM,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Thêm thẻ flashcard thành công",
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateFlashcardInSet = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction,
+): Promise<Response | void> => {
+  try {
+    const userId = getUserIdFromReq(req);
+    const flashcardId = req.params.setId;
+    const cardId = req.params.cardId;
+    const { question, answer, difficulty } = req.body;
+
+    if (!question || !answer) {
+      return res.status(400).json({
+        success: false,
+        error: "Câu hỏi và câu trả lời không được để trống",
+        statusCode: 400,
+      });
+    }
+
+    const result = await updateFlashcardInSetService({
+      userId,
+      flashcardId,
+      cardId,
+      question,
+      answer,
+      difficulty: difficulty || Difficulty.MEDIUM,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Cập nhật thẻ flashcard thành công",
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteFlashcardFromSet = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction,
+): Promise<Response | void> => {
+  try {
+    const userId = getUserIdFromReq(req);
+    const flashcardId = req.params.setId;
+    const cardId = req.params.cardId;
+
+    const result = await deleteFlashcardFromSetService({ userId, flashcardId, cardId });
+
+    return res.status(200).json({
+      success: true,
+      message: "Xóa thẻ flashcard thành công",
+      data: result,
     });
   } catch (error) {
     next(error);

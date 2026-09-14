@@ -39,16 +39,18 @@ const Tabs = ({ tabs, activeTab, setActiveTab }: TabsProps) => {
         </nav>
       </div>
       <div className="py-6">
-        {tabs.map((tab) => {
-          if (tab.name === activeTab) {
-            return (
-              <div key={tab.name} className="animate-in fade-in duration-200">
-                {tab.content}
-              </div>
-            );
-          }
-          return null;
-        })}
+        {tabs.map((tab) => (
+          <div
+            key={tab.name}
+            className={`${
+              tab.name === activeTab
+                ? "block animate-in fade-in duration-200"
+                : "hidden"
+            }`}
+          >
+            {tab.content}
+          </div>
+        ))}
       </div>
     </div>
   );

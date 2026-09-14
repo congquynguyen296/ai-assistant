@@ -12,12 +12,14 @@ import type { NotificationItem } from "@/types/models";
 interface NotificationCardProps {
   notification: NotificationItem;
   onClose?: () => void;
+  onMarkAsRead?: (id: string) => void;
 }
 
-const NotificationCard = ({ notification, onClose }: NotificationCardProps) => {
+const NotificationCard = ({ notification, onClose, onMarkAsRead }: NotificationCardProps) => {
   const navigate = useNavigate();
 
-  const { title, message, type, time, isRead, link } = notification;
+  const { title, message, type, createdAt, isRead, link } = notification;
+  const timeStr = createdAt ? new Date(createdAt).toLocaleString() : "Vừa xong";
 
   const getIcon = () => {
     switch (type) {
@@ -50,6 +52,9 @@ const NotificationCard = ({ notification, onClose }: NotificationCardProps) => {
   };
 
   const handleClick = () => {
+    if (!isRead && onMarkAsRead && notification._id) {
+      onMarkAsRead(notification._id);
+    }
     if (link) {
       navigate(link);
       if (onClose) onClose();
@@ -79,7 +84,7 @@ const NotificationCard = ({ notification, onClose }: NotificationCardProps) => {
               {title}
             </h4>
             <span className="text-[10px] text-slate-400 whitespace-nowrap shrink-0">
-              {time}
+              {timeStr}
             </span>
           </div>
           <p

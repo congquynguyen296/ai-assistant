@@ -81,107 +81,123 @@ const QuizzesPage = () => {
     quiz.title?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  if (loading) return <LoadingSpinner />;
+
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-7xl">
-      <PageHeader
-        title="Thư viện câu hỏi"
-        description="Quản lý và ôn tập các bộ câu hỏi trắc nghiệm của bạn"
-        icon={BrainCircuit}
-        action={
-          <Button onClick={() => navigate("/documents")}>
-            <Plus className="w-5 h-5 mr-2" />
-            Tạo Quiz mới
-          </Button>
-        }
-      />
-
-      {/* Search and Filter */}
-      <div className="mb-8">
-        <div className="relative max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-          <input
-            type="text"
-            placeholder="Tìm kiếm quiz..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
-          />
+    <div className="min-h-screen relative w-full">
+      <div className="absolute inset-0 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] bg-size-[16px_16px] pointer-events-none z-0"></div>
+      <div className="relative container mx-auto px-4 py-8 max-w-7xl">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-10">
+          <div>
+            <h1 className="text-2xl font-medium text-slate-900 tracking-tight mb-2 flex items-center gap-2">
+              Thư viện câu hỏi
+            </h1>
+            <p className="text-slate-500 mb-2">
+              Quản lý và ôn tập các bộ câu hỏi trắc nghiệm của bạn
+            </p>
+          </div>
+          <div className="w-full sm:w-auto">
+            <Button onClick={() => navigate("/documents")} className="w-full sm:w-auto">
+              <Plus className="w-5 h-5 mr-2" />
+              Tạo Quiz mới
+            </Button>
+          </div>
         </div>
-      </div>
 
-      {/* Quiz Grid */}
-      {filteredQuizzes.length > 0 ? (
+      {/* Content */}
+      {loading ? (
+        <div className="flex items-center justify-center min-h-[400px]">
+          <LoadingSpinner variant="inline" />
+        </div>
+      ) : (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            {filteredQuizzes.map((quiz) => (
-              <QuizCard
-                key={quiz._id}
-                quiz={quiz}
-                onDelete={(quiz) => {
-                  setSelectedQuiz(quiz);
-                  setIsDeleteModalOpen(true);
-                }}
+          {/* Search and Filter */}
+          <div className="mb-8">
+            <div className="relative max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Tìm kiếm quiz..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
               />
-            ))}
+            </div>
           </div>
 
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex justify-center items-center gap-2">
-              <button
-                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                disabled={currentPage === 1}
-                className="p-2 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                <ChevronLeft className="w-5 h-5 text-slate-600" />
-              </button>
-
-              <div className="flex items-center gap-1">
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                  (page) => (
-                    <button
-                      key={page}
-                      onClick={() => setCurrentPage(page)}
-                      className={`w-10 h-10 rounded-lg text-sm font-medium transition-colors ${
-                        currentPage === page
-                          ? "bg-emerald-600 text-white"
-                          : "text-slate-600 hover:bg-slate-50 border border-transparent hover:border-slate-200"
-                      }`}
-                    >
-                      {page}
-                    </button>
-                  )
-                )}
+          {/* Quiz Grid */}
+          {filteredQuizzes.length > 0 ? (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                {filteredQuizzes.map((quiz) => (
+                  <QuizCard
+                    key={quiz._id}
+                    quiz={quiz}
+                    onDelete={(quiz) => {
+                      setSelectedQuiz(quiz);
+                      setIsDeleteModalOpen(true);
+                    }}
+                  />
+                ))}
               </div>
 
-              <button
-                onClick={() =>
-                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                }
-                disabled={currentPage === totalPages}
-                className="p-2 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                <ChevronRight className="w-5 h-5 text-slate-600" />
-              </button>
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex justify-center items-center gap-2">
+                  <button
+                    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                    className="p-2 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <ChevronLeft className="w-5 h-5 text-slate-600" />
+                  </button>
+
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                      (page) => (
+                        <button
+                          key={page}
+                          onClick={() => setCurrentPage(page)}
+                          className={`w-10 h-10 rounded-lg text-sm font-medium transition-colors ${
+                            currentPage === page
+                              ? "bg-emerald-600 text-white"
+                              : "text-slate-600 hover:bg-slate-50 border border-transparent hover:border-slate-200"
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      )
+                    )}
+                  </div>
+
+                  <button
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                    }
+                    disabled={currentPage === totalPages}
+                    className="p-2 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <ChevronRight className="w-5 h-5 text-slate-600" />
+                  </button>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="text-center py-12 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200">
+              <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-sm border border-slate-100">
+                <BrainCircuit className="w-8 h-8 text-slate-400" />
+              </div>
+              <h3 className="text-lg font-semibold text-slate-900 mb-2">
+                Chưa có bộ câu hỏi nào
+              </h3>
+              <p className="text-slate-500 max-w-md mx-auto mb-6">
+                Tạo bộ câu hỏi đầu tiên từ tài liệu của bạn để bắt đầu ôn tập hiệu
+                quả hơn.
+              </p>
+              <Button onClick={() => navigate("/documents")}>Tạo Quiz ngay</Button>
             </div>
           )}
         </>
-      ) : (
-        <div className="text-center py-12 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200">
-          <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-sm border border-slate-100">
-            <BrainCircuit className="w-8 h-8 text-slate-400" />
-          </div>
-          <h3 className="text-lg font-semibold text-slate-900 mb-2">
-            Chưa có bộ câu hỏi nào
-          </h3>
-          <p className="text-slate-500 max-w-md mx-auto mb-6">
-            Tạo bộ câu hỏi đầu tiên từ tài liệu của bạn để bắt đầu ôn tập hiệu
-            quả hơn.
-          </p>
-          <Button onClick={() => navigate("/documents")}>Tạo Quiz ngay</Button>
-        </div>
       )}
 
       <ConfirmModal
@@ -194,6 +210,7 @@ const QuizzesPage = () => {
         isLoading={deleting}
         variant="danger"
       />
+      </div>
     </div>
   );
 };

@@ -2,14 +2,14 @@ import Document from "@/models/Document.js";
 import Quiz from "@/models/Quiz.js";
 import Flashcard from "@/models/Flashcard.js";
 import ChatHistory from "@/models/ChatHistory.js";
-import * as geminiUtil from "@/utils/geminiUtil.js";
+import * as azureAiUtil from "@/utils/azureAiUtil.js";
 import { AppError } from "@/middlewares/errorHandle.js";
 import { findRelevantChunks, type TextChunk } from "@/utils/textChunker.js";
 import { retrieveContext } from "@/services/ragClientService.js";
 import { mapFlashcardSet, mapQuiz } from "@/utils/dtoMapper.js";
 import type { RagRetrieveResponse } from "@/types/external.js";
 import type { FlashcardSetResponseDto } from "@/dtos/flashcards/flashcard.response.dto.js";
-import type { QuizResponseDto } from "@/dtos/quiz/quiz.dto.js";
+import type { QuizResponseDto } from "@/dtos/quiz/quiz.response.dto.js";
 
 export const generateFlashcardsService = async (input: {
   userId: string;
@@ -28,13 +28,13 @@ export const generateFlashcardsService = async (input: {
     throw new AppError("Tài liệu không tồn tại", 404);
   }
 
-  const cards = await geminiUtil.generateFlashcards(
+  const cards = await azureAiUtil.generateFlashcards(
     document.extractedText,
     numFlashcards,
     requirements,
   );
 
-  const flashcardSet = await Flashcard.create({
+  const flashcardSet = (await Flashcard.create({
     userId,
     documentId,
     title: title || `Flashcards for ${document.title}`,
@@ -45,9 +45,9 @@ export const generateFlashcardsService = async (input: {
       reviewCount: 0,
       isStarred: false,
     })),
-  });
+  })) as any;
 
-  return mapFlashcardSet(flashcardSet.toObject());
+  return mapFlashcardSet(flashcardSet);
 };
 
 export const generateQuizService = async (input: {
@@ -67,13 +67,13 @@ export const generateQuizService = async (input: {
     throw new AppError("Tài liệu không tồn tại", 404);
   }
 
-  const questions = await geminiUtil.generateQuiz(
+  const questions = await azureAiUtil.generateQuiz(
     document.extractedText,
     Number.parseInt(String(numQuizzes), 10),
     requirements,
   );
 
-  const quiz = await Quiz.create({
+  const quiz = (await Quiz.create({
     userId,
     documentId,
     title: title || `Quiz for ${document.title}`,
@@ -81,9 +81,9 @@ export const generateQuizService = async (input: {
     totalQuestions: questions.length,
     userAnswer: [],
     score: 0,
-  });
+  })) as any;
 
-  return mapQuiz(quiz.toObject());
+  return mapQuiz(quiz);
 };
 
 export const generateSummaryService = async (input: {
@@ -101,7 +101,7 @@ export const generateSummaryService = async (input: {
     throw new AppError("Tài liệu không tồn tại", 404);
   }
 
-  const summary = await geminiUtil.generateSummary(
+  const summary = await azureAiUtil.generateSummary(
     document.extractedText,
     language || "VIETNAMESE",
   );
@@ -163,8 +163,8 @@ export const chatService = async (input: {
   }
 
   const answer = ragContext
-    ? await geminiUtil.chatWithContext(question, null, contextForGemini)
-    : await geminiUtil.chatWithContext(question, relevantChunks);
+    ? await azureAiUtil.chatWithContext(question, null, contextForGemini)
+    : await azureAiUtil.chatWithContext(question, relevantChunks);
 
   chatHistory.messages.push(
     {
@@ -241,7 +241,7 @@ export const explainConceptService = async (input: {
     relevantChunkIndices = relevantChunks.map((chunk) => chunk.chunkIndex);
   }
 
-  const explanation = await geminiUtil.explainConcept(concept, context);
+  const explanation = await azureAiUtil.explainConcept(concept, context);
 
   return {
     concept,

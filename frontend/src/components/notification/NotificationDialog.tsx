@@ -7,9 +7,19 @@ interface NotificationDialogProps {
   isOpen: boolean;
   onClose: () => void;
   notifications?: NotificationItem[];
+  onMarkAllAsRead?: () => void;
+  onDeleteAllRead?: () => void;
+  onMarkAsRead?: (id: string) => void;
 }
 
-const NotificationDialog = ({ isOpen, onClose, notifications = [] }: NotificationDialogProps) => {
+const NotificationDialog = ({
+  isOpen,
+  onClose,
+  notifications = [],
+  onMarkAllAsRead,
+  onDeleteAllRead,
+  onMarkAsRead,
+}: NotificationDialogProps) => {
   const dialogRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -33,7 +43,7 @@ const NotificationDialog = ({ isOpen, onClose, notifications = [] }: Notificatio
   return (
     <div
       ref={dialogRef}
-      className="absolute top-full -right mt-3 w-80 bg-white rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-200 origin-top-right"
+      className="absolute top-full right-[-60px] sm:right-0 mt-3 w-[320px] sm:w-[340px] bg-white rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-200 origin-top-right"
     >
       <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-white/50 backdrop-blur-sm">
         <div className="flex items-center gap-2">
@@ -44,8 +54,9 @@ const NotificationDialog = ({ isOpen, onClose, notifications = [] }: Notificatio
         </div>
         <div className="flex items-center gap-1">
           <button
+            onClick={onMarkAllAsRead}
             className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
-            title="Đánh dấu tất cả đã đọc"
+            title="Đánh dấu tất cả đã xem"
           >
             <CheckCheck size={16} />
           </button>
@@ -63,9 +74,10 @@ const NotificationDialog = ({ isOpen, onClose, notifications = [] }: Notificatio
           <div className="p-2 space-y-1">
             {notifications.map((notification) => (
               <NotificationCard
-                key={notification.id}
+                key={notification._id}
                 notification={notification}
                 onClose={onClose}
+                onMarkAsRead={onMarkAsRead}
               />
             ))}
           </div>
@@ -77,8 +89,11 @@ const NotificationDialog = ({ isOpen, onClose, notifications = [] }: Notificatio
       </div>
 
       <div className="p-3 border-t border-slate-100 bg-slate-50/50 text-center">
-        <button className="text-xs font-medium text-emerald-600 hover:text-emerald-700 hover:underline">
-          Xem tất cả
+        <button
+          onClick={onDeleteAllRead}
+          className="text-xs font-medium text-rose-600 hover:text-rose-700 hover:underline"
+        >
+          Xóa tất cả
         </button>
       </div>
     </div>

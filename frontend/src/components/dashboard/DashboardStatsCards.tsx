@@ -86,23 +86,23 @@ export default function DashboardStatsCards({ documents, flashcards, quizzes }: 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
       <StatCard
-        label="Documents analyzed"
+        label="Tài liệu đã phân tích"
         value={documents.value}
         subtext=""
-        trendText={`${documents.thisWeek} this week`}
+        trendText={`${documents.thisWeek} tuần này`}
         icon="documents"
         accent="sky"
       />
       <StatCard
-        label="Flashcards mastered"
+        label="Flashcard đã nắm vững"
         value={flashcards.value}
         subtext=""
-        trendText={`${flashcards.thisWeek} this week`}
+        trendText={`${flashcards.thisWeek} tuần này`}
         icon="flashcards"
         accent="rose"
       />
       <StatCard
-        label="Quizzes completed"
+        label="Bài kiểm tra đã hoàn thành"
         value={quizzes.value}
         subtext={quizzes.avgScoreText}
         trendText=""

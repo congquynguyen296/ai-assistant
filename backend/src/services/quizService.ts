@@ -2,16 +2,22 @@ import { AppError } from "@/middlewares/errorHandle.js";
 import Quiz from "@/models/Quiz.js";
 import { mapQuiz, mapQuizAnswers } from "@/utils/dtoMapper.js";
 import type {
-  QuizAnswerDto,
   QuizListResponseDto,
   QuizResultsResponseDto,
   QuizResponseDto,
-} from "@/dtos/quiz/quiz.dto.js";
+} from "@/dtos/quiz/quiz.response.dto.js";
+import type {
+  GetQuizzesRequestDto,
+  GetAllQuizzesRequestDto,
+  GetQuizByIdRequestDto,
+  SubmitQuizRequestDto,
+  GetQuizResultsRequestDto,
+  DeleteQuizRequestDto,
+} from "@/dtos/quiz/quiz.request.dto.js";
 
-export const getQuizzesService = async (input: {
-  userId: string;
-  documentId: string;
-}): Promise<QuizResponseDto[]> => {
+export const getQuizzesService = async (
+  input: GetQuizzesRequestDto
+): Promise<QuizResponseDto[]> => {
   const quizzes = await Quiz.find({
     userId: input.userId,
     documentId: input.documentId,
@@ -25,11 +31,9 @@ export const getQuizzesService = async (input: {
   );
 };
 
-export const getAllQuizzesService = async (input: {
-  userId: string;
-  page: number;
-  size: number;
-}): Promise<QuizListResponseDto> => {
+export const getAllQuizzesService = async (
+  input: GetAllQuizzesRequestDto
+): Promise<QuizListResponseDto> => {
   const total = await Quiz.countDocuments({ userId: input.userId });
   const quizzes = await Quiz.find({ userId: input.userId })
     .populate("documentId", "title fileName fileUrl")
@@ -51,10 +55,9 @@ export const getAllQuizzesService = async (input: {
   };
 };
 
-export const getQuizByIdService = async (input: {
-  userId: string;
-  quizId: string;
-}): Promise<QuizResponseDto> => {
+export const getQuizByIdService = async (
+  input: GetQuizByIdRequestDto
+): Promise<QuizResponseDto> => {
   const quiz = await Quiz.findOne({ userId: input.userId, _id: input.quizId })
     .populate("documentId", "title fileName fileUrl")
     .lean();
@@ -66,11 +69,9 @@ export const getQuizByIdService = async (input: {
   return mapQuiz(quiz as unknown as Record<string, unknown>);
 };
 
-export const submitQuizService = async (input: {
-  userId: string;
-  quizId: string;
-  answers: QuizAnswerDto[];
-}): Promise<Record<string, unknown>> => {
+export const submitQuizService = async (
+  input: SubmitQuizRequestDto
+): Promise<Record<string, unknown>> => {
   const quiz = await Quiz.findOne({ userId: input.userId, _id: input.quizId });
   if (!quiz) {
     throw new AppError("Quiz không tồn tại", 404);
@@ -121,10 +122,9 @@ export const submitQuizService = async (input: {
   };
 };
 
-export const getQuizResultsService = async (input: {
-  userId: string;
-  quizId: string;
-}): Promise<QuizResultsResponseDto> => {
+export const getQuizResultsService = async (
+  input: GetQuizResultsRequestDto
+): Promise<QuizResultsResponseDto> => {
   const quiz = await Quiz.findOne({ userId: input.userId, _id: input.quizId });
 
   if (!quiz) {
@@ -165,10 +165,9 @@ export const getQuizResultsService = async (input: {
   };
 };
 
-export const deleteQuizService = async (input: {
-  userId: string;
-  quizId: string;
-}): Promise<void> => {
+export const deleteQuizService = async (
+  input: DeleteQuizRequestDto
+): Promise<void> => {
   const quiz = await Quiz.findOne({ userId: input.userId, _id: input.quizId });
 
   if (!quiz) {

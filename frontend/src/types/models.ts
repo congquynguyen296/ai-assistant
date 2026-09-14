@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Difficulty } from "./enums";
 
 export interface User {
   _id?: string;
@@ -25,7 +26,7 @@ export interface Flashcard {
   _id: string;
   question: string;
   answer?: string;
-  difficulty?: string;
+  difficulty?: Difficulty;
   isStarred?: boolean;
   reviewCount?: number;
 }
@@ -106,12 +107,12 @@ export interface PaymentPlan {
 }
 
 export interface NotificationItem {
-  id: number | string;
+  _id: string;
   title: string;
   message: string;
-  type?: string;
-  time: string;
-  isRead?: boolean;
+  type: string;
+  createdAt: string;
+  isRead: boolean;
   link?: string | null;
 }
 

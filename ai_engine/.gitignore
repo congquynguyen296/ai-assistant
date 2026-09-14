@@ -15,7 +15,13 @@ models/
 
 # Environment files
 .env
+.env.*
+*.env
 
 # IDE
 .vscode/
 .idea/
+
+# Logs
+logs/
+*.log
