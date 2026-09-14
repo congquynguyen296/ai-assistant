@@ -27,11 +27,12 @@ const PdfViewer = ({ url, className = "" }: PdfViewerProps) => {
   const getViewerUrl = () => {
     if (!isMobile) return `${url}#toolbar=1&view=FitH`;
 
-    // Option 1: PDF.js hosted (không phụ thuộc Google)
-    return `https://mozilla.github.io/pdf.js/web/viewer.html?file=${encodeURIComponent(url)}`;
-
-    // Option 2 (fallback): Google Docs Viewer
-    // return `https://docs.google.com/gview?embedded=1&url=${encodeURIComponent(url)}&t=${Date.now()}`;
+    // Cả Mozilla PDF.js và Google Docs Viewer đều gặp lỗi bảo mật cross-origin 
+    // hoặc không thể truy cập file local/private (trả về X-Frame-Options: sameorigin).
+    // Giải pháp an toàn nhất là trả về URL trực tiếp để trình duyệt tự xử lý:
+    // - iOS Safari: Hiển thị PDF bình thường.
+    // - Android Chrome: Sẽ tự động tải file xuống hoặc mở bằng trình đọc hệ thống.
+    return url;
   };
 
   useEffect(() => {

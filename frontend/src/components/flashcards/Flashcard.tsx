@@ -192,11 +192,11 @@ const Flashcard = ({ flashcardSet, onBack, onUpdateSet }: FlashcardProps) => {
           >
             {/* Front side - Question */}
             <div
-              className="absolute inset-0 w-full h-full backface-hidden bg-white/90 backdrop-blur-xl border-2 border-slate-200 rounded-3xl shadow-xl p-8 flex flex-col cursor-pointer"
+              className="absolute inset-0 w-full h-full backface-hidden bg-white/90 backdrop-blur-xl border-2 border-slate-200 rounded-3xl shadow-xl p-5 md:p-8 flex flex-col cursor-pointer"
               style={{ backfaceVisibility: "hidden" }}
               onClick={handleFlipCard}
             >
-              <div className="flex items-start justify-between mb-6">
+              <div className="flex items-start justify-between mb-4 md:mb-6 shrink-0">
                 <div
                   className={`px-3 py-1.5 rounded-lg border ${difficultyColors.bg} ${difficultyColors.border}`}
                 >
@@ -226,18 +226,20 @@ const Flashcard = ({ flashcardSet, onBack, onUpdateSet }: FlashcardProps) => {
                 </button>
               </div>
 
-              <div className="flex-1 flex flex-col items-center justify-center text-center">
-                <div className="mb-4">
-                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
-                    Câu hỏi
-                  </span>
+              <div className="flex-1 min-h-0 w-full overflow-y-auto custom-scrollbar pr-2 flex flex-col">
+                <div className="my-auto flex flex-col items-center text-center py-6 w-full">
+                  <div className="mb-4 shrink-0">
+                    <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                      Câu hỏi
+                    </span>
+                  </div>
+                  <h3 className="text-2xl font-semibold text-slate-900 leading-relaxed">
+                    {currentCard.question}
+                  </h3>
                 </div>
-                <h3 className="text-2xl font-semibold text-slate-900 leading-relaxed">
-                  {currentCard.question}
-                </h3>
               </div>
 
-              <div className="mt-6 text-center">
+              <div className="mt-4 md:mt-6 text-center shrink-0">
                 <div className="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 rounded-lg">
                   <RotateCcw className="w-4 h-4 text-slate-500" />
                   <span className="text-sm font-medium text-slate-600">
@@ -249,14 +251,14 @@ const Flashcard = ({ flashcardSet, onBack, onUpdateSet }: FlashcardProps) => {
 
             {/* Back side - Answer */}
             <div
-              className="absolute inset-0 w-full h-full backface-hidden bg-linear-to-br from-emerald-50 to-teal-50 border-2 border-emerald-200 rounded-3xl shadow-xl p-8 flex flex-col rotate-y-180 cursor-pointer"
+              className="absolute inset-0 w-full h-full backface-hidden bg-linear-to-br from-emerald-50 to-teal-50 border-2 border-emerald-200 rounded-3xl shadow-xl p-5 md:p-8 flex flex-col rotate-y-180 cursor-pointer"
               style={{
                 backfaceVisibility: "hidden",
                 transform: "rotateY(180deg)",
               }}
               onClick={handleFlipCard}
             >
-              <div className="flex items-start justify-between mb-6">
+              <div className="flex items-start justify-between mb-4 md:mb-6 shrink-0">
                 <div
                   className={`px-3 py-1.5 rounded-lg border ${difficultyColors.bg} ${difficultyColors.border}`}
                 >
@@ -286,18 +288,20 @@ const Flashcard = ({ flashcardSet, onBack, onUpdateSet }: FlashcardProps) => {
                 </button>
               </div>
 
-              <div className="flex-1 flex flex-col items-center justify-center text-center">
-                <div className="mb-4">
-                  <span className="text-xs font-semibold text-emerald-600 uppercase tracking-wide">
-                    Câu trả lời
-                  </span>
+              <div className="flex-1 min-h-0 w-full overflow-y-auto custom-scrollbar pr-2 flex flex-col">
+                <div className="my-auto flex flex-col items-center text-center py-6 w-full">
+                  <div className="mb-4 shrink-0">
+                    <span className="text-xs font-semibold text-emerald-600 uppercase tracking-wide">
+                      Câu trả lời
+                    </span>
+                  </div>
+                  <p className="text-lg font-medium text-slate-800 leading-relaxed">
+                    {currentCard.answer}
+                  </p>
                 </div>
-                <p className="text-lg font-medium text-slate-800 leading-relaxed">
-                  {currentCard.answer}
-                </p>
               </div>
 
-              <div className="mt-6 text-center">
+              <div className="mt-4 md:mt-6 text-center shrink-0">
                 <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-100 rounded-lg">
                   <RotateCcw className="w-4 h-4 text-emerald-600" />
                   <span className="text-sm font-medium text-emerald-700">

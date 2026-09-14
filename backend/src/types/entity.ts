@@ -36,10 +36,12 @@ export interface DocumentDocument extends Document {
   updatedAt: Date;
 }
 
+import { Difficulty } from "./enums.js";
+
 export interface FlashcardCard {
   question: string;
   answer: string;
-  difficulty: "easy" | "medium" | "hard";
+  difficulty: Difficulty;
   lastReviewed?: Date | null;
   reviewCount: number;
   isStarred: boolean;
@@ -60,7 +62,7 @@ export interface QuizQuestion {
   options: string[];
   correctAnswer: string;
   explanation?: string;
-  difficulty?: "easy" | "medium" | "hard";
+  difficulty?: Difficulty;
 }
 
 export interface QuizUserAnswer {

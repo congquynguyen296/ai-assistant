@@ -9,7 +9,7 @@ import type {
   QuizQuestionDto,
   QuizResponseDto,
   QuizSubmitAnswerDto,
-} from "@/dtos/quiz/quiz.dto.js";
+} from "@/dtos/quiz/quiz.response.dto.js";
 
 const toStringId = (value: unknown): string => {
   if (typeof value === "string") return value;

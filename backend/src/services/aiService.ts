@@ -9,7 +9,7 @@ import { retrieveContext } from "@/services/ragClientService.js";
 import { mapFlashcardSet, mapQuiz } from "@/utils/dtoMapper.js";
 import type { RagRetrieveResponse } from "@/types/external.js";
 import type { FlashcardSetResponseDto } from "@/dtos/flashcards/flashcard.response.dto.js";
-import type { QuizResponseDto } from "@/dtos/quiz/quiz.dto.js";
+import type { QuizResponseDto } from "@/dtos/quiz/quiz.response.dto.js";
 
 export const generateFlashcardsService = async (input: {
   userId: string;
@@ -34,7 +34,7 @@ export const generateFlashcardsService = async (input: {
     requirements,
   );
 
-  const flashcardSet = await Flashcard.create({
+  const flashcardSet = (await Flashcard.create({
     userId,
     documentId,
     title: title || `Flashcards for ${document.title}`,
@@ -45,9 +45,9 @@ export const generateFlashcardsService = async (input: {
       reviewCount: 0,
       isStarred: false,
     })),
-  });
+  })) as any;
 
-  return mapFlashcardSet(flashcardSet.toObject());
+  return mapFlashcardSet(flashcardSet);
 };
 
 export const generateQuizService = async (input: {
@@ -73,7 +73,7 @@ export const generateQuizService = async (input: {
     requirements,
   );
 
-  const quiz = await Quiz.create({
+  const quiz = (await Quiz.create({
     userId,
     documentId,
     title: title || `Quiz for ${document.title}`,
@@ -81,9 +81,9 @@ export const generateQuizService = async (input: {
     totalQuestions: questions.length,
     userAnswer: [],
     score: 0,
-  });
+  })) as any;
 
-  return mapQuiz(quiz.toObject());
+  return mapQuiz(quiz);
 };
 
 export const generateSummaryService = async (input: {

@@ -34,11 +34,14 @@ export const API_PATHS = {
 
   FLASHCARDS: {
     GET_ALL_FLASHCARDS_SET: "/flashcards",
-    GET_FLASHCARDS_FOR_DOCUMENT: (documentId: string) =>
-      `/flashcards/${documentId}`,
+    GET_FLASHCARDS_FOR_DOCUMENT: (documentId: string) => `/flashcards/${documentId}`,
     REVIEW_FLASHCARD: (cardId: string) => `/flashcards/${cardId}/review`,
     TOGGLE_STAR_FLASHCARD: (cardId: string) => `/flashcards/${cardId}/star`,
     DELETE_FLASHCARD_SET: (flashcardId: string) => `/flashcards/${flashcardId}`,
+    RENAME_FLASHCARD_SET: (setId: string) => `/flashcards/${setId}/rename`,
+    ADD_FLASHCARD_TO_SET: (setId: string) => `/flashcards/${setId}/cards`,
+    UPDATE_FLASHCARD_IN_SET: (setId: string, cardId: string) => `/flashcards/${setId}/cards/${cardId}`,
+    DELETE_FLASHCARD_FROM_SET: (setId: string, cardId: string) => `/flashcards/${setId}/cards/${cardId}`,
   },
 
   QUIZZES: {

@@ -2,11 +2,12 @@ import OpenAI from "openai";
 import { AppError } from "@/middlewares/errorHandle.js";
 import { z } from "zod";
 import { zodResponseFormat } from "openai/helpers/zod";
+import { Difficulty } from "@/types/enums.js";
 
 export interface GeneratedFlashcard {
   question: string;
   answer: string;
-  difficulty: "easy" | "medium" | "hard";
+  difficulty: Difficulty;
 }
 
 export interface GeneratedQuizQuestion {
@@ -14,7 +15,7 @@ export interface GeneratedQuizQuestion {
   options: string[];
   correctAnswer: string;
   explanation: string;
-  difficulty: "easy" | "medium" | "hard";
+  difficulty: Difficulty;
 }
 
 if (
@@ -38,7 +39,7 @@ const FlashcardResponseSchema = z.object({
     z.object({
       question: z.string(),
       answer: z.string(),
-      difficulty: z.enum(["easy", "medium", "hard"]),
+      difficulty: z.nativeEnum(Difficulty),
     })
   ),
 });
@@ -98,7 +99,7 @@ const QuizResponseSchema = z.object({
       options: z.array(z.string()),
       correctAnswer: z.string(),
       explanation: z.string(),
-      difficulty: z.enum(["easy", "medium", "hard"]),
+      difficulty: z.nativeEnum(Difficulty),
     })
   ),
 });

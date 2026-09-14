@@ -3,11 +3,13 @@ import { toast } from "sonner";
 import flashcardService from "@/services/flashcardService";
 import aiService from "@/services/aiService";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
-import { Brain, Sparkles, Trash2, Plus } from "lucide-react";
+import { Brain, Sparkles, Trash2, Plus, MoreVertical } from "lucide-react";
 import moment from "moment";
 import ConfirmModal from "@/components/common/ConfirmModal";
 import GenerateModal from "@/components/common/GenerateModal";
 import Flashcard from "@/components/flashcards/Flashcard";
+import FlashcardSetEditor from "@/components/flashcards/FlashcardSetEditor";
+import RenameModal from "@/components/common/RenameModal";
 import type { FlashcardSet } from "@/types/models";
 
 interface FlashcardManagerProps {
@@ -18,6 +20,13 @@ const FlashcardManager = ({ documentId }: FlashcardManagerProps) => {
   const [flashcardSets, setFlashcardSets] = useState<FlashcardSet[]>([]);
   const [selectedSet, setSelectedSet] = useState<FlashcardSet | null>(null);
   const [loading, setLoading] = useState(false);
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const [editingSet, setEditingSet] = useState<FlashcardSet | null>(null);
+  
+  // States for renaming
+  const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
+  const [setToRename, setSetToRename] = useState<FlashcardSet | null>(null);
+  const [renaming, setRenaming] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -75,7 +84,11 @@ const FlashcardManager = ({ documentId }: FlashcardManagerProps) => {
       set._id === updatedSet._id ? updatedSet : set
     );
     setFlashcardSets(updatedSets);
-    setSelectedSet(updatedSet);
+    
+    // Only update selectedSet if we are currently viewing it
+    if (selectedSet && selectedSet._id === updatedSet._id) {
+      setSelectedSet(updatedSet);
+    }
   };
 
   // Func to handle delete request
@@ -104,6 +117,24 @@ const FlashcardManager = ({ documentId }: FlashcardManagerProps) => {
     }
   };
 
+  // Handle confirm rename
+  const handleConfirmRename = async (newTitle: string) => {
+    if (!setToRename || !newTitle.trim()) return;
+
+    setRenaming(true);
+    try {
+      await flashcardService.renameFlashcardSet(setToRename._id, newTitle.trim());
+      toast.success("Đổi tên bộ flashcard thành công");
+      setIsRenameModalOpen(false);
+      setSetToRename(null);
+      fetchFlashcardSets();
+    } catch (error: any) {
+      toast.error(error.message || "Đổi tên thất bại");
+    } finally {
+      setRenaming(false);
+    }
+  };
+
   // Func handle selected set
   const handleSelectFlashcardSet = (flashcardSet: FlashcardSet) => {
     setSelectedSet(flashcardSet);
@@ -112,6 +143,7 @@ const FlashcardManager = ({ documentId }: FlashcardManagerProps) => {
   // Handle back to list
   const handleBackToList = () => {
     setSelectedSet(null);
+    setEditingSet(null);
   };
 
   const renderSetList = () => {
@@ -153,6 +185,19 @@ const FlashcardManager = ({ documentId }: FlashcardManagerProps) => {
             )}
           </button>
         </div>
+      );
+    }
+
+    if (editingSet) {
+      return (
+        <FlashcardSetEditor
+          flashcardSet={editingSet}
+          onBack={handleBackToList}
+          onSetUpdated={(updatedSet) => {
+            setEditingSet(updatedSet);
+            handleUpdateSet(updatedSet);
+          }}
+        />
       );
     }
 
@@ -198,14 +243,67 @@ const FlashcardManager = ({ documentId }: FlashcardManagerProps) => {
               key={set._id}
               onClick={() => handleSelectFlashcardSet(set)}
             >
-              {/* Delete button */}
-              <button
-                onClick={(e) => handleDeleteRequest(e, set)}
-                title="Xóa flashcard"
-                className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 w-8 h-8 flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all duration-200 cursor-pointer z-10"
-              >
-                <Trash2 className="w-5 h-5" strokeWidth={2} />
-              </button>
+              {/* Dropdown Menu */}
+              <div className="absolute top-4 right-4 z-20">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setActiveDropdown(activeDropdown === set._id ? null : set._id);
+                  }}
+                  className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all duration-200 cursor-pointer ${
+                    activeDropdown === set._id 
+                      ? "text-emerald-600 bg-emerald-50 opacity-100" 
+                      : "text-slate-400 opacity-100 md:opacity-0 group-hover:opacity-100 hover:text-emerald-600 hover:bg-emerald-50"
+                  }`}
+                >
+                  <MoreVertical className="w-5 h-5" strokeWidth={2} />
+                </button>
+                {activeDropdown === set._id && (
+                  <div className="absolute right-0 mt-1 w-36 bg-white border border-slate-200 rounded-xl shadow-lg shadow-slate-900/10 overflow-hidden py-1 z-30">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveDropdown(null);
+                        setSetToRename(set);
+                        setIsRenameModalOpen(true);
+                      }}
+                      className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+                    >
+                      Đổi tên
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveDropdown(null);
+                        setEditingSet(set);
+                      }}
+                      className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+                    >
+                      Cập nhật
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveDropdown(null);
+                        toast.info("Tính năng đang trong giai đoạn phát triển");
+                      }}
+                      className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+                    >
+                      Chia sẻ
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveDropdown(null);
+                        handleDeleteRequest(e, set);
+                      }}
+                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                    >
+                      Xóa
+                    </button>
+                  </div>
+                )}
+              </div>
 
               {/* Header section */}
               <div>
@@ -289,6 +387,20 @@ const FlashcardManager = ({ documentId }: FlashcardManagerProps) => {
         countLabel="Số lượng thẻ"
         defaultCount={10}
         maxCount={30}
+      />
+
+      {/* Rename modal */}
+      <RenameModal
+        isOpen={isRenameModalOpen}
+        onClose={() => {
+          setIsRenameModalOpen(false);
+          setSetToRename(null);
+        }}
+        onConfirm={handleConfirmRename}
+        title="Đổi tên bộ Flashcard"
+        description="Nhập tên mới cho bộ flashcard của bạn"
+        initialValue={setToRename?.title || ""}
+        isLoading={renaming}
       />
     </div>
   );

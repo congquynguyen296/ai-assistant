@@ -1,10 +1,11 @@
 import type { DocumentRef } from "@/types/common.js";
+import { Difficulty } from "@/types/enums.js";
 
 export interface FlashcardCardDto {
   _id?: string;
   question: string;
   answer: string;
-  difficulty: "easy" | "medium" | "hard";
+  difficulty: Difficulty;
   lastReviewed?: Date | null;
   reviewCount: number;
   isStarred: boolean;

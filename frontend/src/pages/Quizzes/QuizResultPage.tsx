@@ -13,18 +13,18 @@ import quizService from "@/services/quizService";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 
 const CORRECT_MESSAGES = [
-  "Quá giỏi, nào gặp anh thưởng.",
+  // "Quá giỏi, nào gặp anh thưởng.",
   "Xuất sắc, 11 điểm.",
   "Đã hee.",
   "Đủ quao ròi đó.",
   "Tuyệt vời ông mặt trăng.",
-  "KỸ SƯ HÓA PHÂN TÍCH.",
+  // "KỸ SƯ HÓA PHÂN TÍCH.",
   "Đem ngay câu khó hơn tới đây.",
 ];
 
 const INCORRECT_MESSAGES = [
   "Gần đúng rồi, cố lên.",
-  "Tiếc quá, sai một đống thôi.",
+  // "Tiếc quá, sai một đống thôi.",
   "Thất bại là bị đòn.",
   "Cố gắng lần sau nha, nhưng tiếc là bài này làm một lần thôi.",
   "Không sao, sai thì bị đòn.",

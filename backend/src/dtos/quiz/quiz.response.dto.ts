@@ -1,11 +1,12 @@
 import type { DocumentRef } from "@/types/common.js";
+import { Difficulty } from "@/types/enums.js";
 
 export interface QuizQuestionDto {
   question: string;
   options: string[];
   correctAnswer: string;
   explanation?: string;
-  difficulty?: "easy" | "medium" | "hard";
+  difficulty?: Difficulty;
 }
 
 export interface QuizAnswerDto {
@@ -49,7 +50,7 @@ export interface QuizResultsResponseDto {
     selectedAnswer: string | null;
     isCorrect: boolean;
     explanation?: string;
-    difficulty?: "easy" | "medium" | "hard";
+    difficulty?: Difficulty;
   }>;
 }
 
