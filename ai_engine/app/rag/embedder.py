@@ -19,11 +19,12 @@ from openai import AzureOpenAI
 from ..core.config import (
     AZURE_OPENAI_API_KEY,
     AZURE_OPENAI_ENDPOINT,
-    EMBEDDING_MODEL,
+    AZURE_OPENAI_DEPLOYMENT_NAME,
     EMBEDDING_BATCH_SIZE,
     EMBEDDING_INTER_BATCH_DELAY,
     EMBEDDING_MAX_RETRIES,
     EMBEDDING_RETRY_BASE_DELAY,
+    VECTOR_SIZE,
 )
 
 logger = logging.getLogger(__name__)
@@ -48,7 +49,7 @@ def _get_client() -> AzureOpenAI:
             api_key=AZURE_OPENAI_API_KEY,
             api_version="2024-02-01"
         )
-        logger.info("Azure OpenAI client initialised (embedding model: %s)", EMBEDDING_MODEL)
+        logger.info("Azure OpenAI client initialised (deployment name: %s)", AZURE_OPENAI_DEPLOYMENT_NAME)
     return _client
 
 
@@ -94,10 +95,15 @@ def embed_texts(texts: List[str], task_type: str = "RETRIEVAL_DOCUMENT") -> List
         for attempt in range(EMBEDDING_MAX_RETRIES):
             try:
                 # With OpenAI, passing an array of strings returns an array of embeddings
-                batch_result = client.embeddings.create(
-                    model=EMBEDDING_MODEL,
-                    input=batch,
-                )
+                kwargs = {
+                    "model": AZURE_OPENAI_DEPLOYMENT_NAME,
+                    "input": batch,
+                }
+                # Azure's text-embedding-3 supports passing dimensions to reduce output size
+                if "3" in AZURE_OPENAI_DEPLOYMENT_NAME or VECTOR_SIZE != 768:
+                     kwargs["dimensions"] = VECTOR_SIZE
+                     
+                batch_result = client.embeddings.create(**kwargs)
                 break
             except Exception as exc:
                 msg = str(exc)

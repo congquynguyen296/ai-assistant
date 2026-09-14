@@ -51,9 +51,14 @@ const fetchWithTimeout = async (
       // Clone response to read body without consuming it for the caller
       const resClone = res.clone();
       try {
-        logData.responseBody = await resClone.json();
-      } catch {
-        logData.responseBody = await resClone.text();
+        const textBody = await resClone.text();
+        try {
+          logData.responseBody = JSON.parse(textBody);
+        } catch {
+          logData.responseBody = textBody;
+        }
+      } catch (e) {
+        logData.responseBody = "Could not read response body";
       }
       apiLogger.error('Outgoing request returned error status', logData);
     } else {
