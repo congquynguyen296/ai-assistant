@@ -40,6 +40,9 @@ const NotificationDialog = ({
 
   if (!isOpen) return null;
 
+  const hasUnread = notifications.some((n) => !n.isRead);
+  const hasRead = notifications.some((n) => n.isRead);
+
   return (
     <div
       ref={dialogRef}
@@ -55,7 +58,12 @@ const NotificationDialog = ({
         <div className="flex items-center gap-1">
           <button
             onClick={onMarkAllAsRead}
-            className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+            disabled={!hasUnread}
+            className={`p-1.5 rounded-lg transition-colors ${
+              hasUnread
+                ? "text-slate-400 hover:text-emerald-600 hover:bg-emerald-50"
+                : "text-slate-300 cursor-not-allowed"
+            }`}
             title="Đánh dấu tất cả đã xem"
           >
             <CheckCheck size={16} />
@@ -91,9 +99,14 @@ const NotificationDialog = ({
       <div className="p-3 border-t border-slate-100 bg-slate-50/50 text-center">
         <button
           onClick={onDeleteAllRead}
-          className="text-xs font-medium text-rose-600 hover:text-rose-700 hover:underline"
+          disabled={!hasRead}
+          className={`text-xs font-medium transition-colors ${
+            hasRead
+              ? "text-rose-600 hover:text-rose-700 hover:underline"
+              : "text-slate-300 cursor-not-allowed"
+          }`}
         >
-          Xóa tất cả
+          Xóa tất cả đã đọc
         </button>
       </div>
     </div>
