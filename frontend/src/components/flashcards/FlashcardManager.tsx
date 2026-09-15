@@ -23,6 +23,10 @@ const FlashcardManager = ({ documentId }: FlashcardManagerProps) => {
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [editingSet, setEditingSet] = useState<FlashcardSet | null>(null);
   
+  // States for Review Mode
+  const [reviewCards, setReviewCards] = useState<any[] | null>(null);
+  const [loadingReview, setLoadingReview] = useState(false);
+  
   // States for renaming
   const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
   const [setToRename, setSetToRename] = useState<FlashcardSet | null>(null);
@@ -135,15 +139,35 @@ const FlashcardManager = ({ documentId }: FlashcardManagerProps) => {
     }
   };
 
-  // Func handle selected set
+  // Func handle selected set (Browse mode)
   const handleSelectFlashcardSet = (flashcardSet: FlashcardSet) => {
     setSelectedSet(flashcardSet);
+  };
+
+  // Handle start review (Review mode)
+  const handleStartReview = async () => {
+    setLoadingReview(true);
+    try {
+      const response = await flashcardService.getReviewSession(documentId);
+      const cards = response.data || [];
+      if (cards.length === 0) {
+        toast.info("Không có thẻ nào cần ôn tập hôm nay!");
+      } else {
+        setReviewCards(cards);
+      }
+    } catch (error) {
+      console.log(`Lỗi khi lấy session: ${error}`);
+      toast.error("Có lỗi xảy ra khi lấy danh sách ôn tập");
+    } finally {
+      setLoadingReview(false);
+    }
   };
 
   // Handle back to list
   const handleBackToList = () => {
     setSelectedSet(null);
     setEditingSet(null);
+    setReviewCards(null);
   };
 
   const renderSetList = () => {
@@ -204,35 +228,47 @@ const FlashcardManager = ({ documentId }: FlashcardManagerProps) => {
     return (
       <div className="space-y-6">
         {/* Header generate button */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-lg font-semibold text-slate-900">
-              Danh sách flashcards
+        <div className="flex flex-col md:flex-row items-center justify-between mb-8 gap-4">
+          <div className="w-full md:w-auto">
+            <h3 className="text-2xl font-bold text-slate-900">
+              Flashcards
             </h3>
             <p className="text-md font-medium text-slate-500 mt-1">
-              {flashcardSets.length} bộ
+              {flashcardSets.length} bộ thẻ trong tài liệu này
             </p>
           </div>
 
-          <div className="">{/* Placeholder for alignment */}</div>
-
-          <button
-            className="inline-flex items-center justify-center gap-2 px-6 h-12 font-semibold rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 whitespace-nowrap bg-linear-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/25 hover:from-emerald-600 hover:to-teal-600 hover:shadow-xl hover:shadow-emerald-500/30"
-            onClick={() => setIsGenerateModalOpen(true)}
-            disabled={generating}
-          >
-            {generating ? (
-              <>
-                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                Đang tạo...
-              </>
-            ) : (
-              <>
-                <Plus className="w-4 h-4 text-white" strokeWidth={2.5} />
-                Thêm mới
-              </>
-            )}
-          </button>
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
+            <button
+              onClick={handleStartReview}
+              disabled={loadingReview}
+              className="flex-1 md:flex-none inline-flex items-center justify-center gap-2 px-6 py-3 font-semibold rounded-xl transition-all duration-200 disabled:opacity-50 whitespace-nowrap bg-linear-to-r from-blue-500 to-indigo-500 text-white shadow-lg shadow-blue-500/25 hover:from-blue-600 hover:to-indigo-600 hover:shadow-xl hover:shadow-blue-500/30"
+            >
+              {loadingReview ? (
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                <Brain className="w-5 h-5 text-white" strokeWidth={2.5} />
+              )}
+              Bắt đầu ôn tập
+            </button>
+            <button
+              className="flex-1 md:flex-none inline-flex items-center justify-center gap-2 px-6 py-3 font-semibold rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 whitespace-nowrap bg-linear-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/25 hover:from-emerald-600 hover:to-teal-600 hover:shadow-xl hover:shadow-emerald-500/30"
+              onClick={() => setIsGenerateModalOpen(true)}
+              disabled={generating}
+            >
+              {generating ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Đang tạo...
+                </>
+              ) : (
+                <>
+                  <Plus className="w-4 h-4 text-white" strokeWidth={2.5} />
+                  Thêm mới
+                </>
+              )}
+            </button>
+          </div>
         </div>
 
         {/* Flashcard set grids */}
@@ -350,12 +386,26 @@ const FlashcardManager = ({ documentId }: FlashcardManagerProps) => {
   return (
     <div>
       <div className="bg-white/80 backdrop-blur-xl border border-slate-200/60 rounded-3xl shadow-xl shadow-slate-200/50 p-8">
-        {selectedSet ? (
-          // Render flashcard
+        {reviewCards ? (
+          // Render SRS Review
           <Flashcard
-            flashcardSet={selectedSet}
+            cards={reviewCards}
+            isReviewMode={true}
             onBack={handleBackToList}
-            onUpdateSet={handleUpdateSet}
+            onUpdateCards={(updatedCards) => {
+              setReviewCards(updatedCards);
+            }}
+          />
+        ) : selectedSet ? (
+          // Render Browse flashcard set
+          <Flashcard
+            cards={selectedSet.cards}
+            isReviewMode={false}
+            onBack={handleBackToList}
+            onUpdateCards={(updatedCards) => {
+              const newSet = { ...selectedSet, cards: updatedCards };
+              handleUpdateSet(newSet as FlashcardSet);
+            }}
           />
         ) : (
           renderSetList()

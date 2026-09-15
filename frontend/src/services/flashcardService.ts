@@ -15,6 +15,27 @@ const getAllFlashcardSets = async (): Promise<FlashcardSetsResponse> => {
   }
 };
 
+const getReviewSession = async (documentId?: string) => {
+  try {
+    const timezoneOffset = new Date().getTimezoneOffset(); // in minutes (e.g. UTC+7 is -420)
+    const response = await axiosInstance.get(
+      API_PATHS.FLASHCARDS.GET_REVIEW_SESSION,
+      {
+        headers: {
+          "x-timezone-offset": timezoneOffset.toString(),
+        },
+        params: {
+          documentId
+        }
+      }
+    );
+    return response.data;
+  } catch (error) {
+    const err = error as { response?: { data?: unknown } };
+    throw err.response?.data || "Lấy danh sách ôn tập thất bại";
+  }
+};
+
 const getAllFlashcardsForDocument = async (
   documentId: string
 ): Promise<FlashcardSetsResponse> => {
@@ -30,11 +51,13 @@ const getAllFlashcardsForDocument = async (
 };
 
 const reviewFlashcard = async (
-  cardId: string
+  cardId: string,
+  grade: number
 ): Promise<FlashcardSetsResponse> => {
   try {
     const response = await axiosInstance.post<FlashcardSetsResponse>(
-      API_PATHS.FLASHCARDS.REVIEW_FLASHCARD(cardId)
+      API_PATHS.FLASHCARDS.REVIEW_FLASHCARD(cardId),
+      { grade }
     );
     return response.data;
   } catch (error) {
@@ -137,6 +160,7 @@ const deleteFlashcardFromSet = async (
 
 const flashcardService = {
   getAllFlashcardSets,
+  getReviewSession,
   getAllFlashcardsForDocument,
   reviewFlashcard,
   toggleStarFlashcard,

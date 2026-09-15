@@ -42,6 +42,10 @@ export interface FlashcardCard {
   question: string;
   answer: string;
   difficulty: Difficulty;
+  status: "new" | "learning" | "review";
+  nextReviewDate: Date;
+  interval: number;
+  easeFactor: number;
   lastReviewed?: Date | null;
   reviewCount: number;
   isStarred: boolean;

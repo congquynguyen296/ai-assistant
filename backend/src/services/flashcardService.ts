@@ -2,9 +2,12 @@ import { AppError } from "@/middlewares/errorHandle.js";
 import Flashcard from "@/models/Flashcard.js";
 import { mapFlashcardSet } from "@/utils/dtoMapper.js";
 import type { FlashcardSetResponseDto } from "@/dtos/flashcards/flashcard.response.dto.js";
+import FlashcardReviewLog from "@/models/FlashcardReviewLog.js";
+import { calculateNextReview } from "@/utils/srsAlgorithm.js";
 import type {
   GetFlashcardsRequestDto,
   GetAllFlashcardSetsRequestDto,
+  GetReviewSessionRequestDto,
   ReviewFlashcardRequestDto,
   ToggleStarFlashcardRequestDto,
   DeleteFlashcardSetRequestDto,
@@ -43,6 +46,58 @@ export const getAllFlashcardSetsService = async (
   );
 };
 
+export const getReviewSessionService = async (
+  input: GetReviewSessionRequestDto
+): Promise<any[]> => {
+  // Lấy timezone bù trừ so với UTC. Ví dụ: +07:00 là -420 phút.
+  const now = new Date();
+  
+  // Tính endOfDay theo timezone của client
+  // Múi giờ của client: local = utc - timezoneOffset
+  // endOfDay của ngày hiện tại (theo local) -> chuyển về UTC
+  // Rất đơn giản: start of next day in local time - 1 ms
+  const utcNowMs = now.getTime();
+  const localTimeMs = utcNowMs - (input.timezoneOffset * 60 * 1000);
+  const localDate = new Date(localTimeMs);
+  
+  localDate.setUTCHours(23, 59, 59, 999);
+  
+  // Convert end of local day back to UTC
+  const endOfDayUtcMs = localDate.getTime() + (input.timezoneOffset * 60 * 1000);
+  const endOfDay = new Date(endOfDayUtcMs);
+
+  const query: any = { userId: input.userId };
+  if (input.documentId) {
+    query.documentId = input.documentId;
+  }
+  const flashcardSets = await Flashcard.find(query).lean();
+
+  const sessionCards: any[] = [];
+  
+  for (const set of flashcardSets) {
+    for (const card of set.cards as any[]) {
+      if (
+        card.status === "new" ||
+        (card.nextReviewDate && new Date(card.nextReviewDate) <= endOfDay)
+      ) {
+        sessionCards.push({
+          ...card,
+          flashcardSetId: set._id,
+          documentId: set.documentId,
+          setTitle: set.title,
+        });
+      }
+    }
+  }
+
+  // Shuffle hoặc ưu tiên thẻ learning
+  return sessionCards.sort((a, b) => {
+    if (a.status === "learning" && b.status !== "learning") return -1;
+    if (a.status !== "learning" && b.status === "learning") return 1;
+    return 0; // Giữ nguyên thứ tự nếu cùng nhóm
+  });
+};
+
 export const reviewFlashcardService = async (
   input: ReviewFlashcardRequestDto
 ): Promise<FlashcardSetResponseDto> => {
@@ -61,9 +116,51 @@ export const reviewFlashcardService = async (
     throw new AppError("Flashcard không tồn tại trong bộ", 404);
   }
 
-  flashcardSet.cards[cardIndex].lastReviewed = new Date();
-  flashcardSet.cards[cardIndex].reviewCount += 1;
+  const targetCard = flashcardSet.cards[cardIndex];
+  
+  // Lấy giá trị cũ hoặc gán default nếu undefined
+  const oldInterval = targetCard.interval ?? 0;
+  const oldEaseFactor = targetCard.easeFactor ?? 2.5;
+  const oldStatus = targetCard.status || "new";
+  const oldRepetitionCount = targetCard.reviewCount ?? 0;
+
+  // Tính toán bước tiếp theo theo thuật toán SRS V5
+  const srsResult = calculateNextReview(
+    input.grade,
+    oldInterval,
+    oldEaseFactor,
+    oldStatus,
+    oldRepetitionCount
+  );
+
+  // Cập nhật ngày kế tiếp
+  const now = new Date();
+  let nextReviewDate = new Date();
+  if (srsResult.interval > 0) {
+    nextReviewDate = new Date(now.getTime() + srsResult.interval * 24 * 60 * 60 * 1000);
+  }
+
+  flashcardSet.cards[cardIndex].status = srsResult.status;
+  flashcardSet.cards[cardIndex].interval = srsResult.interval;
+  flashcardSet.cards[cardIndex].easeFactor = srsResult.easeFactor;
+  flashcardSet.cards[cardIndex].reviewCount = srsResult.repetitionCount;
+  flashcardSet.cards[cardIndex].nextReviewDate = nextReviewDate;
+  flashcardSet.cards[cardIndex].lastReviewed = now;
+
   await flashcardSet.save();
+
+  // Lưu Log
+  await FlashcardReviewLog.create({
+    userId: input.userId,
+    flashcardSetId: flashcardSet._id,
+    cardId: targetCard._id,
+    grade: input.grade,
+    oldInterval: oldInterval,
+    newInterval: srsResult.interval,
+    oldEaseFactor: oldEaseFactor,
+    newEaseFactor: srsResult.easeFactor,
+    reviewedAt: now,
+  });
 
   return mapFlashcardSet(flashcardSet.toObject());
 };

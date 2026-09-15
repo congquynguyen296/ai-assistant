@@ -9,9 +9,16 @@ export interface GetAllFlashcardSetsRequestDto {
   documentId: string;
 }
 
+export interface GetReviewSessionRequestDto {
+  userId: string;
+  timezoneOffset: number; // in minutes
+  documentId?: string;
+}
+
 export interface ReviewFlashcardRequestDto {
   userId: string;
   cardId: string;
+  grade: number; // 1 to 4
 }
 
 export interface ToggleStarFlashcardRequestDto {

@@ -2,6 +2,7 @@ import type { Response, NextFunction } from "express";
 import {
   getFlashcardsService,
   getAllFlashcardSetsService,
+  getReviewSessionService,
   reviewFlashcardService,
   toggleStarFlashcardService,
   deleteFlashcardSetService,
@@ -61,6 +62,40 @@ export const getAllFlashcardSets = async (
   }
 };
 
+export const getReviewSession = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction,
+): Promise<Response | void> => {
+  try {
+    const userId = getUserIdFromReq(req);
+    const timezoneOffset = req.headers["x-timezone-offset"] as string;
+    const documentId = req.query.documentId as string | undefined;
+
+    if (!timezoneOffset || isNaN(Number(timezoneOffset))) {
+      return res.status(400).json({
+        success: false,
+        error: "Thiếu header x-timezone-offset để tính toán ngày",
+        statusCode: 400,
+      });
+    }
+
+    const result = await getReviewSessionService({ 
+      userId, 
+      timezoneOffset: Number(timezoneOffset),
+      documentId
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Lấy session ôn tập thành công",
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const reviewFlashcard = async (
   req: AuthRequest,
   res: Response,
@@ -69,15 +104,25 @@ export const reviewFlashcard = async (
   try {
     const userId = getUserIdFromReq(req);
     const cardId = req.params.cardId;
+    const { grade } = req.body; // 1, 2, 3, 4
+
     if (!cardId) {
       return res.status(400).json({
-        sucess: false,
+        success: false, // Fix typo sucess -> success
         error: "CardId không hợp lệ",
         statusCode: 400,
       });
     }
 
-    const result = await reviewFlashcardService({ userId, cardId });
+    if (!grade || ![1, 2, 3, 4].includes(grade)) {
+      return res.status(400).json({
+        success: false,
+        error: "Grade không hợp lệ, phải từ 1 đến 4",
+        statusCode: 400,
+      });
+    }
+
+    const result = await reviewFlashcardService({ userId, cardId, grade });
 
     return res.status(200).json({
       success: true,

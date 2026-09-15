@@ -3,6 +3,7 @@ import protect from "@/middlewares/auth.js";
 import {
   getFlashcards,
   getAllFlashcardSets,
+  getReviewSession,
   reviewFlashcard,
   toggleStarFlashcard,
   deleteFlashcardSet,
@@ -17,6 +18,8 @@ const router = express.Router();
 router.use(protect);
 
 router.get("/", getFlashcards);
+
+router.get("/review-session", getReviewSession);
 
 router.get("/:documentId", getAllFlashcardSets);
 

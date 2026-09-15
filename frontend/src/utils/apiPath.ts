@@ -33,6 +33,7 @@ export const API_PATHS = {
   },
 
   FLASHCARDS: {
+    GET_REVIEW_SESSION: "/flashcards/review-session",
     GET_ALL_FLASHCARDS_SET: "/flashcards",
     GET_FLASHCARDS_FOR_DOCUMENT: (documentId: string) => `/flashcards/${documentId}`,
     REVIEW_FLASHCARD: (cardId: string) => `/flashcards/${cardId}/review`,

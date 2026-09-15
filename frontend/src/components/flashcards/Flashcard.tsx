@@ -7,18 +7,23 @@ import {
   ChevronRight,
   RotateCcw,
   ArrowLeft,
+  Check,
+  X,
+  Frown,
+  Smile,
 } from "lucide-react";
-import type { FlashcardSet } from "@/types/models";
 
 interface FlashcardProps {
-  flashcardSet: FlashcardSet;
+  cards: any[];
+  isReviewMode?: boolean;
   onBack: () => void;
-  onUpdateSet: (updatedSet: FlashcardSet) => void;
+  onUpdateCards: (updatedCards: any[]) => void;
 }
 
-const Flashcard = ({ flashcardSet, onBack, onUpdateSet }: FlashcardProps) => {
+const Flashcard = ({ cards, isReviewMode = false, onBack, onUpdateCards }: FlashcardProps) => {
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Reset flip state when card changes
   useEffect(() => {
@@ -59,55 +64,67 @@ const Flashcard = ({ flashcardSet, onBack, onUpdateSet }: FlashcardProps) => {
     }
   };
 
-  // Function handle next flashcard action
+  // Function handle next flashcard action (Browse mode only)
   const handleNextCard = () => {
-    if (flashcardSet) {
-      setCurrentCardIndex(
-        (prevIndex) => (prevIndex + 1) % flashcardSet.cards.length
-      );
+    if (cards.length > 0 && !isReviewMode) {
+      setCurrentCardIndex((prevIndex) => (prevIndex + 1) % cards.length);
     }
   };
 
-  // Function handle prev flashcard action
+  // Function handle prev flashcard action (Browse mode only)
   const handlePrevCard = () => {
-    if (flashcardSet) {
+    if (cards.length > 0 && !isReviewMode) {
       setCurrentCardIndex(
-        (prevIndex) =>
-          (prevIndex - 1 + flashcardSet.cards.length) %
-          flashcardSet.cards.length
+        (prevIndex) => (prevIndex - 1 + cards.length) % cards.length
       );
     }
   };
 
-  // Helper function review card
-  const handleReview = async () => {
-    const currentCard = flashcardSet?.cards[currentCardIndex];
+  // Handle grade review (Review mode only)
+  const handleGrade = async (grade: number) => {
+    if (isSubmitting) return;
+    
+    const currentCard = cards[currentCardIndex];
     if (!currentCard) return;
 
+    setIsSubmitting(true);
     try {
-      await flashcardService.reviewFlashcard(currentCard._id);
-      // Update local state
-      const updatedCards = flashcardSet.cards.map((card) =>
-        card._id === currentCard._id
-          ? { ...card, reviewCount: (card.reviewCount || 0) + 1 }
-          : card
-      );
-      const updatedSet = { ...flashcardSet, cards: updatedCards };
-      onUpdateSet(updatedSet);
+      await flashcardService.reviewFlashcard(currentCard._id, grade);
+      
+      let updatedCards = [...cards];
+      
+      // Nếu người dùng chọn Quên (1), đẩy thẻ xuống cuối để học lại trong cùng session
+      if (grade === 1) {
+        // Tạo bản sao và đẩy vào cuối mảng
+        const cardToRepeat = { ...currentCard, status: "learning" };
+        updatedCards.push(cardToRepeat);
+      }
+      
+      // Đánh dấu thẻ hiện tại là đã review (nếu đang ở Review mode, ta có thể chỉ cần tiến index)
+      // Nhưng vì In-session Queue thêm thẻ vào cuối, ta vẫn cứ tăng index lên 1 để học thẻ tiếp theo
+      onUpdateCards(updatedCards);
+      
+      if (currentCardIndex + 1 < updatedCards.length) {
+        setCurrentCardIndex((prev) => prev + 1);
+      } else {
+        // Hết thẻ để học, gọi onBack (hoặc hiện thông báo hoàn thành)
+        toast.success("Đã hoàn thành phiên ôn tập!");
+        onBack();
+      }
     } catch (error) {
       console.log(`Review flashcard không thành công: ${error}`);
-      toast.error("Có lỗi xảy ra khi review flashcard");
+      toast.error("Có lỗi xảy ra khi đánh giá flashcard");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   // Handle flip card
   const handleFlipCard = () => {
     if (!isFlipped) {
-      // Flipping to back side - increase review count
       setIsFlipped(true);
-      handleReview();
-    } else {
-      // Flipping back to front side
+    } else if (!isReviewMode) {
+      // In review mode, tapping back side doesn't flip back, must choose grade
       setIsFlipped(false);
     }
   };
@@ -116,11 +133,10 @@ const Flashcard = ({ flashcardSet, onBack, onUpdateSet }: FlashcardProps) => {
   const handleToggleStar = async (cardId: string) => {
     try {
       await flashcardService.toggleStarFlashcard(cardId);
-      const updatedCards = flashcardSet.cards.map((card) =>
+      const updatedCards = cards.map((card) =>
         card._id === cardId ? { ...card, isStarred: !card.isStarred } : card
       );
-      const updatedSet = { ...flashcardSet, cards: updatedCards };
-      onUpdateSet(updatedSet);
+      onUpdateCards(updatedCards);
       toast.success("Cập nhật thành công");
     } catch (error) {
       toast.error("Có lỗi xảy ra khi lưu flashcard. Vui lòng thử lại sau");
@@ -133,10 +149,18 @@ const Flashcard = ({ flashcardSet, onBack, onUpdateSet }: FlashcardProps) => {
       if (e.code === "Space") {
         e.preventDefault(); // Prevent page scrolling
         handleFlipCard();
-      } else if (e.key === "ArrowLeft") {
-        handlePrevCard();
-      } else if (e.key === "ArrowRight") {
-        handleNextCard();
+      } else if (!isReviewMode) {
+        if (e.key === "ArrowLeft") {
+          handlePrevCard();
+        } else if (e.key === "ArrowRight") {
+          handleNextCard();
+        }
+      } else if (isReviewMode && isFlipped && !isSubmitting) {
+        // SRS Shortcuts: 1(Quên), 2(Khó), 3(Tốt), 4(Dễ)
+        if (e.key === "1") handleGrade(1);
+        if (e.key === "2") handleGrade(2);
+        if (e.key === "3") handleGrade(3);
+        if (e.key === "4") handleGrade(4);
       }
     };
 
@@ -144,17 +168,17 @@ const Flashcard = ({ flashcardSet, onBack, onUpdateSet }: FlashcardProps) => {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [currentCardIndex, isFlipped, flashcardSet]); // Re-attach when state changes
+  }, [currentCardIndex, isFlipped, cards, isReviewMode, isSubmitting]);
 
-  if (!flashcardSet || !flashcardSet.cards || flashcardSet.cards.length === 0) {
+  if (!cards || cards.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16">
-        <p className="text-slate-500">Không có flashcard nào trong bộ này</p>
+        <p className="text-slate-500">Không có flashcard nào</p>
       </div>
     );
   }
 
-  const currentCard = flashcardSet.cards[currentCardIndex];
+  const currentCard = cards[currentCardIndex];
   if (!currentCard) return null;
 
   const difficultyColors = getDifficultyColor(currentCard.difficulty);
@@ -171,7 +195,7 @@ const Flashcard = ({ flashcardSet, onBack, onUpdateSet }: FlashcardProps) => {
           Quay lại
         </button>
         <div className="text-sm font-medium text-slate-500">
-          {currentCardIndex + 1} / {flashcardSet.cards.length}
+          {currentCardIndex + 1} / {cards.length}
         </div>
       </div>
 
@@ -301,43 +325,84 @@ const Flashcard = ({ flashcardSet, onBack, onUpdateSet }: FlashcardProps) => {
                 </div>
               </div>
 
-              <div className="mt-4 md:mt-6 text-center shrink-0">
-                <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-100 rounded-lg">
-                  <RotateCcw className="w-4 h-4 text-emerald-600" />
-                  <span className="text-sm font-medium text-emerald-700">
-                    Click để lật lại
-                  </span>
+              {isReviewMode ? (
+                <div className="mt-4 shrink-0 border-t border-emerald-200/50 pt-4">
+                  <div className="grid grid-cols-4 gap-2">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleGrade(1); }}
+                      disabled={isSubmitting}
+                      className="flex flex-col items-center gap-2 py-3 px-2 sm:px-4 rounded-lg bg-red-50 text-red-700 hover:bg-red-100 transition-colors disabled:opacity-50"
+                    >
+                      <Frown className="w-5 h-5" />
+                      <span className="text-xs font-bold text-center">Quên (1)</span>
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleGrade(2); }}
+                      disabled={isSubmitting}
+                      className="flex flex-col items-center gap-2 py-3 px-2 sm:px-4 rounded-lg bg-orange-50 text-orange-700 hover:bg-orange-100 transition-colors disabled:opacity-50"
+                    >
+                      <X className="w-5 h-5" />
+                      <span className="text-xs font-bold text-center">Khó (2)</span>
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleGrade(3); }}
+                      disabled={isSubmitting}
+                      className="flex flex-col items-center gap-2 py-3 px-2 sm:px-4 rounded-lg bg-green-50 text-green-700 hover:bg-green-100 transition-colors disabled:opacity-50"
+                    >
+                      <Check className="w-5 h-5" />
+                      <span className="text-xs font-bold text-center">Tốt (3)</span>
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleGrade(4); }}
+                      disabled={isSubmitting}
+                      className="flex flex-col items-center gap-2 py-3 px-2 sm:px-4 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors disabled:opacity-50"
+                    >
+                      <Smile className="w-5 h-5" />
+                      <span className="text-xs font-bold text-center">Dễ (4)</span>
+                    </button>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="mt-4 md:mt-6 text-center shrink-0">
+                  <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-100 rounded-lg">
+                    <RotateCcw className="w-4 h-4 text-emerald-600" />
+                    <span className="text-sm font-medium text-emerald-700">
+                      Click để lật lại
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Navigation controls */}
-      <div className="flex items-center justify-center gap-4">
-        <button
-          onClick={handlePrevCard}
-          className="w-12 h-12 flex items-center justify-center bg-white border-2 border-slate-200 hover:border-emerald-300 rounded-xl transition-all duration-200 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-          disabled={flashcardSet.cards.length <= 1}
-        >
-          <ChevronLeft className="w-5 h-5 text-slate-600" strokeWidth={2} />
-        </button>
+      {/* Navigation controls (Only show in Browse Mode) */}
+      {!isReviewMode && (
+        <div className="flex items-center justify-center gap-4">
+          <button
+            onClick={handlePrevCard}
+            className="w-12 h-12 flex items-center justify-center bg-white border-2 border-slate-200 hover:border-emerald-300 rounded-xl transition-all duration-200 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={cards.length <= 1}
+          >
+            <ChevronLeft className="w-5 h-5 text-slate-600" strokeWidth={2} />
+          </button>
 
-        <div className="px-6 py-2 bg-slate-100 rounded-xl">
-          <span className="text-sm font-semibold text-slate-700">
-            {currentCardIndex + 1} / {flashcardSet.cards.length}
-          </span>
+          <div className="px-6 py-2 bg-slate-100 rounded-xl">
+            <span className="text-sm font-semibold text-slate-700">
+              {currentCardIndex + 1} / {cards.length}
+            </span>
+          </div>
+
+          <button
+            onClick={handleNextCard}
+            className="w-12 h-12 flex items-center justify-center bg-white border-2 border-slate-200 hover:border-emerald-300 rounded-xl transition-all duration-200 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={cards.length <= 1}
+          >
+            <ChevronRight className="w-5 h-5 text-slate-600" strokeWidth={2} />
+          </button>
         </div>
-
-        <button
-          onClick={handleNextCard}
-          className="w-12 h-12 flex items-center justify-center bg-white border-2 border-slate-200 hover:border-emerald-300 rounded-xl transition-all duration-200 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-          disabled={flashcardSet.cards.length <= 1}
-        >
-          <ChevronRight className="w-5 h-5 text-slate-600" strokeWidth={2} />
-        </button>
-      </div>
+      )}
     </div>
   );
 };

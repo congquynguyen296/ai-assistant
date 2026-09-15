@@ -33,6 +33,11 @@ const flashcardSchema = new Schema<FlashcardDocument>(
           enum: ["easy", "medium", "hard"],
           default: "medium",
         },
+        status: {
+          type: String,
+          enum: ["new", "learning", "review"],
+          default: "new",
+        },
         nextReviewDate: {
           type: Date,
           default: Date.now,
