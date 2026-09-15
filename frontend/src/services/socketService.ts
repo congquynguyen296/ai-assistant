@@ -3,9 +3,9 @@ import { io, Socket } from "socket.io-client";
 let socket: Socket | null = null;
 
 export const connectSocket = (userId: string) => {
-  if (socket) return socket;
-
-  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+  // Sử dụng chung VITE_API_BASE_URL giống Axios, sau đó cắt bỏ /api/v1 để lấy domain gốc
+  const rawUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api/v1";
+  const API_URL = rawUrl.replace("/api/v1", "");
 
   socket = io(API_URL, {
     withCredentials: true,
