@@ -2,6 +2,7 @@ import OpenAI from 'openai';
 import { z } from 'zod';
 import { zodResponseFormat } from 'openai/helpers/zod';
 import { AppError } from '@/middlewares/errorHandle.js';
+import { apiLogger } from '@/utils/logger.js';
 
 if (
   !process.env.AZURE_OPENAI_API_KEY ||
@@ -43,7 +44,10 @@ async function callAiWithRetry<T>(
   let lastError: any = null;
   
   for (let i = 0; i <= retries; i++) {
+    const startTime = Date.now();
     try {
+      apiLogger.info(`[AI Calling] Model: ${modelName}, Schema: ${schemaName}, Retry: ${i}`);
+      
       const response = await ai.chat.completions.create({
         model: modelName,
         messages: [{ role: 'user', content: prompt }],
@@ -51,14 +55,21 @@ async function callAiWithRetry<T>(
       });
 
       const parsed = JSON.parse(response.choices[0].message.content || '{}');
-      return schema.parse(parsed); // Strict Zod Validation
-    } catch (error) {
-      console.warn(`[AI Retry ${i}] Failed to parse/validate output for ${schemaName}. Retrying...`);
+      const validated = schema.parse(parsed); // Strict Zod Validation
+      
+      const duration = Date.now() - startTime;
+      const usage = response.usage;
+      apiLogger.info(`[AI Success] Schema: ${schemaName} completed in ${duration}ms. Tokens: Prompt=${usage?.prompt_tokens}, Completion=${usage?.completion_tokens}, Total=${usage?.total_tokens}`);
+      
+      return validated;
+    } catch (error: any) {
+      const duration = Date.now() - startTime;
+      apiLogger.warn(`[AI Retry ${i}] Failed to parse/validate output for ${schemaName} after ${duration}ms. Error: ${error?.message}`);
       lastError = error;
     }
   }
   
-  console.error(`[AI Error] All retries failed for ${schemaName}:`, lastError);
+  apiLogger.error(`[AI Error] All retries failed for ${schemaName}`, { error: lastError });
   throw new AppError('AI trả về dữ liệu không hợp lệ. Vui lòng thử lại.', 500);
 }
 

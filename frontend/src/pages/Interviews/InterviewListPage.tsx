@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Plus, Loader2, Trash2 } from 'lucide-react';
 import InterviewCard from '@/components/interviews/list/InterviewCard';
 import ConfirmModal from '@/components/common/ConfirmModal';
+import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { useInterviews } from '@/hooks/useInterviews';
 
 export default function InterviewListPage() {
@@ -42,8 +43,8 @@ export default function InterviewListPage() {
       </div>
 
       {loading ? (
-        <div className="flex justify-center items-center py-20">
-          <Loader2 className="w-8 h-8 text-emerald-500 animate-spin" />
+        <div className="flex justify-center items-center min-h-[400px]">
+          <LoadingSpinner variant="inline" />
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

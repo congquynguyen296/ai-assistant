@@ -11,10 +11,13 @@ import {
 } from '@/services/interviewService.js';
 import { SetupInterviewRequestSchema, ChatInterviewRequestSchema } from '@/dtos/interviews/interview.request.dto.js';
 import { AppError } from '@/middlewares/errorHandle.js';
+import { apiLogger } from '@/utils/logger.js';
 
 export const setupInterview = async (req: Request, res: Response) => {
   const userId = req.user?.id;
   if (!userId) throw new AppError('Không có quyền truy cập', 401);
+
+  apiLogger.info(`[Interview Setup] Request received from userId: ${userId}`);
 
   const validatedData = SetupInterviewRequestSchema.parse(req.body);
 
@@ -27,6 +30,7 @@ export const setupInterview = async (req: Request, res: Response) => {
     level: validatedData.level,
   });
 
+  apiLogger.info(`[Interview Setup] Success for userId: ${userId}, SessionId: ${session._id}`);
   res.status(201).json(session);
 };
 
@@ -37,12 +41,15 @@ export const chatInterview = async (req: Request, res: Response) => {
   const { id: sessionId } = req.params;
   const validatedData = ChatInterviewRequestSchema.parse(req.body);
 
+  apiLogger.info(`[Interview Chat] User: ${userId}, Session: ${sessionId} sent message`);
+
   const response = await chatInterviewService({
     userId,
     sessionId,
     message: validatedData.message,
   });
 
+  apiLogger.info(`[Interview Chat] AI Response sent for Session: ${sessionId}`);
   res.status(200).json(response);
 };
 

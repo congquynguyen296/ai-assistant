@@ -72,6 +72,18 @@ class RedisService {
     }
   }
 
+  async deleteByPattern(pattern: string): Promise<void> {
+    try {
+      const keys = await redisClient.keys(pattern);
+      if (keys.length > 0) {
+        await redisClient.del(keys);
+        console.log(`Deleted ${keys.length} keys matching pattern: ${pattern}`);
+      }
+    } catch (e) {
+      console.error(`Error deleting keys by pattern ${pattern}:`, e);
+    }
+  }
+
   async exists(key: string): Promise<boolean> {
     try {
       const count = await redisClient.exists(key);
