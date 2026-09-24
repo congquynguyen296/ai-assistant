@@ -90,7 +90,7 @@ export default function InterviewSetupPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <button
                   onClick={() => setMode('knowledge')}
-                  className={`p-6 rounded-2xl border-2 text-left transition-all ${mode === 'knowledge' ? 'border-emerald-500 bg-emerald-50/50' : 'border-slate-200 hover:border-emerald-200 hover:bg-slate-50'}`}
+                  className={`p-6 rounded-2xl border-2 text-left transition-all relative ${mode === 'knowledge' ? 'border-emerald-500 bg-emerald-50/50' : 'border-slate-200 hover:border-emerald-200 hover:bg-slate-50'}`}
                 >
                   <div className="w-12 h-12 bg-purple-100 text-purple-600 rounded-xl flex items-center justify-center mb-4">
                     <Brain className="w-6 h-6" />
@@ -100,12 +100,11 @@ export default function InterviewSetupPage() {
                 </button>
 
                 <button
-                  disabled
                   onClick={() => setMode('jd_only')}
-                  className="p-6 rounded-2xl border-2 text-left transition-all border-slate-200 bg-slate-50/50 opacity-60 cursor-not-allowed relative overflow-hidden group"
+                  className={`p-6 rounded-2xl border-2 text-left transition-all relative overflow-hidden group ${mode === 'jd_only' ? 'border-emerald-500 bg-emerald-50/50' : 'border-slate-200 hover:border-emerald-200 hover:bg-slate-50'}`}
                 >
-                  <div className="absolute top-4 right-4 bg-slate-200 text-slate-500 text-xs px-2 py-1 rounded-md font-medium">Sắp ra mắt</div>
-                  <div className="w-12 h-12 bg-teal-100 text-teal-600 rounded-xl flex items-center justify-center mb-4 grayscale opacity-70">
+                  <div className="absolute top-4 right-4 bg-amber-100 text-amber-700 text-[10px] px-2 py-1 rounded-md font-bold uppercase tracking-widest border border-amber-200">Beta</div>
+                  <div className="w-12 h-12 bg-teal-100 text-teal-600 rounded-xl flex items-center justify-center mb-4">
                     <Settings className="w-6 h-6" />
                   </div>
                   <h3 className="font-semibold text-slate-800 text-lg mb-2">JD Focus</h3>
@@ -113,12 +112,11 @@ export default function InterviewSetupPage() {
                 </button>
 
                 <button
-                  disabled
                   onClick={() => setMode('cv_only')}
-                  className="p-6 rounded-2xl border-2 text-left transition-all border-slate-200 bg-slate-50/50 opacity-60 cursor-not-allowed relative overflow-hidden group"
+                  className={`p-6 rounded-2xl border-2 text-left transition-all relative overflow-hidden group ${mode === 'cv_only' ? 'border-emerald-500 bg-emerald-50/50' : 'border-slate-200 hover:border-emerald-200 hover:bg-slate-50'}`}
                 >
-                  <div className="absolute top-4 right-4 bg-slate-200 text-slate-500 text-xs px-2 py-1 rounded-md font-medium">Sắp ra mắt</div>
-                  <div className="w-12 h-12 bg-amber-100 text-amber-600 rounded-xl flex items-center justify-center mb-4 grayscale opacity-70">
+                  <div className="absolute top-4 right-4 bg-amber-100 text-amber-700 text-[10px] px-2 py-1 rounded-md font-bold uppercase tracking-widest border border-amber-200">Beta</div>
+                  <div className="w-12 h-12 bg-amber-100 text-amber-600 rounded-xl flex items-center justify-center mb-4">
                     <FileText className="w-6 h-6" />
                   </div>
                   <h3 className="font-semibold text-slate-800 text-lg mb-2">CV Deep Dive</h3>
@@ -126,17 +124,23 @@ export default function InterviewSetupPage() {
                 </button>
 
                 <button
-                  disabled
                   onClick={() => setMode('job')}
-                  className="p-6 rounded-2xl border-2 text-left transition-all border-slate-200 bg-slate-50/50 opacity-60 cursor-not-allowed relative overflow-hidden group"
+                  className={`p-6 rounded-2xl border-2 text-left transition-all relative overflow-hidden group ${mode === 'job' ? 'border-emerald-500 bg-emerald-50/50' : 'border-slate-200 hover:border-emerald-200 hover:bg-slate-50'}`}
                 >
-                  <div className="absolute top-4 right-4 bg-slate-200 text-slate-500 text-xs px-2 py-1 rounded-md font-medium">Sắp ra mắt</div>
-                  <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center mb-4 grayscale opacity-70">
+                  <div className="absolute top-4 right-4 bg-amber-100 text-amber-700 text-[10px] px-2 py-1 rounded-md font-bold uppercase tracking-widest border border-amber-200">Beta</div>
+                  <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center mb-4">
                     <Briefcase className="w-6 h-6" />
                   </div>
                   <h3 className="font-semibold text-slate-800 text-lg mb-2">Job Interview</h3>
                   <p className="text-slate-500 text-sm">Phỏng vấn toàn diện kết hợp cả JD cụ thể và CV của bạn.</p>
                 </button>
+              </div>
+
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3 mt-4">
+                <div className="w-1.5 h-1.5 rounded-full bg-amber-500 mt-2 shrink-0"></div>
+                <p className="text-sm text-amber-800">
+                  <span className="font-bold">Lưu ý:</span> Các chế độ dán nhãn <strong>BETA</strong> đang trong quá trình thử nghiệm và tối ưu hóa hệ thống AI. Trải nghiệm có thể chưa thực sự mượt mà hoặc ổn định nhất.
+                </p>
               </div>
 
               <div className="flex justify-end pt-6 mt-6 border-t border-slate-100">
@@ -161,8 +165,8 @@ export default function InterviewSetupPage() {
               {!currentSession?.blueprint && (
                 <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm mt-8">
                   <h3 className="font-semibold text-slate-800 mb-4">Chọn cấp độ phỏng vấn</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    {['Intern/Fresher', 'Junior/Middle', 'Senior'].map((l) => (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {['Intern/Fresher', 'Junior/Middle'].map((l) => (
                       <button
                         key={l}
                         onClick={() => setLevel(l)}
