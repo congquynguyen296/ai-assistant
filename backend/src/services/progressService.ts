@@ -1,6 +1,7 @@
 import Document from "@/models/Document.js";
 import Quiz from "@/models/Quiz.js";
 import Flashcard from "@/models/Flashcard.js";
+import InterviewSession from "@/models/InterviewSession.js";
 
 export const getDashboardService = async (input: {
   userId: string;
@@ -13,6 +14,8 @@ export const getDashboardService = async (input: {
     userId,
     completedAt: { $ne: null },
   });
+  const totalInterviews = await InterviewSession.countDocuments({ userId });
+  const completedInterviews = await InterviewSession.countDocuments({ userId, status: 'completed' });
 
   const flashcardSets = await Flashcard.find({ userId });
   let totalFlashcards = 0;
@@ -47,6 +50,12 @@ export const getDashboardService = async (input: {
     .populate("documentId", "title")
     .select("title score totalQuestions completedAt");
 
+  const recentInterviews = await InterviewSession.find({ userId })
+    .sort({ updatedAt: -1 })
+    .limit(5)
+    .populate("topicId", "name")
+    .select("blueprint status createdAt updatedAt report");
+
   const studySteak = Math.floor(Math.random() * 7) + 1;
   return {
     overview: {
@@ -57,12 +66,15 @@ export const getDashboardService = async (input: {
       starredFlashcards,
       totalQuizzes,
       completedQuizzed,
+      totalInterviews,
+      completedInterviews,
       averageScore,
       studySteak,
     },
     recentActivity: {
       documents: recentDocuments,
       quizzes: recentQuizzes,
+      interviews: recentInterviews,
     },
   };
 };

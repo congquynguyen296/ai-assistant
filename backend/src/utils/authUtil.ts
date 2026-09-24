@@ -1,4 +1,4 @@
-import type { AuthRequest } from "@/types/request.js";
+import type { AuthRequest } from "@/dtos/common/request.dto.js";
 
 export const getUserIdFromReq = (req: AuthRequest): string => {
   if (!req.user || !req.user.id) {

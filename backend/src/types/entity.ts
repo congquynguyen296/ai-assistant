@@ -1,4 +1,5 @@
 import type { Document, Types } from "mongoose";
+import { InterviewMode, InterviewStatus, InterviewQuestionSource } from "./enums.js";
 
 export interface UserDocument extends Document {
   id: string;
@@ -105,4 +106,44 @@ export interface UserPublicDto {
   username: string;
   email: string;
   profileImage?: string | null;
+}
+
+export interface InterviewMessage {
+  role: "user" | "assistant";
+  content: string;
+  timestamp: Date;
+}
+
+export interface InterviewSessionDocument extends Document {
+  userId: Types.ObjectId;
+  mode: InterviewMode;
+  level?: string;
+  status: InterviewStatus;
+  documentIds: Types.ObjectId[];
+  topicId?: Types.ObjectId;
+  blueprint?: Record<string, unknown>;
+  messages: InterviewMessage[];
+  report?: Record<string, unknown>;
+  maxQuestions: number;
+  questionsAsked: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface InterviewTopicDocument extends Document {
+  name: string;
+  usageCount: number;
+  category?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface InterviewQuestionDocument extends Document {
+  topicId: Types.ObjectId;
+  question: string;
+  difficulty: Difficulty;
+  source: InterviewQuestionSource;
+  expectedAnswerContext?: string;
+  createdAt: Date;
+  updatedAt: Date;
 }

@@ -89,7 +89,7 @@ const QuizzesPage = () => {
       <div className="relative container mx-auto px-4 py-8 max-w-7xl">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-10">
           <div>
-            <h1 className="text-2xl font-medium text-slate-900 tracking-tight mb-2 flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight mb-2 flex items-center gap-2">
               Thư viện câu hỏi
             </h1>
             <p className="text-slate-500 mb-2">

@@ -157,9 +157,11 @@ export const getDocumentByIdService = async (input: {
 
 export const getDocumentsService = async (input: {
   userId: string;
+  page?: number;
+  size?: number;
 }): Promise<DocumentListResponseDto> => {
-  const { userId } = input;
-  const cacheKey = `documents:${userId}`;
+  const { userId, page = 1, size = 10 } = input;
+  const cacheKey = `documents:${userId}:${page}:${size}`;
   const cacheDate = await redisService.getObject<DocumentListResponseDto>(
     cacheKey,
   );
@@ -172,8 +174,13 @@ export const getDocumentsService = async (input: {
   console.log(
     `Cache MISS for documents list (key: ${cacheKey}), querying MongoDB`,
   );
+  
+  const total = await Document.countDocuments({ userId });
   const documents = (await Document.aggregate([
     { $match: { userId: new mongoose.Types.ObjectId(userId) } },
+    { $sort: { uploadDate: -1 } },
+    { $skip: (page - 1) * size },
+    { $limit: size },
     {
       $lookup: {
         from: "flashcards",
@@ -204,7 +211,6 @@ export const getDocumentsService = async (input: {
         quizzes: 0,
       },
     },
-    { $sort: { uploadDate: -1 } },
   ])) as Array<Record<string, unknown>>;
 
   const documentsWithUrls = await Promise.all(
@@ -221,14 +227,19 @@ export const getDocumentsService = async (input: {
 
   const response: DocumentListResponseDto = {
     documents: documentsWithUrls,
-    count: documents.length,
+    pagination: {
+      total,
+      page,
+      size,
+      totalPages: Math.ceil(total / size),
+    }
   };
 
-  if (response.count > 0) {
+  if (response.documents.length > 0) {
     try {
       await redisService.setObject(cacheKey, response);
       console.log(
-        `Documents list cached in Redis (key: ${cacheKey}), count: ${response.count}`,
+        `Documents list cached in Redis (key: ${cacheKey}), count: ${response.pagination.total}`,
       );
     } catch (cacheErr) {
       console.warn(`Failed to cache documents list:`, (cacheErr as Error).message);

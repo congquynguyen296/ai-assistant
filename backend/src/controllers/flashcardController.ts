@@ -11,7 +11,7 @@ import {
   deleteFlashcardFromSetService,
 } from "../services/flashcardService.js";
 import { getUserIdFromReq } from "@/utils/authUtil.js";
-import type { AuthRequest } from "@/types/request.js";
+import type { AuthRequest } from "@/dtos/common/request.dto.js";
 import { Difficulty } from "@/types/enums.js";
 
 export const getFlashcards = async (

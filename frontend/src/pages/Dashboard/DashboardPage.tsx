@@ -37,6 +37,7 @@ const DashboardPage = () => {
   const overview = dashboardData?.overview;
   const recentDocuments = dashboardData?.recentActivity?.documents || [];
   const recentQuizzes = dashboardData?.recentActivity?.quizzes || [];
+  const recentInterviews = dashboardData?.recentActivity?.interviews || [];
   const now = Date.now();
   const weekAgo = now - 7 * 24 * 60 * 60 * 1000;
   const countThisWeek = (items: any[], getTs: (x: any) => string | undefined) =>
@@ -48,6 +49,7 @@ const DashboardPage = () => {
 
   const docsThisWeek = countThisWeek(recentDocuments, (d) => d.lastAccessed);
   const quizzesThisWeek = countThisWeek(recentQuizzes, (q) => q.lastAttempted || q.completedAt);
+  const interviewsThisWeek = countThisWeek(recentInterviews, (i) => i.updatedAt);
 
   const recentActivityItems: DashboardRecentActivityItem[] = [
     ...(recentQuizzes || []).map((quiz: any) => ({
@@ -67,6 +69,15 @@ const DashboardPage = () => {
       timestamp: doc.lastAccessed,
       accent: doc.status === "completed" ? ("emerald" as const) : doc.status === "failed" ? ("rose" as const) : doc.status === "processing" || doc.status === "pending" ? ("amber" as const) : ("slate" as const),
       link: doc._id ? `/documents/${doc._id}` : undefined,
+    })),
+    ...(recentInterviews || []).map((interview: any) => ({
+      id: interview._id,
+      type: "interview" as const,
+      title: `Phiên phỏng vấn: ${interview.blueprint?.title || "Phỏng vấn"}`,
+      subtitle: interview.status === "completed" ? `Điểm số: ${interview.report?.overallScore || 0}/100` : "Đang tiến hành",
+      timestamp: interview.updatedAt,
+      accent: interview.status === "completed" ? ("emerald" as const) : ("amber" as const),
+      link: interview._id ? `/interviews/${interview._id}${interview.status === "completed" ? "/report" : ""}` : undefined,
     })),
   ]
     .filter((x) => Boolean(x.id))
@@ -145,7 +156,7 @@ const DashboardPage = () => {
       <div className="relative max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8 pt-8 px-4 sm:px-0">
-          <h1 className="text-2xl font-medium text-slate-900 tracking-tight mb-2">
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight mb-2">
             Tổng quan
           </h1>
           <p className="text-slate-500">
@@ -177,7 +188,6 @@ const DashboardPage = () => {
               resumeHref={resumeHref}
             />
 
-            {/* Stats cards */}
             <DashboardStatsCards
               documents={{ value: overview.totalDocuments, thisWeek: docsThisWeek }}
               flashcards={{
@@ -190,6 +200,10 @@ const DashboardPage = () => {
                   recentQuizzes?.[0]?.score != null
                     ? `Điểm TB: ${recentQuizzes[0].score}%`
                     : `+ ${quizzesThisWeek} tuần này`,
+              }}
+              interviews={{
+                value: overview.totalInterviews || 0,
+                thisWeek: interviewsThisWeek,
               }}
             />
 

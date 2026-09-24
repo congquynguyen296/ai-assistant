@@ -26,6 +26,10 @@ import PaymentPage from "@/pages/Payment/PaymentPage";
 import ConfirmOTPPage from "@/pages/Auth/ConfirmOTPPage";
 import MessagePage from "@/pages/Messages/MessagePage";
 import LandingPage from "@/pages/LandingPage";
+import InterviewListPage from "@/pages/Interviews/InterviewListPage";
+import InterviewSetupPage from "@/pages/Interviews/InterviewSetupPage";
+import InterviewRoomPage from "@/pages/Interviews/InterviewRoomPage";
+import InterviewReportPage from "@/pages/Interviews/InterviewReportPage";
 
 export default function App() {
   const { isAuthenticated, loading } = useAuth();
@@ -82,6 +86,11 @@ export default function App() {
           <Route path="/quizzes/:quizId/review" element={<QuizReviewPage />} />
           <Route path="/quizzes/:quizId/result" element={<QuizResultPage />} />
           <Route path="/study-rooms/:roomId" element={<StudyRoomPage />} />
+          
+          <Route path="/interviews" element={<InterviewListPage />} />
+          <Route path="/interviews/setup" element={<InterviewSetupPage />} />
+          <Route path="/interviews/:interviewId/room" element={<InterviewRoomPage />} />
+          <Route path="/interviews/:interviewId/report" element={<InterviewReportPage />} />
         </Route>
 
         <Route path="*" element={<NotFoundPage />} />

@@ -8,7 +8,7 @@ import {
   getChatHistoryService,
   deleteChatService,
 } from "../services/aiService.js";
-import type { AuthRequest } from "@/types/request.js";
+import type { AuthRequest } from "@/dtos/common/request.dto.js";
 import type { GenerateFlashcardsRequestDto } from "@/dtos/ai/generate-flashcards.request.dto.js";
 import type { GenerateQuizRequestDto } from "@/dtos/ai/generate-quiz.request.dto.js";
 import type { GenerateSummaryRequestDto } from "@/dtos/ai/generate-summary.request.dto.js";

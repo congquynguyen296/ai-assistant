@@ -57,4 +57,16 @@ export const API_PATHS = {
   PROGRESS: {
     GET_DASHBOARD: "/progress/dashboard",
   },
+
+  INTERVIEWS: {
+    GET_SESSIONS: "/interviews",
+    GET_SESSION_BY_ID: (id: string) => `/interviews/${id}`,
+    GET_SESSION: (id: string) => `/interviews/${id}`,
+    SETUP: "/interviews/setup",
+    CHAT: (id: string) => `/interviews/${id}/chat`,
+    FINISH: (id: string) => `/interviews/${id}/finish`,
+    GET_TRENDING_TOPICS: "/interviews/topics/trending",
+    SEARCH_TOPICS: (query: string) => `/interviews/topics/search?q=${encodeURIComponent(query)}`,
+    DELETE_INTERVIEW: (id: string) => `/interviews/${id}`,
+  },
 };

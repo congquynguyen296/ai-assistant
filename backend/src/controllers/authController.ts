@@ -9,7 +9,7 @@ import {
   confirmEmailService,
   resendOTPService,
 } from "../services/authService.js";
-import type { AuthRequest } from "@/types/request.js";
+import type { AuthRequest } from "@/dtos/common/request.dto.js";
 import type { RegisterRequestDto } from "@/dtos/auth/register.request.dto.js";
 import type { LoginRequestDto } from "@/dtos/auth/login.request.dto.js";
 import type { ConfirmEmailRequestDto } from "@/dtos/auth/confirm-email.request.dto.js";
