@@ -97,9 +97,15 @@ const QuizzesPage = () => {
             </p>
           </div>
           <div className="w-full sm:w-auto">
-            <Button onClick={() => navigate("/documents")} className="w-full sm:w-auto">
+            <Button 
+              onClick={() => {
+                toast.info("Vui lòng chọn một tài liệu để AI tạo Quiz");
+                navigate("/documents");
+              }} 
+              className="w-full sm:w-auto"
+            >
               <Plus className="w-5 h-5 mr-2" />
-              Tạo Quiz mới
+              Tạo từ tài liệu
             </Button>
           </div>
         </div>

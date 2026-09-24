@@ -7,6 +7,7 @@ type StatCardProps = {
   trendText: string;
   icon: "documents" | "flashcards" | "quizzes" | "interviews";
   accent: "sky" | "rose" | "emerald" | "amber";
+  id?: string;
 };
 
 const accents: Record<
@@ -39,12 +40,13 @@ const accents: Record<
   },
 };
 
-function StatCard({ label, value, subtext, trendText, icon, accent }: StatCardProps) {
+function StatCard({ label, value, subtext, trendText, icon, accent, id }: StatCardProps) {
   const Icon = icon === "documents" ? FileText : icon === "flashcards" ? BookOpen : icon === "interviews" ? FileText : BrainCircuit;
   const a = accents[accent];
 
   return (
     <div
+      id={id}
       className={[
         "group relative overflow-hidden",
         "bg-white/85 backdrop-blur-xl border border-slate-200/60 rounded-2xl",
@@ -93,6 +95,7 @@ export default function DashboardStatsCards({ documents, flashcards, quizzes, in
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
       <StatCard
+        id="tour-dashboard-stats-documents"
         label="Tài liệu đã phân tích"
         value={documents.value}
         subtext=""
@@ -101,6 +104,7 @@ export default function DashboardStatsCards({ documents, flashcards, quizzes, in
         accent="sky"
       />
       <StatCard
+        id="tour-dashboard-stats-flashcards"
         label="Flashcard đã nắm vững"
         value={flashcards.value}
         subtext=""
@@ -109,6 +113,7 @@ export default function DashboardStatsCards({ documents, flashcards, quizzes, in
         accent="rose"
       />
       <StatCard
+        id="tour-dashboard-stats-quizzes"
         label="Bài kiểm tra đã hoàn thành"
         value={quizzes.value}
         subtext={quizzes.avgScoreText}
@@ -117,6 +122,7 @@ export default function DashboardStatsCards({ documents, flashcards, quizzes, in
         accent="emerald"
       />
       <StatCard
+        id="tour-dashboard-stats-interviews"
         label="Buổi phỏng vấn đã tham gia"
         value={interviews.value}
         subtext=""

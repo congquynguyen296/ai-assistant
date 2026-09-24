@@ -12,6 +12,8 @@ import {
   Lock,
   Mail,
   User,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 
 const RegisterPage = () => {
@@ -19,6 +21,8 @@ const RegisterPage = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [rePassword, setRePassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showRePassword, setShowRePassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [focusField, setFocusField] = useState<string | null>(null);
@@ -66,8 +70,9 @@ const RegisterPage = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-linear-to-br from-slate-50 via-white to-slate-50">
-      <div className="w-full max-w-lg px-6">
+    <div className="relative flex items-center justify-center min-h-screen bg-linear-to-br from-slate-50 via-white to-slate-50 overflow-hidden">
+      <div className="absolute inset-0 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] bg-size-[16px_16px] pointer-events-none z-0" />
+      <div className="relative z-10 w-full max-w-lg px-6">
         <div className="bg-white/80 backdrop-blur-xl border border-slate-200/60 shadow-xl shadow-slate-200/50 p-10 rounded-2xl">
           {/* Header */}
           <div className="text-center mb-10">
@@ -157,14 +162,25 @@ const RegisterPage = () => {
                   <Lock className="w-5 h-5" strokeWidth={2} />
                 </div>
                 <input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   onFocus={() => setFocusField("password")}
                   onBlur={() => setFocusField(null)}
                   placeholder="********"
-                  className="w-full h-12 pl-12 pr-4 border-2 border-slate-200 rounded-xl bg-slate-50/50 text-slate-900 placeholder-slate-400 text-sm font-medium transition-all duration-200 focus:outline-none focus:border-emerald-500 focus:bg-white focus:shadow-lg focus:shadow-emerald-500/10"
+                  className="w-full h-12 pl-12 pr-12 border-2 border-slate-200 rounded-xl bg-slate-50/50 text-slate-900 placeholder-slate-400 text-sm font-medium transition-all duration-200 focus:outline-none focus:border-emerald-500 focus:bg-white focus:shadow-lg focus:shadow-emerald-500/10"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-emerald-500 transition-colors duration-200 focus:outline-none"
+                >
+                  {showPassword ? (
+                    <EyeOff className="w-5 h-5" strokeWidth={2} />
+                  ) : (
+                    <Eye className="w-5 h-5" strokeWidth={2} />
+                  )}
+                </button>
               </div>
             </div>
 
@@ -185,14 +201,25 @@ const RegisterPage = () => {
                   <FileLock2 className="w-5 h-5" strokeWidth={2} />
                 </div>
                 <input
-                  type="password"
+                  type={showRePassword ? "text" : "password"}
                   value={rePassword}
                   onChange={(e) => setRePassword(e.target.value)}
                   onFocus={() => setFocusField("rePassword")}
                   onBlur={() => setFocusField(null)}
                   placeholder="********"
-                  className="w-full h-12 pl-12 pr-4 border-2 border-slate-200 rounded-xl bg-slate-50/50 text-slate-900 placeholder-slate-400 text-sm font-medium transition-all duration-200 focus:outline-none focus:border-emerald-500 focus:bg-white focus:shadow-lg focus:shadow-emerald-500/10"
+                  className="w-full h-12 pl-12 pr-12 border-2 border-slate-200 rounded-xl bg-slate-50/50 text-slate-900 placeholder-slate-400 text-sm font-medium transition-all duration-200 focus:outline-none focus:border-emerald-500 focus:bg-white focus:shadow-lg focus:shadow-emerald-500/10"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowRePassword(!showRePassword)}
+                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-emerald-500 transition-colors duration-200 focus:outline-none"
+                >
+                  {showRePassword ? (
+                    <EyeOff className="w-5 h-5" strokeWidth={2} />
+                  ) : (
+                    <Eye className="w-5 h-5" strokeWidth={2} />
+                  )}
+                </button>
               </div>
             </div>
 
@@ -245,9 +272,9 @@ const RegisterPage = () => {
         </div>
 
         {/* Sub footer */}
-        <p className="text-center text-sm text-slate-500 mt-6">
+        {/* <p className="text-center text-sm text-slate-500 mt-6">
           Trang này tạo ra là cho Huỳnh Mỹ Huyền dùng.
-        </p>
+        </p> */}
       </div>
     </div>
   );
