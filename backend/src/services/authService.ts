@@ -107,7 +107,9 @@ export const confirmEmailService = async (
 
   await redisService.deleteObject(`register_otp:${email}`);
 
-  await sendWelcomeEmail(email, parsedData.username);
+  sendWelcomeEmail(email, parsedData.username).catch((err) => {
+    console.error("Non-fatal: Failed to send welcome email:", err);
+  });
 
   const token = generateToken({ id: newUser._id.toString() });
 
@@ -322,7 +324,9 @@ export const googleLoginService = async (
 
       const defaultPassword = Math.random().toString(36).slice(-8);
       if (email) {
-        await sendWelcomeEmail(email, username, defaultPassword);
+        sendWelcomeEmail(email, username, defaultPassword).catch((err) => {
+          console.error("Non-fatal: Failed to send welcome email:", err);
+        });
       }
 
       user = await User.create({
