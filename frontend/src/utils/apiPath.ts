@@ -66,6 +66,7 @@ export const API_PATHS = {
     CHAT: (id: string) => `/interviews/${id}/chat`,
     FINISH: (id: string) => `/interviews/${id}/finish`,
     GET_TRENDING_TOPICS: "/interviews/topics/trending",
+    SEARCH_TOPICS: (query: string) => `/interviews/topics/search?q=${encodeURIComponent(query)}`,
     DELETE_INTERVIEW: (id: string) => `/interviews/${id}`,
   },
 };

@@ -26,7 +26,7 @@ export default function InterviewListPage() {
   return (
     <div className="relative min-h-full w-full">
       <div className="absolute inset-0 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] bg-size-[16px_16px] pointer-events-none z-0"></div>
-      <div className="relative z-10 container max-w-5xl mx-auto py-8 px-4">
+      <div className="relative z-10 container max-w-7xl mx-auto py-8 px-4">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-800">Phỏng Vấn</h1>

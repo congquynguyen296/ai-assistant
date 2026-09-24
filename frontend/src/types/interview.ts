@@ -1,4 +1,4 @@
-export type InterviewMode = 'job' | 'knowledge' | 'cv_only' | 'mixed';
+export type InterviewMode = 'job' | 'knowledge' | 'cv_only' | 'jd_only';
 export type InterviewDifficulty = 'easy' | 'medium' | 'hard';
 export type InterviewStatus = 'setup' | 'in_progress' | 'completed';
 
@@ -44,7 +44,7 @@ export interface InterviewSession {
 }
 
 export interface SetupInterviewParams {
-  mode: 'job' | 'knowledge' | 'cv_only' | 'mixed';
+  mode: 'job' | 'knowledge' | 'cv_only' | 'jd_only';
   documentIds?: string[];
   topicName?: string;
   customText?: string;

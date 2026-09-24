@@ -40,6 +40,12 @@ export type ProfileResponse = ApiResponse<User>;
 
 export interface DocumentListPayload {
   documents: Document[];
+  pagination?: {
+    total?: number;
+    page?: number;
+    size?: number;
+    totalPages?: number;
+  };
 }
 
 export type DocumentListResponse = ApiResponse<DocumentListPayload>;

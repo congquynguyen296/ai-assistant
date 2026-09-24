@@ -29,6 +29,7 @@ import {
   getBlueprintPrompt,
   getNextQuestionPrompt,
   getReportPrompt,
+  computeInterviewState,
 } from '@/utils/interviewPrompts.js';
 
 // --- HELPER: AI CALL WITH RETRY ---
@@ -36,6 +37,7 @@ async function callAiWithRetry<T>(
   prompt: string,
   schema: z.ZodType<T>,
   schemaName: string,
+  temperature: number = 0.5,
   retries = 2
 ): Promise<T> {
   let lastError: any = null;
@@ -73,7 +75,12 @@ export const generateInterviewBlueprint = async (
   const prompt = getBlueprintPrompt(mode, cvText, jdText, topicName, customText, level);
 
   try {
-    return await callAiWithRetry(prompt, BlueprintResponseSchema, 'blueprint');
+    const blueprint = await callAiWithRetry(prompt, BlueprintResponseSchema, 'blueprint', 0.5);
+    
+    // Validate blueprint (clamp max questions and areas based on guide if needed)
+    // Actually done strictly in getNextQuestionPrompt logic using computeInterviewState
+    
+    return blueprint;
   } catch (error) {
     throw new AppError('Lỗi khi sinh cấu trúc phỏng vấn', 500);
   }
@@ -81,16 +88,26 @@ export const generateInterviewBlueprint = async (
 
 export const generateNextQuestion = async (
   blueprint: InterviewBlueprint,
-  recentMessages: Array<{ role: string; content: string }>
+  level: string,
+  recentMessages: Array<{ role: string; content: string }>,
+  state: ReturnType<typeof computeInterviewState>,
+  maxQuestions: number
 ): Promise<NextQuestion> => {
+  // Truncate answers if too long (~1500 chars)
   const chatHistoryContext = recentMessages
-    .map((msg) => `${msg.role.toUpperCase()}: ${msg.content}`)
+    .map((msg) => {
+      let content = msg.content;
+      if (msg.role === 'user' && content.length > 1500) {
+        content = content.substring(0, 1500) + '...';
+      }
+      return `${msg.role.toUpperCase()}: ${content}`;
+    })
     .join('\n\n');
 
-  const prompt = getNextQuestionPrompt(blueprint, chatHistoryContext);
+  const prompt = getNextQuestionPrompt(blueprint, level, chatHistoryContext, state, maxQuestions);
 
   try {
-    return await callAiWithRetry(prompt, NextQuestionSchema, 'next_question');
+    return await callAiWithRetry(prompt, NextQuestionSchema, 'next_question', 0.4);
   } catch (error) {
     throw new AppError('Lỗi khi sinh câu hỏi tiếp theo', 500);
   }
@@ -98,16 +115,17 @@ export const generateNextQuestion = async (
 
 export const generateInterviewReport = async (
   blueprint: InterviewBlueprint,
+  level: string,
   allMessages: Array<{ role: string; content: string }>
 ): Promise<InterviewReport> => {
   const fullConversation = allMessages
     .map((msg) => `${msg.role.toUpperCase()}: ${msg.content}`)
     .join('\n\n');
 
-  const prompt = getReportPrompt(blueprint, fullConversation);
+  const prompt = getReportPrompt(blueprint, level, fullConversation);
 
   try {
-    return await callAiWithRetry(prompt, ReportSchema, 'report');
+    return await callAiWithRetry(prompt, ReportSchema, 'report', 0.5);
   } catch (error) {
     throw new AppError('Lỗi khi đánh giá kết quả phỏng vấn', 500);
   }

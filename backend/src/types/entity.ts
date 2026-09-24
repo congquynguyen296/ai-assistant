@@ -117,6 +117,7 @@ export interface InterviewMessage {
 export interface InterviewSessionDocument extends Document {
   userId: Types.ObjectId;
   mode: InterviewMode;
+  level?: string;
   status: InterviewStatus;
   documentIds: Types.ObjectId[];
   topicId?: Types.ObjectId;

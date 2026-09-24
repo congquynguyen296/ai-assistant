@@ -5,6 +5,7 @@ import {
   finishInterviewService,
   getInterviewSessionService,
   getTrendingTopicsService,
+  searchTopicsService,
   getInterviewSessionsListService,
   deleteInterviewSessionService,
 } from '@/services/interviewService.js';
@@ -23,6 +24,7 @@ export const setupInterview = async (req: Request, res: Response) => {
     documentIds: validatedData.documentIds,
     topicName: validatedData.topicName,
     customText: validatedData.customText,
+    level: validatedData.level,
   });
 
   res.status(201).json(session);
@@ -77,12 +79,21 @@ export const getTrendingTopics = async (req: Request, res: Response) => {
   res.status(200).json(topics);
 };
 
+export const searchTopics = async (req: Request, res: Response) => {
+  const query = req.query.q as string;
+  const topics = await searchTopicsService(query);
+  res.status(200).json(topics);
+};
+
 export const getInterviewSessions = async (req: Request, res: Response) => {
   const userId = req.user?.id;
   if (!userId) throw new AppError('Không có quyền truy cập', 401);
 
-  const sessions = await getInterviewSessionsListService(userId);
-  res.status(200).json(sessions);
+  const page = Number.parseInt(String(req.query.page ?? 1), 10) || 1;
+  const size = Number.parseInt(String(req.query.size ?? 10), 10) || 10;
+
+  const result = await getInterviewSessionsListService(userId, page, size);
+  res.status(200).json(result);
 };
 
 export const deleteInterviewSession = async (req: Request, res: Response) => {

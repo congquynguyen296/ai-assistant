@@ -10,6 +10,7 @@ const interviewSessionSchema = new Schema<InterviewSessionDocument>(
       enum: Object.values(InterviewMode),
       required: true,
     },
+    level: { type: String },
     status: {
       type: String,
       enum: Object.values(InterviewStatus),

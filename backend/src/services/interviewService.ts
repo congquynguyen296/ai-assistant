@@ -11,6 +11,7 @@ import {
   generateNextQuestion,
   generateInterviewReport,
 } from './interviewAiService.js';
+import { computeInterviewState } from '@/utils/interviewPrompts.js';
 
 export const createInterviewSessionService = async (input: {
   userId: string;
@@ -67,6 +68,7 @@ export const createInterviewSessionService = async (input: {
   const session = await InterviewSession.create({
     userId,
     mode,
+    level: level || 'Middle',
     documentIds: documentIds || [],
     topicId,
     blueprint,
@@ -78,6 +80,7 @@ export const createInterviewSessionService = async (input: {
       }
     ],
     maxQuestions: blueprint.recommendedMaxQuestions || 10,
+    questionsAsked: 1,
     status: InterviewStatus.IN_PROGRESS,
   });
 
@@ -95,12 +98,6 @@ export const chatInterviewService = async (input: {
   if (!session) throw new AppError('Phiên phỏng vấn không tồn tại', 404);
   if (session.status !== InterviewStatus.IN_PROGRESS) throw new AppError('Phiên phỏng vấn đã kết thúc', 400);
 
-  if (session.questionsAsked >= session.maxQuestions) {
-    session.status = InterviewStatus.COMPLETED;
-    await session.save();
-    return { question: 'Phiên phỏng vấn đã đạt giới hạn câu hỏi. Vui lòng kết thúc để xem báo cáo.', isFinished: true };
-  }
-
   // Define User Message
   const userMsg: InterviewMessage = {
     role: 'user',
@@ -108,12 +105,25 @@ export const chatInterviewService = async (input: {
     timestamp: new Date(),
   };
 
-  // Get recent context (max 4 messages)
-  const recentMessages = session.messages.slice(-4).map(m => ({ role: m.role, content: m.content }));
+  const answeredCount = session.messages.filter(m => m.role === 'user').length + 1;
+  const maxQuestions = session.maxQuestions || 10;
+  const focusAreas = (session.blueprint as any)?.focusAreas || [];
+  
+  const state = computeInterviewState(answeredCount, maxQuestions, focusAreas);
+
+  if (state.isFinished) {
+    session.status = InterviewStatus.COMPLETED;
+    session.messages.push(userMsg as any);
+    await session.save();
+    return { question: 'Phiên phỏng vấn đã hoàn thành. Đang tạo báo cáo...', isFinished: true };
+  }
+
+  // Get recent context (oldest -> newest, max 6 messages for context)
+  const recentMessages = session.messages.slice(-5).map(m => ({ role: m.role, content: m.content }));
   recentMessages.push({ role: 'user', content: message }); // Include the current user message
 
   // Generate AI Response
-  const aiResponse = await generateNextQuestion(session.blueprint as any, recentMessages);
+  const aiResponse = await generateNextQuestion(session.blueprint as any, session.level || 'Middle', recentMessages, state, maxQuestions);
   
   // Define AI Message
   const aiMsg: InterviewMessage = {
@@ -136,17 +146,15 @@ export const chatInterviewService = async (input: {
     await InterviewQuestion.create({
       topicId: session.topicId,
       question: aiResponse.question,
-      difficulty: Difficulty.MEDIUM, // Default to medium, can be parsed from AI if needed later
+      difficulty: Difficulty.MEDIUM,
       source: InterviewQuestionSource.AI_GENERATED,
       expectedAnswerContext: aiResponse.feedbackToPreviousAnswer || 'No context',
     });
   }
 
-  const isFinished = (session.questionsAsked + 1) >= session.maxQuestions;
-
   return {
     question: aiResponse.question,
-    isFinished,
+    isFinished: false,
   };
 };
 
@@ -159,7 +167,7 @@ export const finishInterviewService = async (input: { userId: string; sessionId:
 
   const allMessages = session.messages.map(m => ({ role: m.role, content: m.content }));
   
-  const report = await generateInterviewReport(session.blueprint as any, allMessages);
+  const report = await generateInterviewReport(session.blueprint as any, session.level || 'Middle', allMessages);
 
   session.status = InterviewStatus.COMPLETED;
   session.report = report as Record<string, unknown>;
@@ -176,11 +184,19 @@ export const getInterviewSessionService = async (input: { userId: string; sessio
 };
 
 export const getTrendingTopicsService = async () => {
-  const topics = await InterviewTopic.find().sort({ usageCount: -1 }).limit(10);
+  const topics = await InterviewTopic.find().sort({ usageCount: -1 }).limit(5);
   return topics;
 };
 
-export const getInterviewSessionsListService = async (userId: string) => {
+export const searchTopicsService = async (query: string) => {
+  if (!query) return [];
+  const topics = await InterviewTopic.find({ name: { $regex: query, $options: 'i' } })
+    .sort({ usageCount: -1 })
+    .limit(10);
+  return topics;
+};
+
+export const getInterviewSessionsListService = async (userId: string, page: number = 1, size: number = 10) => {
   // Cleanup abandoned sessions implicitly
   const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
   await InterviewSession.updateMany(
@@ -188,10 +204,22 @@ export const getInterviewSessionsListService = async (userId: string) => {
     { $set: { status: InterviewStatus.ABANDONED } }
   );
 
+  const total = await InterviewSession.countDocuments({ userId });
   const sessions = await InterviewSession.find({ userId })
     .sort({ updatedAt: -1 })
+    .skip((page - 1) * size)
+    .limit(size)
     .populate('topicId', 'name');
-  return sessions;
+    
+  return {
+    sessions,
+    pagination: {
+      total,
+      page,
+      size,
+      totalPages: Math.ceil(total / size),
+    }
+  };
 };
 
 export const deleteInterviewSessionService = async (input: { userId: string; sessionId: string }) => {

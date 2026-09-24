@@ -1,7 +1,7 @@
 import type { Response, NextFunction } from "express";
 import { getDashboardService } from "@/services/progressService.js";
 import { getUserIdFromReq } from "@/utils/authUtil.js";
-import type { AuthRequest } from "@/types/request.js";
+import type { AuthRequest } from "@/dtos/common/request.dto.js";
 
 export const getDashboard = async (
   req: AuthRequest,

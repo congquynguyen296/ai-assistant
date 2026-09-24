@@ -6,14 +6,16 @@ import {
   finishInterview,
   getInterview,
   getTrendingTopics,
+  searchTopics,
   getInterviewSessions,
   deleteInterviewSession,
 } from '@/controllers/interviewController.js';
 
 const router = express.Router();
 
-// Trending topics does not require full session, but might require auth
+// Topics routes
 router.get('/topics/trending', protect, getTrendingTopics);
+router.get('/topics/search', protect, searchTopics);
 
 // Setup new interview session
 router.post('/setup', protect, setupInterview);

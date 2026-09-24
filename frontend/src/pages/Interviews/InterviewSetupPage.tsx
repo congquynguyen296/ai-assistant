@@ -5,11 +5,11 @@ import { ArrowLeft, Briefcase, Brain, FileText, ChevronRight, Settings, Loader2,
 import JobInterviewSetup from '@/components/interviews/setup/JobInterviewSetup';
 import KnowledgeSetup from '@/components/interviews/setup/KnowledgeSetup';
 import CVDeepDiveSetup from '@/components/interviews/setup/CVDeepDiveSetup';
-import MixedSetup from '@/components/interviews/setup/MixedSetup';
+import JDOnlySetup from '@/components/interviews/setup/JDOnlySetup';
 
 import { useInterviews } from '@/hooks/useInterviews';
 
-type InterviewModeType = 'job' | 'knowledge' | 'cv_only' | 'mixed' | null;
+type InterviewModeType = 'job' | 'knowledge' | 'cv_only' | 'jd_only' | null;
 
 export default function InterviewSetupPage() {
   const navigate = useNavigate();
@@ -38,35 +38,37 @@ export default function InterviewSetupPage() {
 
   const renderSetupForm = () => {
     switch (mode) {
+      case 'knowledge':
+        return <KnowledgeSetup onChange={setSetupParams} />;
+      case 'jd_only':
+        return <JDOnlySetup onChange={setSetupParams} />;
+      case 'cv_only':
+        return <CVDeepDiveSetup onChange={setSetupParams} />;
       case 'job':
         return <JobInterviewSetup onChange={setSetupParams} />;
-      case 'knowledge':
-        return <KnowledgeSetup onGenerateBlueprint={() => handleGenerateBlueprint()} isGenerating={isGenerating} />;
-      case 'cv_only':
-        return <CVDeepDiveSetup onGenerateBlueprint={() => handleGenerateBlueprint()} isGenerating={isGenerating} />;
-      case 'mixed':
-        return <MixedSetup />;
       default:
         return null;
     }
   };
 
   return (
-    <div className="container max-w-4xl mx-auto py-8 px-4 h-full flex flex-col">
-      <div className="flex items-center gap-4 mb-8">
-        <button 
-          onClick={() => step === 2 ? setStep(1) : navigate('/interviews')}
-          className="p-2 hover:bg-slate-100 rounded-full transition-colors"
-        >
-          <ArrowLeft className="w-5 h-5 text-slate-600" />
-        </button>
-        <div>
-          <h1 className="text-2xl font-bold text-slate-800">Thiết lập Phỏng vấn</h1>
-          <p className="text-slate-500 mt-1">Cấu hình buổi phỏng vấn mô phỏng của bạn</p>
+    <div className="relative h-full flex flex-col bg-slate-50/50">
+      <div className="absolute inset-0 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] bg-[size:16px_16px] pointer-events-none z-0" />
+      <div className="container max-w-7xl mx-auto py-8 px-4 flex-1 flex flex-col relative z-10">
+        <div className="flex items-center gap-4 mb-8">
+          <button 
+            onClick={() => step === 2 ? setStep(1) : navigate('/interviews')}
+            className="p-2 hover:bg-slate-100 rounded-full transition-colors bg-white/50"
+          >
+            <ArrowLeft className="w-5 h-5 text-slate-600" />
+          </button>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-800">Thiết lập Phỏng vấn</h1>
+            <p className="text-slate-500 mt-1">Cấu hình buổi phỏng vấn mô phỏng của bạn</p>
+          </div>
         </div>
-      </div>
 
-      <div className="flex-1 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+        <div className="flex-1 bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
         {/* Progress bar */}
         <div className="bg-slate-50 border-b border-slate-100 p-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -87,17 +89,6 @@ export default function InterviewSetupPage() {
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <button
-                  onClick={() => setMode('job')}
-                  className={`p-6 rounded-2xl border-2 text-left transition-all ${mode === 'job' ? 'border-emerald-500 bg-emerald-50/50' : 'border-slate-200 hover:border-emerald-200 hover:bg-slate-50'}`}
-                >
-                  <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center mb-4">
-                    <Briefcase className="w-6 h-6" />
-                  </div>
-                  <h3 className="font-semibold text-slate-800 text-lg mb-2">Job Interview</h3>
-                  <p className="text-slate-500 text-sm">Phỏng vấn theo một Job Description cụ thể kết hợp với CV của bạn.</p>
-                </button>
-
-                <button
                   onClick={() => setMode('knowledge')}
                   className={`p-6 rounded-2xl border-2 text-left transition-all ${mode === 'knowledge' ? 'border-emerald-500 bg-emerald-50/50' : 'border-slate-200 hover:border-emerald-200 hover:bg-slate-50'}`}
                 >
@@ -109,10 +100,25 @@ export default function InterviewSetupPage() {
                 </button>
 
                 <button
-                  onClick={() => setMode('cv_only')}
-                  className={`p-6 rounded-2xl border-2 text-left transition-all ${mode === 'cv_only' ? 'border-emerald-500 bg-emerald-50/50' : 'border-slate-200 hover:border-emerald-200 hover:bg-slate-50'}`}
+                  disabled
+                  onClick={() => setMode('jd_only')}
+                  className="p-6 rounded-2xl border-2 text-left transition-all border-slate-200 bg-slate-50/50 opacity-60 cursor-not-allowed relative overflow-hidden group"
                 >
-                  <div className="w-12 h-12 bg-amber-100 text-amber-600 rounded-xl flex items-center justify-center mb-4">
+                  <div className="absolute top-4 right-4 bg-slate-200 text-slate-500 text-xs px-2 py-1 rounded-md font-medium">Sắp ra mắt</div>
+                  <div className="w-12 h-12 bg-teal-100 text-teal-600 rounded-xl flex items-center justify-center mb-4 grayscale opacity-70">
+                    <Settings className="w-6 h-6" />
+                  </div>
+                  <h3 className="font-semibold text-slate-800 text-lg mb-2">JD Focus</h3>
+                  <p className="text-slate-500 text-sm">Phỏng vấn bám sát yêu cầu từ Job Description bạn cung cấp.</p>
+                </button>
+
+                <button
+                  disabled
+                  onClick={() => setMode('cv_only')}
+                  className="p-6 rounded-2xl border-2 text-left transition-all border-slate-200 bg-slate-50/50 opacity-60 cursor-not-allowed relative overflow-hidden group"
+                >
+                  <div className="absolute top-4 right-4 bg-slate-200 text-slate-500 text-xs px-2 py-1 rounded-md font-medium">Sắp ra mắt</div>
+                  <div className="w-12 h-12 bg-amber-100 text-amber-600 rounded-xl flex items-center justify-center mb-4 grayscale opacity-70">
                     <FileText className="w-6 h-6" />
                   </div>
                   <h3 className="font-semibold text-slate-800 text-lg mb-2">CV Deep Dive</h3>
@@ -120,14 +126,16 @@ export default function InterviewSetupPage() {
                 </button>
 
                 <button
-                  onClick={() => setMode('mixed')}
-                  className={`p-6 rounded-2xl border-2 text-left transition-all ${mode === 'mixed' ? 'border-emerald-500 bg-emerald-50/50' : 'border-slate-200 hover:border-emerald-200 hover:bg-slate-50'}`}
+                  disabled
+                  onClick={() => setMode('job')}
+                  className="p-6 rounded-2xl border-2 text-left transition-all border-slate-200 bg-slate-50/50 opacity-60 cursor-not-allowed relative overflow-hidden group"
                 >
-                  <div className="w-12 h-12 bg-teal-100 text-teal-600 rounded-xl flex items-center justify-center mb-4">
-                    <Settings className="w-6 h-6" />
+                  <div className="absolute top-4 right-4 bg-slate-200 text-slate-500 text-xs px-2 py-1 rounded-md font-medium">Sắp ra mắt</div>
+                  <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center mb-4 grayscale opacity-70">
+                    <Briefcase className="w-6 h-6" />
                   </div>
-                  <h3 className="font-semibold text-slate-800 text-lg mb-2">Mixed Interview</h3>
-                  <p className="text-slate-500 text-sm">Tổng hợp CV, JD và kiến thức ngẫu nhiên. Mức độ áp lực cao nhất.</p>
+                  <h3 className="font-semibold text-slate-800 text-lg mb-2">Job Interview</h3>
+                  <p className="text-slate-500 text-sm">Phỏng vấn toàn diện kết hợp cả JD cụ thể và CV của bạn.</p>
                 </button>
               </div>
 
@@ -150,7 +158,7 @@ export default function InterviewSetupPage() {
               {/* Render specific setup component based on mode */}
               {renderSetupForm()}
 
-              {mode !== 'mixed' && !currentSession?.blueprint && (
+              {!currentSession?.blueprint && (
                 <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm mt-8">
                   <h3 className="font-semibold text-slate-800 mb-4">Chọn cấp độ phỏng vấn</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -171,7 +179,7 @@ export default function InterviewSetupPage() {
                 </div>
               )}
 
-              {mode !== 'mixed' && !currentSession?.blueprint && (
+              {!currentSession?.blueprint && (
                 <div className="bg-slate-50 rounded-2xl border border-slate-200 p-8 text-center mt-8">
                   <div className="w-16 h-16 bg-slate-200 rounded-full flex items-center justify-center mx-auto mb-4">
                     <Brain className="w-8 h-8 text-slate-400" />
@@ -180,18 +188,26 @@ export default function InterviewSetupPage() {
                   <p className="text-slate-500 text-sm mb-6 max-w-sm mx-auto">
                     Hyra sẽ phân tích các thông tin bạn cung cấp để tạo ra một bản Blueprint (kế hoạch phỏng vấn) được cá nhân hóa.
                   </p>
-                  <button
-                    onClick={() => handleGenerateBlueprint()}
-                    disabled={isGenerating}
-                    className="inline-flex items-center justify-center gap-2 font-semibold rounded-xl transition-all duration-200 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 whitespace-nowrap bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/25 hover:from-emerald-600 hover:to-teal-600 hover:shadow-xl hover:shadow-emerald-500/30 h-11 px-5 text-sm w-full sm:w-auto mt-4"
-                  >
-                    {isGenerating ? <Loader2 className="w-5 h-5 animate-spin" /> : <Settings className="w-5 h-5" />}
-                    <span>{isGenerating ? 'Đang phân tích...' : 'Tạo Blueprint'}</span>
-                  </button>
+                  <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-4">
+                    <button
+                      onClick={() => setStep(1)}
+                      className="inline-flex items-center justify-center gap-2 font-medium rounded-xl transition-all duration-200 hover:bg-slate-200 text-slate-700 bg-slate-100 h-11 px-5 text-sm w-full sm:w-auto"
+                    >
+                      <span>Quay lại</span>
+                    </button>
+                    <button
+                      onClick={() => handleGenerateBlueprint()}
+                      disabled={isGenerating}
+                      className="inline-flex items-center justify-center gap-2 font-semibold rounded-xl transition-all duration-200 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 whitespace-nowrap bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/25 hover:from-emerald-600 hover:to-teal-600 hover:shadow-xl hover:shadow-emerald-500/30 h-11 px-5 text-sm w-full sm:w-auto"
+                    >
+                      {isGenerating ? <Loader2 className="w-5 h-5 animate-spin" /> : <Settings className="w-5 h-5" />}
+                      <span>{isGenerating ? 'Đang phân tích...' : 'Tạo Blueprint'}</span>
+                    </button>
+                  </div>
                 </div>
               )}
 
-              {mode !== 'mixed' && currentSession?.blueprint && (
+              {currentSession?.blueprint && (
                 <div className="bg-white rounded-2xl border border-emerald-200 p-6 shadow-sm mt-8 relative overflow-hidden">
                   <div className="absolute top-0 left-0 w-2 h-full bg-emerald-500"></div>
                   
@@ -234,6 +250,7 @@ export default function InterviewSetupPage() {
           )}
         </div>
       </div>
+    </div>
     </div>
   );
 }

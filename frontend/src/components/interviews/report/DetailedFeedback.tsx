@@ -37,15 +37,15 @@ export default function DetailedFeedback({ technicalSkills, softSkills }: Detail
               <div className="mt-0.5 shrink-0">
                 {renderFeedbackIcon(comp.score)}
               </div>
-              <div className="flex-1">
-                <div className="flex justify-between items-center mb-1">
-                  <h4 className="font-semibold">{comp.skillName}</h4>
-                  <span className="text-xs font-bold uppercase tracking-wider px-2 py-1 rounded-full bg-white/50">
+              <div className="flex-1 min-w-0">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-4 mb-2">
+                  <h4 className="font-semibold break-words w-full">{comp.skillName}</h4>
+                  <span className="text-xs font-bold uppercase tracking-wider px-2 py-1 rounded-full bg-white/50 whitespace-nowrap shrink-0">
                     {getScoreLabel(comp.score)} ({comp.score}/100)
                   </span>
                 </div>
                 {comp.feedback && (
-                  <p className="text-sm mt-2 opacity-90">{comp.feedback}</p>
+                  <p className="text-sm mt-2 opacity-90 break-words whitespace-pre-wrap">{comp.feedback}</p>
                 )}
               </div>
             </div>

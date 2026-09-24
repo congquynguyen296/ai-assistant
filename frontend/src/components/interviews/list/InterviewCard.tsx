@@ -23,7 +23,7 @@ export default function InterviewCard({ interview, onDelete }: InterviewCardProp
       case 'job': return 'Phỏng vấn Công việc';
       case 'knowledge': return 'Phỏng vấn Kiến thức';
       case 'cv_only': return 'Phỏng vấn CV';
-      case 'mixed': return 'Phỏng vấn Tổng hợp';
+      case 'jd_only': return 'Phỏng vấn JD Focus';
       default: return 'Phỏng vấn';
     }
   };
@@ -55,7 +55,7 @@ export default function InterviewCard({ interview, onDelete }: InterviewCardProp
       <div className="mt-auto pt-4 border-t border-slate-100 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <span className="text-sm font-medium text-slate-600">
-            {interview.messages.length} câu hỏi
+            {interview.messages.filter(m => m.role === 'assistant').length} câu hỏi
           </span>
           {interview.status !== 'completed' && onDelete && (
             <button
@@ -73,15 +73,11 @@ export default function InterviewCard({ interview, onDelete }: InterviewCardProp
         <button 
           onClick={() => {
             const sessionId = interview.id || (interview as any)._id;
-            navigate(
-              interview.status === 'completed' 
-                ? `/interviews/${sessionId}/report`
-                : `/interviews/${sessionId}/room`
-            );
+            navigate(`/interviews/${sessionId}/room`);
           }}
           className="flex items-center gap-1 text-sm font-semibold text-emerald-600 hover:text-emerald-700 group-hover:translate-x-1 transition-transform"
         >
-          {interview.status === 'completed' ? 'Xem báo cáo' : 'Tiếp tục'}
+          {interview.status === 'completed' ? 'Xem lại' : 'Tiếp tục'}
           <ArrowRight className="w-4 h-4" />
         </button>
       </div>

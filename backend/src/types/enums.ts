@@ -8,7 +8,7 @@ export enum InterviewMode {
   JOB = "job",
   KNOWLEDGE = "knowledge",
   CV_ONLY = "cv_only",
-  MIXED = "mixed",
+  JD_ONLY = "jd_only",
 }
 
 export enum InterviewStatus {

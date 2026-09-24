@@ -98,35 +98,47 @@ export default function InterviewRoomPage() {
       <div className="absolute inset-0 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] bg-size-[16px_16px] pointer-events-none z-0" />
 
       {/* Header */}
-      <div className="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between shrink-0 shadow-sm z-10">
-        <div className="flex items-center gap-4 max-w-[60%]">
-          <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center border border-emerald-200 overflow-hidden shrink-0">
-             <Brain className="w-5 h-5 text-emerald-600" />
+      <div className="bg-white border-b border-slate-200 px-4 sm:px-6 py-3 sm:py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between shrink-0 shadow-sm z-10 gap-3 sm:gap-0">
+        <div className="flex items-center gap-3 sm:gap-4 max-w-full sm:max-w-[60%] w-full sm:w-auto">
+          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-emerald-100 rounded-full flex items-center justify-center border border-emerald-200 overflow-hidden shrink-0">
+             <Brain className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600" />
           </div>
-          <div className="min-w-0">
-            <h2 className="font-bold text-slate-800 truncate">{currentSession?.blueprint?.title || 'Phỏng vấn'}</h2>
+          <div className="min-w-0 flex-1">
+            <h2 className="font-bold text-slate-800 text-sm sm:text-base truncate">{currentSession?.blueprint?.title || 'Phỏng vấn'}</h2>
             <p className="text-xs text-slate-500 flex items-center gap-1">
               <Briefcase className="w-3 h-3" /> Technical Interviewer
             </p>
           </div>
         </div>
         
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0 w-full sm:w-auto justify-end border-t border-slate-100 sm:border-0 pt-2 sm:pt-0">
           <button 
             onClick={() => navigate('/interviews')}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+            className="flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
           >
             <LogOut className="w-4 h-4" />
             <span className="hidden sm:inline">Rời khỏi</span>
+            <span className="sm:hidden">Thoát</span>
           </button>
           
-          <button 
-            onClick={handleFinish}
-            className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 rounded-lg transition-colors shadow-sm"
-          >
-            <CheckCircle className="w-4 h-4" />
-            <span>Nộp bài & Đánh giá</span>
-          </button>
+          {currentSession?.status === 'completed' ? (
+            <button 
+              onClick={() => navigate(`/interviews/${interviewId}/report`)}
+              className="flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-sm font-medium hover:from-emerald-600 hover:to-teal-600 rounded-lg transition-colors shadow-sm shadow-emerald-500/25 whitespace-nowrap"
+            >
+              <CheckCircle className="w-4 h-4" />
+              <span>Xem Báo Cáo</span>
+            </button>
+          ) : (
+            <button 
+              onClick={handleFinish}
+              className="flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-sm font-medium hover:from-emerald-600 hover:to-teal-600 rounded-lg transition-colors shadow-sm shadow-emerald-500/25 whitespace-nowrap"
+            >
+              <CheckCircle className="w-4 h-4" />
+              <span className="hidden sm:inline">Nộp bài & Đánh giá</span>
+              <span className="sm:hidden">Nộp bài</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -139,6 +151,7 @@ export default function InterviewRoomPage() {
             messages={(currentSession?.messages || []) as any[]} 
             isAiTyping={isAiTyping} 
             chatHistoryRef={chatHistoryRef as any} 
+            isCompleted={currentSession?.status === 'completed'}
           />
         </div>
         
@@ -154,6 +167,7 @@ export default function InterviewRoomPage() {
             messages={(currentSession?.messages || []) as any[]} 
             isAiTyping={isAiTyping} 
             chatHistoryRef={chatHistoryRef as any} 
+            isCompleted={currentSession?.status === 'completed'}
           />
         </div>
 
@@ -165,6 +179,7 @@ export default function InterviewRoomPage() {
             setInputValue={setInputValue}
             handleKeyDown={handleKeyDown}
             handleSendMessage={handleSendMessage}
+            isCompleted={currentSession?.status === 'completed'}
           />
         </div>
       </div>

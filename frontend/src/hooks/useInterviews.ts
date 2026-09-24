@@ -16,8 +16,8 @@ export const useInterviews = () => {
   const fetchSessions = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await interviewService.getSessions();
-      setSessions(data);
+      const response = await interviewService.getSessions();
+      setSessions(response.sessions);
       setError(null);
     } catch (err: any) {
       const msg = err.response?.data?.message || 'Lỗi khi tải danh sách phỏng vấn';

@@ -37,13 +37,13 @@ export default function ReportSummary({ report, sessionData }: ReportSummaryProp
             <FileText className="w-4 h-4 text-slate-400" />
             <span className="text-sm text-slate-600">Số câu hỏi</span>
           </div>
-          <span className="font-semibold text-slate-800">{sessionData.questionsAsked} câu</span>
+          <span className="font-semibold text-slate-800">{sessionData.messages?.filter(m => m.role === 'assistant').length || 0} câu</span>
         </div>
       </div>
       
       <div className="mt-6 p-4 bg-blue-50 rounded-xl border border-blue-100">
         <h4 className="text-sm font-semibold text-blue-800 mb-2">Nhận xét chung</h4>
-        <p className="text-sm text-blue-700 leading-relaxed">
+        <p className="text-sm text-blue-700 leading-relaxed break-words whitespace-pre-wrap">
           {report.overallFeedback}
         </p>
       </div>

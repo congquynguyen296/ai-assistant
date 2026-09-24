@@ -53,6 +53,10 @@ const DocumentListPage = () => {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error("File tải lên không được vượt quá 5MB");
+        return;
+      }
       setUploadFile(file);
       setUploadTitle(file.name.replace(/\.[^/.]+$/, "")); // Remove file extension for default title
     }
@@ -194,11 +198,11 @@ const DocumentListPage = () => {
     <div className="min-h-screen">
       {/* Sub backgroud */}
       <div className="absolute inset-0 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] bg-size-[16px_16px] pointer-events-none z-0" />
-      <div className="relative max-w-7xl mx-auto">
+      <div className="relative max-w-7xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-10">
           <div>
-            <h1 className="text-2xl font-medium text-slate-900 tracking-tight mb-2">
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight mb-2">
               Quản lý tài liệu
             </h1>
             <p className="text-slate-500 mb-2">
@@ -299,7 +303,7 @@ const DocumentListPage = () => {
                         </>
                       )}
                     </p>
-                    <p className="text-xs text-slate-500">Hỗ trợ tối đa 10MB</p>
+                    <p className="text-xs text-slate-500">Hỗ trợ tối đa 5MB</p>
                   </div>
                 </div>
               </div>

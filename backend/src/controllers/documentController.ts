@@ -7,7 +7,7 @@ import {
   deleteDocumentService,
 } from "../services/documentService.js";
 import { getUserIdFromReq } from "@/utils/authUtil.js";
-import type { AuthRequest } from "@/types/request.js";
+import type { AuthRequest } from "@/dtos/common/request.dto.js";
 import type { UploadDocumentRequestDto } from "@/dtos/documents/upload.request.dto.js";
 import type { UpdateDocumentRequestDto } from "@/dtos/documents/update.request.dto.js";
 
@@ -85,8 +85,10 @@ export const getDocuments = async (
 ): Promise<Response | void> => {
   try {
     const userId = getUserIdFromReq(req);
+    const page = Number.parseInt(String(req.query.page ?? 1), 10) || 1;
+    const size = Number.parseInt(String(req.query.size ?? 10), 10) || 10;
 
-    const result = await getDocumentsService({ userId });
+    const result = await getDocumentsService({ userId, page, size });
 
     return res.status(200).json({
       success: true,

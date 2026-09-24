@@ -7,8 +7,10 @@ import type {
 } from '@/types/interview';
 
 export const interviewService = {
-  getSessions: async (): Promise<InterviewSessionData[]> => {
-    const response = await axiosInstance.get(API_PATHS.INTERVIEWS.GET_SESSIONS);
+  getSessions: async (page = 1, size = 10): Promise<{ sessions: InterviewSessionData[]; pagination: any }> => {
+    const response = await axiosInstance.get(API_PATHS.INTERVIEWS.GET_SESSIONS, {
+      params: { page, size }
+    });
     return response.data;
   },
 
@@ -36,6 +38,11 @@ export const interviewService = {
 
   getTrendingTopics: async (): Promise<Array<{ _id: string; name: string; usageCount: number }>> => {
     const response = await axiosInstance.get(API_PATHS.INTERVIEWS.GET_TRENDING_TOPICS);
+    return response.data;
+  },
+
+  searchTopics: async (query: string): Promise<Array<{ _id: string; name: string; usageCount: number }>> => {
+    const response = await axiosInstance.get(API_PATHS.INTERVIEWS.SEARCH_TOPICS(query));
     return response.data;
   },
 

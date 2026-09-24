@@ -5,9 +5,10 @@ interface InterviewLogSidebarProps {
   messages: InterviewMessage[];
   isAiTyping: boolean;
   chatHistoryRef: React.RefObject<HTMLDivElement>;
+  isCompleted?: boolean;
 }
 
-export default function InterviewLogSidebar({ messages, isAiTyping, chatHistoryRef }: InterviewLogSidebarProps) {
+export default function InterviewLogSidebar({ messages, isAiTyping, chatHistoryRef, isCompleted }: InterviewLogSidebarProps) {
   return (
     <div className="flex w-full h-full bg-slate-50 border-r border-slate-200 flex-col">
       <div className="p-4 border-b border-slate-200 bg-white">
