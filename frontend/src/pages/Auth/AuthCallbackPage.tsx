@@ -19,8 +19,13 @@ const AuthCallbackPage = () => {
       const handleGoogleLogin = async () => {
         try {
           const response = await authService.googleLogin(code);
-          const { user, token } = (response as any)?.data || response;
+          const { user, token, isNewUser } = (response as any)?.data || response;
           login(user, token);
+          if (isNewUser) {
+            localStorage.setItem("hyra_is_new_user", "true");
+          } else {
+            localStorage.removeItem("hyra_is_new_user");
+          }
           toast.success("Đăng nhập Google thành công");
           navigate("/dashboard");
         } catch (error: any) {

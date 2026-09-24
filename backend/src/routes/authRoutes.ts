@@ -9,6 +9,8 @@ import {
   googleLogin,
   confirmEmail,
   resendOTP,
+  forgotPassword,
+  resetPassword,
 } from "../controllers/authController.js";
 import protect from "@/middlewares/auth.js";
 
@@ -35,6 +37,9 @@ router.post("/register", registerValidation, register);
 router.post("/confirm-email", confirmEmail);
 
 router.post("/resend-otp", resendOTP);
+
+router.post("/forgot-password", forgotPassword);
+router.post("/reset-password", resetPassword);
 
 router.post("/login", loginValidation, login);
 

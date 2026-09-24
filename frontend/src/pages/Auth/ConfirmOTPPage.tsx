@@ -59,6 +59,7 @@ const ConfirmOTPPage = () => {
 
       if (user && token) {
         login(user, token);
+        localStorage.setItem("hyra_is_new_user", "true");
         toast.success("Xác thực thành công! Đang chuyển hướng...");
         navigate("/dashboard");
       } else {

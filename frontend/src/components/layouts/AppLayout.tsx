@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import Sidebar from "@/components/layouts/Sidebar";
 import Header from "@/components/layouts/Header";
 import { Analytics } from "@vercel/analytics/react";
+import { OnboardingTour } from "@/components/common/OnboardingTour";
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -17,6 +18,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
   return (
     <div className="flex h-screen bg-neutral-50 text-neutral-900">
       <Analytics />
+      <OnboardingTour />
       <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header toggleSidebar={toggleSidebar} />

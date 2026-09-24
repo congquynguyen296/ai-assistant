@@ -87,7 +87,7 @@ export default function InterviewSetupPage() {
             <div className="space-y-6 max-w-2xl mx-auto">
               <h2 className="text-lg font-semibold text-slate-800 mb-4">Bạn muốn luyện tập điều gì hôm nay?</h2>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div id="tour-interview-setup-modes" className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <button
                   onClick={() => setMode('knowledge')}
                   className={`p-6 rounded-2xl border-2 text-left transition-all relative ${mode === 'knowledge' ? 'border-emerald-500 bg-emerald-50/50' : 'border-slate-200 hover:border-emerald-200 hover:bg-slate-50'}`}

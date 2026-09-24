@@ -171,7 +171,7 @@ const DocumentListPage = () => {
             <p className="text-sm mb-6 text-slate-500">
               Bắt đầu tải lên tài liệu ngay bây giờ
             </p>
-            <Button onClick={() => setIsUploadModalOpen(true)}>
+            <Button id="tour-upload-doc" onClick={() => setIsUploadModalOpen(true)}>
               <Plus className="w-4 h-4" strokeWidth={2.5} />
               Tải lên
             </Button>
@@ -214,7 +214,7 @@ const DocumentListPage = () => {
           </div>
           {documents && documents.length > 0 && (
             <div className="w-full sm:w-auto">
-              <Button onClick={() => setIsUploadModalOpen(true)} className="w-full sm:w-auto">
+              <Button id="tour-upload-doc" onClick={() => setIsUploadModalOpen(true)} className="w-full sm:w-auto">
                 <Plus className="w-4 h-4" strokeWidth={2.5} />
                 Tải lên
               </Button>
