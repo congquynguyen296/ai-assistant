@@ -180,13 +180,15 @@ const DashboardPage = () => {
         ) : (
           <>
             {/* Current focus */}
-            <DashboardCurrentFocusCard
-              title={focusTitle}
-              description={focusDesc}
-              progressPercent={focusProgress}
-              nextUp={focusNext}
-              resumeHref={resumeHref}
-            />
+            <div id="tour-dashboard-focus">
+              <DashboardCurrentFocusCard
+                title={focusTitle}
+                description={focusDesc}
+                progressPercent={focusProgress}
+                nextUp={focusNext}
+                resumeHref={resumeHref}
+              />
+            </div>
 
             <DashboardStatsCards
               documents={{ value: overview.totalDocuments, thisWeek: docsThisWeek }}

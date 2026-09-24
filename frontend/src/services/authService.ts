@@ -141,6 +141,36 @@ const changePassword = async (
   }
 };
 
+const forgotPassword = async (email: string): Promise<AuthResponse> => {
+  try {
+    const response = await axiosInstance.post<AuthResponse>(
+      API_PATHS.AUTH.FORGOT_PASSWORD,
+      { email }
+    );
+    return response.data;
+  } catch (error) {
+    const err = error as { response?: { data?: unknown } };
+    throw err.response?.data || "Yêu cầu khôi phục thất bại";
+  }
+};
+
+const resetPassword = async (
+  email: string,
+  otp: string,
+  newPassword: string
+): Promise<AuthResponse> => {
+  try {
+    const response = await axiosInstance.post<AuthResponse>(
+      API_PATHS.AUTH.RESET_PASSWORD,
+      { email, otp, newPassword }
+    );
+    return response.data;
+  } catch (error) {
+    const err = error as { response?: { data?: unknown } };
+    throw err.response?.data || "Đặt lại mật khẩu thất bại";
+  }
+};
+
 const authService = {
   login,
   googleLogin,
@@ -150,5 +180,7 @@ const authService = {
   getProfile,
   updateProfile,
   changePassword,
+  forgotPassword,
+  resetPassword,
 };
 export default authService;

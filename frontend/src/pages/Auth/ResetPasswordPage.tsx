@@ -1,24 +1,29 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "@/context/AuthContext";
+import { useState, useEffect } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { toast } from "sonner";
 import authService from "@/services/authService";
-import { validateLogin } from "@/utils/validation";
-import { ArrowRight, Lock, Mail, Eye, EyeOff } from "lucide-react";
-import GoogleButton from "@/components/auth/GoogleButton";
-import FacebookButton from "@/components/auth/FacebookButton";
+import { ArrowRight, Lock, Eye, EyeOff, Hash } from "lucide-react";
 import Logo from "@/assets/logo.svg";
 
-const LoginPage = () => {
-  const [email, setEmail] = useState("");
+const ResetPasswordPage = () => {
+  const [otp, setOtp] = useState("");
   const [password, setPassword] = useState("");
+  const [rePassword, setRePassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [showRePassword, setShowRePassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [focusField, setFocusField] = useState<string | null>(null);
 
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const location = useLocation();
+  const email = location.state?.email || "";
+
+  useEffect(() => {
+    if (!email) {
+      navigate("/forgot-password");
+    }
+  }, [email, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,48 +31,41 @@ const LoginPage = () => {
     setError("");
     setLoading(true);
 
-    // Validate data using validation utility
-    const validation = validateLogin(email, password);
-    if (!validation.isValid) {
-      setError(validation.error || "Validate error");
-      setFocusField(validation.field);
+    if (!otp) {
+      setError("Vui lòng nhập mã OTP");
+      setFocusField("otp");
+      setLoading(false);
+      return;
+    }
+
+    if (password.length < 6) {
+      setError("Mật khẩu phải có ít nhất 6 ký tự");
+      setFocusField("password");
+      setLoading(false);
+      return;
+    }
+
+    if (password !== rePassword) {
+      setError("Mật khẩu xác nhận không trùng khớp");
+      setFocusField("rePassword");
       setLoading(false);
       return;
     }
 
     try {
-      const response = await authService.login(email.trim(), password.trim());
-      const { user, token, isNewUser } = (response as any)?.data || response;
-      login(user, token);
-      if (isNewUser) {
-        localStorage.setItem("hyra_is_new_user", "true");
-      } else {
-        localStorage.removeItem("hyra_is_new_user");
-      }
-      toast.success("Đăng nhập thành công");
-      navigate("/dashboard");
+      await authService.resetPassword(email, otp.trim(), password.trim());
+      toast.success("Đặt lại mật khẩu thành công");
+      navigate("/login");
     } catch (error: any) {
       const errorMessage =
         error?.message ||
-        error?.response?.data?.message ||
-        "Đăng nhập không thành công";
+        error?.error ||
+        "Đặt lại mật khẩu thất bại";
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleGoogleLogin = () => {
-    const params = new URLSearchParams({
-      client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
-      redirect_uri: import.meta.env.VITE_GOOGLE_REDIRECT_URI,
-      response_type: "code",
-      scope: "openid email profile",
-      access_type: "offline",
-      prompt: "consent",
-    });
-    window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
   };
 
   return (
@@ -78,39 +76,41 @@ const LoginPage = () => {
           {/* Header */}
           <div className="text-center mb-10">
             <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-6">
-              <img src={Logo} className="w-14 h-14" />
+              <img src={Logo} className="w-14 h-14" alt="Logo" />
             </div>
             <h1 className="text-2xl font-medium text-slate-900 tracking-tight mb-2">
-              Chào mừng trở lại
+              Đặt lại mật khẩu
             </h1>
-            <p className="text-slate-500 text-sm">Đăng nhập để tiếp tục</p>
+            <p className="text-slate-500 text-sm">
+              Nhập mã OTP gửi đến <span className="font-semibold text-slate-700">{email}</span> và mật khẩu mới
+            </p>
           </div>
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Email */}
+            {/* OTP */}
             <div className="space-y-2">
               <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wide">
-                Email
+                Mã OTP
               </label>
               <div className="relative group">
                 <div
                   className={`absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors duration-200
                   ${
-                    focusField === "email"
+                    focusField === "otp"
                       ? "text-emerald-500"
                       : "text-slate-500"
                   }`}
                 >
-                  <Mail className="w-5 h-5" strokeWidth={2} />
+                  <Hash className="w-5 h-5" strokeWidth={2} />
                 </div>
                 <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  onFocus={() => setFocusField("email")}
+                  type="text"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value)}
+                  onFocus={() => setFocusField("otp")}
                   onBlur={() => setFocusField(null)}
-                  placeholder="you@example.com"
+                  placeholder="123456"
                   className="w-full h-12 pl-12 pr-4 border-2 border-slate-200 rounded-xl bg-slate-50/50 text-slate-900 placeholder-slate-400 text-sm font-medium transition-all duration-200 focus:outline-none focus:border-emerald-500 focus:bg-white focus:shadow-lg focus:shadow-emerald-500/10"
                 />
               </div>
@@ -119,7 +119,7 @@ const LoginPage = () => {
             {/* Password */}
             <div className="space-y-2">
               <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wide">
-                Mật khẩu
+                Mật khẩu mới
               </label>
               <div className="relative group">
                 <div
@@ -153,13 +153,44 @@ const LoginPage = () => {
                   )}
                 </button>
               </div>
-              <div className="flex justify-end pt-1">
-                <Link
-                  to="/forgot-password"
-                  className="text-xs font-medium text-emerald-600 hover:text-emerald-700 transition-colors"
+            </div>
+
+            {/* Re password */}
+            <div className="space-y-2">
+              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wide">
+                Xác nhận mật khẩu mới
+              </label>
+              <div className="relative group">
+                <div
+                  className={`absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors duration-200
+                  ${
+                    focusField === "rePassword"
+                      ? "text-emerald-500"
+                      : "text-slate-500"
+                  }`}
                 >
-                  Quên mật khẩu?
-                </Link>
+                  <Lock className="w-5 h-5" strokeWidth={2} />
+                </div>
+                <input
+                  type={showRePassword ? "text" : "password"}
+                  value={rePassword}
+                  onChange={(e) => setRePassword(e.target.value)}
+                  onFocus={() => setFocusField("rePassword")}
+                  onBlur={() => setFocusField(null)}
+                  placeholder="********"
+                  className="w-full h-12 pl-12 pr-12 border-2 border-slate-200 rounded-xl bg-slate-50/50 text-slate-900 placeholder-slate-400 text-sm font-medium transition-all duration-200 focus:outline-none focus:border-emerald-500 focus:bg-white focus:shadow-lg focus:shadow-emerald-500/10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowRePassword(!showRePassword)}
+                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-emerald-500 transition-colors duration-200 focus:outline-none"
+                >
+                  {showRePassword ? (
+                    <EyeOff className="w-5 h-5" strokeWidth={2} />
+                  ) : (
+                    <Eye className="w-5 h-5" strokeWidth={2} />
+                  )}
+                </button>
               </div>
             </div>
 
@@ -185,7 +216,7 @@ const LoginPage = () => {
                   </>
                 ) : (
                   <>
-                    Đăng nhập{" "}
+                    Đặt lại mật khẩu{" "}
                     <ArrowRight
                       className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-200"
                       strokeWidth={2.5}
@@ -197,57 +228,21 @@ const LoginPage = () => {
             </button>
           </form>
 
-          {/* Divider */}
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-slate-200"></div>
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-white px-2 text-slate-500 font-medium">
-                Hoặc đăng nhập với
-              </span>
-            </div>
-          </div>
-
-          {/* Login with social */}
-          <div className="grid w-full grid-cols-2 gap-3">
-            <GoogleButton onClick={handleGoogleLogin} />
-            <FacebookButton
-              onClick={() =>
-                toast.info(
-                  "Tính năng đang được bảo trì. Chúng tôi xin lỗi vì sự bất tiện này."
-                )
-              }
-            />
-          </div>
-
           {/* Footer */}
           <div className="mt-8 pt-6 border-t border-slate-200/60">
             <p className="text-center text-sm text-slate-600">
-              Chưa có tài khoản?{" "}
               <Link
-                to={"/register"}
+                to={"/login"}
                 className="font-semibold text-emerald-600 hover:text-emerald-700 transition-colors duration-200"
-                onClick={() => {
-                  // toast.info(
-                  //   "Tính năng đang được bảo trì. Chúng tôi xin lỗi vì sự bất tiện này. Bạn có thể đăng ký bằng Google."
-                  // );
-
-                }}
               >
-                Đăng ký
+                Quay lại đăng nhập
               </Link>
             </p>
           </div>
         </div>
-
-        {/* Sub footer */}
-        {/* <p className="text-center text-sm text-slate-500 mt-6">
-          Trang này tạo ra là cho Huỳnh Mỹ Huyền dùng.
-        </p> */}
       </div>
     </div>
   );
 };
 
-export default LoginPage;
+export default ResetPasswordPage;

@@ -78,6 +78,7 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar }: SidebarProps) => {
             <NavLink
               key={link.to}
               to={link.to}
+              id={`tour-nav-${link.to.replace("/", "")}`}
               onClick={toggleSidebar}
               className={({ isActive }) =>
                 `group flex items-center gap-3 px-4 py-2.5 text-sm font-semibold rounded-xl transition-all duration-200 md:justify-center md:group-hover/sidebar:justify-start ${

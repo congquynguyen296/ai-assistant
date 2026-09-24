@@ -8,6 +8,8 @@ import LoadingSpinner from "@/components/common/LoadingSpinner";
 import LoginPage from "@/pages/Auth/LoginPage";
 import RegisterPage from "@/pages/Auth/RegisterPage";
 import AuthCallbackPage from "@/pages/Auth/AuthCallbackPage";
+import ForgotPasswordPage from "@/pages/Auth/ForgotPasswordPage";
+import ResetPasswordPage from "@/pages/Auth/ResetPasswordPage";
 import NotFoundPage from "@/pages/NotFoundPage";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import DocumentDetailPage from "@/pages/Documents/DocumentDetailPage";
@@ -60,6 +62,8 @@ export default function App() {
         <Route path="/register" element={<RegisterPage />} />
         <Route path="confirm-otp" element={<ConfirmOTPPage />} />
         <Route path="/auth/google/callback" element={<AuthCallbackPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
 
         {/* Protected route */}
         <Route element={<ProtectedRoute />}>

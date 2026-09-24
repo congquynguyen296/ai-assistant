@@ -8,6 +8,7 @@ interface ButtonProps {
   className?: string;
   variant?: "primary" | "secondary" | "danger";
   size?: "sm" | "md";
+  id?: string;
 }
 
 const Button = ({
@@ -18,6 +19,7 @@ const Button = ({
   className = "",
   variant = "primary",
   size = "md",
+  id,
 }: ButtonProps) => {
   const baseStyles =
     "inline-flex items-center justify-center gap-2 font-semibold rounded-xl transition-all duration-200 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 whitespace-nowrap";
@@ -37,6 +39,7 @@ const Button = ({
 
   return (
     <button
+      id={id}
       type={type}
       onClick={onClick}
       disabled={disabled}

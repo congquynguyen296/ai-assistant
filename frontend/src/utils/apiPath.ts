@@ -10,6 +10,8 @@ export const API_PATHS = {
     CHANGE_PASSWORD: "auth/change-password",
     CONFIRM_EMAIL: "/auth/confirm-email",
     RESEND_OTP: "/auth/resend-otp",
+    FORGOT_PASSWORD: "/auth/forgot-password",
+    RESET_PASSWORD: "/auth/reset-password",
   },
 
   DOCUMENTS: {

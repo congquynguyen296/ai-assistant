@@ -144,6 +144,47 @@ export const resendOTPService = async (
   };
 };
 
+export const forgotPasswordService = async (email: string): Promise<{ message: string }> => {
+  const user = await User.findOne({ email });
+  if (!user) {
+    // We shouldn't reveal if email exists, but for UX let's return error
+    throw new AppError("Không tìm thấy tài khoản với email này", 404);
+  }
+
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  await redisService.setObject(`forgot_password_otp:${email}`, { otp }, 300);
+  await sendOTP(email, otp);
+
+  return {
+    message: "Mã OTP khôi phục mật khẩu đã được gửi đến email",
+  };
+};
+
+export const resetPasswordService = async (email: string, otp: string, newPassword: string): Promise<{ message: string }> => {
+  const parsedData = await redisService.getObject<{ otp: string }>(`forgot_password_otp:${email}`);
+  
+  if (!parsedData) {
+    throw new AppError("Mã OTP đã hết hạn hoặc không tồn tại", 400);
+  }
+  
+  if (parsedData.otp !== otp) {
+    throw new AppError("Mã OTP không chính xác", 400);
+  }
+
+  const user = await User.findOne({ email });
+  if (!user) {
+    throw new AppError("Người dùng không tồn tại", 404);
+  }
+
+  user.password = newPassword;
+  await user.save();
+  await redisService.deleteObject(`forgot_password_otp:${email}`);
+
+  return {
+    message: "Đặt lại mật khẩu thành công",
+  };
+};
+
 export const loginService = async (
   input: LoginInput,
 ): Promise<LoginResponseDto> => {
@@ -260,6 +301,7 @@ export const googleLoginService = async (
 
     const { sub: googleId, email, name, picture } = payload;
 
+    let isNewUser = false;
     let user = await User.findOne({ $or: [{ googleId }, { email }] });
 
     if (user) {
@@ -269,6 +311,7 @@ export const googleLoginService = async (
         await user.save();
       }
     } else {
+      isNewUser = true;
       let username = name || (email ? email.split("@")[0] : "user");
 
       let existingUsername = await User.findOne({ username });
@@ -301,6 +344,7 @@ export const googleLoginService = async (
         profileImage: user.profileImage,
       },
       token,
+      isNewUser,
     };
   } catch (error) {
     console.error("Google Login Error:", error);

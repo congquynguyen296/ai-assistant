@@ -42,7 +42,7 @@ export default function DashboardRecentActivity({ items, viewAllHref }: Props) {
 
             const body = (
               <div className="flex items-start gap-3">
-                <div className={`h-10 w-10 rounded-2xl border flex items-center justify-center ${iconWrap}`}>
+                <div className={`h-10 w-10 shrink-0 rounded-2xl border flex items-center justify-center ${iconWrap}`}>
                   <Icon className="h-5 w-5" strokeWidth={2} />
                 </div>
                 <div className="min-w-0">

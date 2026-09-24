@@ -8,6 +8,8 @@ import {
   googleLoginService,
   confirmEmailService,
   resendOTPService,
+  forgotPasswordService,
+  resetPasswordService,
 } from "../services/authService.js";
 import type { AuthRequest } from "@/dtos/common/request.dto.js";
 import type { RegisterRequestDto } from "@/dtos/auth/register.request.dto.js";
@@ -91,6 +93,43 @@ export const resendOTP = async (
       message: "Gửi lại mã OTP thành công",
       data: result,
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const forgotPassword = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<Response | void> => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ success: false, error: "Email không hợp lệ" });
+    }
+    const result = await forgotPasswordService(email);
+    return res.status(200).json({ success: true, message: result.message });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const resetPassword = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<Response | void> => {
+  try {
+    const { email, otp, newPassword } = req.body;
+    if (!email || !otp || !newPassword) {
+      return res.status(400).json({ success: false, error: "Thông tin không hợp lệ" });
+    }
+    if (newPassword.length < 6) {
+      return res.status(400).json({ success: false, error: "Mật khẩu phải có ít nhất 6 ký tự" });
+    }
+    const result = await resetPasswordService(email, otp, newPassword);
+    return res.status(200).json({ success: true, message: result.message });
   } catch (error) {
     next(error);
   }
