@@ -19,5 +19,10 @@ export interface DocumentResponseDto {
 
 export interface DocumentListResponseDto {
   documents: DocumentResponseDto[];
-  count: number;
+  pagination: {
+    total: number;
+    page: number;
+    size: number;
+    totalPages: number;
+  };
 }

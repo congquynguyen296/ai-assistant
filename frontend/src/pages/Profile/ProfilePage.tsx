@@ -417,7 +417,7 @@ const ProfilePage = () => {
     <div className="relative min-h-screen w-full bg-slate-50/50">
       <div className="absolute inset-0 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] bg-size-[16px_16px] pointer-events-none z-0" />
 
-      <div className="relative z-10 max-w-5xl mx-auto p-4 md:p-6">
+      <div className="relative z-10 max-w-7xl mx-auto py-8 px-4">
         <PageHeader
           title="Hồ sơ cá nhân"
           subTitle="Quản lý thông tin và bảo mật tài khoản của bạn"

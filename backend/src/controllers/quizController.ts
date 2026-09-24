@@ -8,7 +8,7 @@ import {
   getQuizResultsService,
   deleteQuizService,
 } from "../services/quizService.js";
-import type { AuthRequest } from "@/types/request.js";
+import type { AuthRequest } from "@/dtos/common/request.dto.js";
 import type { SubmitQuizRequestDto } from "@/dtos/quiz/quiz.request.dto.js";
 
 export const getAllQuizzes = async (

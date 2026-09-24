@@ -5,10 +5,11 @@ import type {
   DocumentListResponse,
 } from "@/types/api.types";
 
-const getDocuments = async (): Promise<DocumentListResponse> => {
+const getDocuments = async (page = 1, size = 10): Promise<DocumentListResponse> => {
   try {
     const response = await axiosInstance.get<DocumentListResponse>(
-      API_PATHS.DOCUMENTS.GET_DOCUMENTS
+      API_PATHS.DOCUMENTS.GET_DOCUMENTS,
+      { params: { page, size } }
     );
     return response.data;
   } catch (error) {

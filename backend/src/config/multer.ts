@@ -28,7 +28,7 @@ const upload = multer({
   fileFilter,
   limits: {
     fileSize: Number.parseInt(process.env.MAX_FILE_SIZE || "", 10) ||
-      20 * 1024 * 1024,
+      5 * 1024 * 1024,
   },
 });
 

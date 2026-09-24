@@ -7,7 +7,7 @@ import { AppError } from "@/middlewares/errorHandle.js";
 import { findRelevantChunks, type TextChunk } from "@/utils/textChunker.js";
 import { retrieveContext } from "@/services/ragClientService.js";
 import { mapFlashcardSet, mapQuiz } from "@/utils/dtoMapper.js";
-import type { RagRetrieveResponse } from "@/types/external.js";
+import type { RagRetrieveResponse } from "@/dtos/common/external.dto.js";
 import type { FlashcardSetResponseDto } from "@/dtos/flashcards/flashcard.response.dto.js";
 import type { QuizResponseDto } from "@/dtos/quiz/quiz.response.dto.js";
 

@@ -5,8 +5,8 @@ type StatCardProps = {
   value: number;
   subtext: string;
   trendText: string;
-  icon: "documents" | "flashcards" | "quizzes";
-  accent: "sky" | "rose" | "emerald";
+  icon: "documents" | "flashcards" | "quizzes" | "interviews";
+  accent: "sky" | "rose" | "emerald" | "amber";
 };
 
 const accents: Record<
@@ -31,10 +31,16 @@ const accents: Record<
     iconColor: "text-emerald-600",
     borderHover: "hover:border-emerald-400/50",
   },
+  amber: {
+    hoverBg: "from-amber-500/10 via-yellow-400/10 to-white",
+    iconWrap: "bg-amber-50 border-amber-100",
+    iconColor: "text-amber-600",
+    borderHover: "hover:border-amber-400/50",
+  },
 };
 
 function StatCard({ label, value, subtext, trendText, icon, accent }: StatCardProps) {
-  const Icon = icon === "documents" ? FileText : icon === "flashcards" ? BookOpen : BrainCircuit;
+  const Icon = icon === "documents" ? FileText : icon === "flashcards" ? BookOpen : icon === "interviews" ? FileText : BrainCircuit;
   const a = accents[accent];
 
   return (
@@ -80,11 +86,12 @@ type Props = {
   documents: { value: number; thisWeek: number };
   flashcards: { value: number; thisWeek: number };
   quizzes: { value: number; avgScoreText: string };
+  interviews: { value: number; thisWeek: number };
 };
 
-export default function DashboardStatsCards({ documents, flashcards, quizzes }: Props) {
+export default function DashboardStatsCards({ documents, flashcards, quizzes, interviews }: Props) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
       <StatCard
         label="Tài liệu đã phân tích"
         value={documents.value}
@@ -108,6 +115,14 @@ export default function DashboardStatsCards({ documents, flashcards, quizzes }: 
         trendText=""
         icon="quizzes"
         accent="emerald"
+      />
+      <StatCard
+        label="Buổi phỏng vấn đã tham gia"
+        value={interviews.value}
+        subtext=""
+        trendText={`${interviews.thisWeek} tuần này`}
+        icon="interviews"
+        accent="amber"
       />
     </div>
   );

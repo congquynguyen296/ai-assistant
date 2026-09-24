@@ -14,6 +14,7 @@ import quizRoutes from "@/routes/quizRoutes.js";
 import processRoutes from "@/routes/progressRoute.js";
 import knowledgeGraphRoutes from "@/routes/knowledgeGraphRoutes.js";
 import notificationRoutes from "@/routes/notificationRoutes.js";
+import interviewRoutes from "@/routes/interviewRoutes.js";
 import { requestLogger } from "@/middlewares/requestLogger.js";
 import { appLogger } from "@/utils/logger.js";
 import { initRabbitMQ } from "@/queues/documentQueue.js";
@@ -73,6 +74,7 @@ app.use(`${process.env.API_PREFIX}/ai-generation`, aiRoutes);
 app.use(`${process.env.API_PREFIX}/progress`, processRoutes);
 app.use(`${process.env.API_PREFIX}/knowledge-graph`, knowledgeGraphRoutes);
 app.use(`${process.env.API_PREFIX}/notifications`, notificationRoutes);
+app.use(`${process.env.API_PREFIX}/interviews`, interviewRoutes);
 
 app.use(errorHandler);
 

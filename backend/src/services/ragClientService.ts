@@ -1,4 +1,4 @@
-import type { RagIngestResponse, RagRetrieveResponse } from "@/types/external.js";
+import type { RagIngestResponse, RagRetrieveResponse } from "@/dtos/common/external.dto.js";
 
 const PYTHON_SERVICE_URL =
   process.env.PYTHON_SERVICE_URL || "http://localhost:8000";

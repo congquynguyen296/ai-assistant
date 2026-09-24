@@ -1,8 +1,8 @@
-import { Activity, BrainCircuit, Clock, FileText } from "lucide-react";
+import { Activity, BrainCircuit, Clock, FileText, MessageSquare } from "lucide-react";
 
 export type DashboardRecentActivityItem = {
   id: string;
-  type: "document" | "quiz" | "flashcards";
+  type: "document" | "quiz" | "flashcards" | "interview";
   title: string;
   subtitle: string;
   timestamp?: string;
@@ -38,7 +38,7 @@ export default function DashboardRecentActivity({ items, viewAllHref }: Props) {
                     : "bg-slate-50 border-slate-200 text-slate-600";
 
             const Icon =
-              item.type === "quiz" ? BrainCircuit : item.type === "flashcards" ? Activity : FileText;
+              item.type === "quiz" ? BrainCircuit : item.type === "flashcards" ? Activity : item.type === "interview" ? MessageSquare : FileText;
 
             const body = (
               <div className="flex items-start gap-3">
