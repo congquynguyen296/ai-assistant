@@ -12,6 +12,7 @@ import {
   generateInterviewReport,
 } from './interviewAiService.js';
 import { computeInterviewState } from '@/utils/interviewPrompts.js';
+import { redisService } from '@/services/redisService.js';
 
 export const createInterviewSessionService = async (input: {
   userId: string;
@@ -84,6 +85,9 @@ export const createInterviewSessionService = async (input: {
     status: InterviewStatus.IN_PROGRESS,
   });
 
+  // Invalidate cache
+  await redisService.deleteByPattern(`interviews:${userId}:*`);
+
   return session;
 };
 
@@ -141,6 +145,9 @@ export const chatInterviewService = async (input: {
     }
   );
 
+  // Invalidate cache since updated timestamp changes
+  await redisService.deleteByPattern(`interviews:${userId}:*`);
+
   // Save generated question to Question Bank if Knowledge mode
   if (session.topicId) {
     await InterviewQuestion.create({
@@ -173,6 +180,9 @@ export const finishInterviewService = async (input: { userId: string; sessionId:
   session.report = report as Record<string, unknown>;
   await session.save();
 
+  // Invalidate cache
+  await redisService.deleteByPattern(`interviews:${userId}:*`);
+
   return report;
 };
 
@@ -197,6 +207,16 @@ export const searchTopicsService = async (query: string) => {
 };
 
 export const getInterviewSessionsListService = async (userId: string, page: number = 1, size: number = 10) => {
+  const cacheKey = `interviews:${userId}:${page}:${size}`;
+  const cachedData = await redisService.getObject<any>(cacheKey);
+
+  if (cachedData) {
+    console.log(`Cache HIT for interviews list (key: ${cacheKey})`);
+    return cachedData;
+  }
+
+  console.log(`Cache MISS for interviews list (key: ${cacheKey}), querying MongoDB`);
+
   // Cleanup abandoned sessions implicitly
   const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
   await InterviewSession.updateMany(
@@ -211,7 +231,7 @@ export const getInterviewSessionsListService = async (userId: string, page: numb
     .limit(size)
     .populate('topicId', 'name');
     
-  return {
+  const response = {
     sessions,
     pagination: {
       total,
@@ -220,6 +240,17 @@ export const getInterviewSessionsListService = async (userId: string, page: numb
       totalPages: Math.ceil(total / size),
     }
   };
+
+  if (response.sessions.length > 0) {
+    try {
+      await redisService.setObject(cacheKey, response);
+      console.log(`Interviews list cached in Redis (key: ${cacheKey}), count: ${response.pagination.total}`);
+    } catch (err) {
+      console.warn(`Failed to cache interviews list:`, (err as Error).message);
+    }
+  }
+
+  return response;
 };
 
 export const deleteInterviewSessionService = async (input: { userId: string; sessionId: string }) => {
@@ -232,4 +263,7 @@ export const deleteInterviewSessionService = async (input: { userId: string; ses
   }
 
   await InterviewSession.deleteOne({ _id: sessionId });
+
+  // Invalidate cache
+  await redisService.deleteByPattern(`interviews:${userId}:*`);
 };
