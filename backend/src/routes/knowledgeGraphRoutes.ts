@@ -2,9 +2,12 @@ import express from "express";
 import * as kgController from "@/controllers/knowledgeGraphController.js";
 import protect from "@/middlewares/auth.js";
 
+import { apiLimiter } from "@/middlewares/rateLimiter.js";
+
 const router = express.Router();
 
 router.use(protect);
+router.use(apiLimiter);
 
 router.get("/documents/:documentId", kgController.getGraph);
 

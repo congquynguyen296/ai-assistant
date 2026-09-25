@@ -9,9 +9,12 @@ import {
   deleteDocument,
 } from "../controllers/documentController.js";
 
+import { apiLimiter } from "@/middlewares/rateLimiter.js";
+
 const router = express.Router();
 
 router.use(protect);
+router.use(apiLimiter);
 
 router.post("/upload", upload.single("file"), uploadDocument);
 

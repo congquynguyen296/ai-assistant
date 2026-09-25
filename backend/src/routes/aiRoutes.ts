@@ -10,9 +10,12 @@ import {
   deleteChatHistory,
 } from "../controllers/aiController.js";
 
+import { apiLimiter } from "@/middlewares/rateLimiter.js";
+
 const router = express.Router();
 
 router.use(protect);
+router.use(apiLimiter);
 
 router.post("/generate-flashcards", generateFlashcards);
 

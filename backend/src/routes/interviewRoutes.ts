@@ -11,22 +11,27 @@ import {
   deleteInterviewSession,
 } from '@/controllers/interviewController.js';
 
+import { apiLimiter } from '@/middlewares/rateLimiter.js';
+
 const router = express.Router();
 
+router.use(protect);
+router.use(apiLimiter);
+
 // Topics routes
-router.get('/topics/trending', protect, getTrendingTopics);
-router.get('/topics/search', protect, searchTopics);
+router.get('/topics/trending', getTrendingTopics);
+router.get('/topics/search', searchTopics);
 
 // Setup new interview session
-router.post('/setup', protect, setupInterview);
+router.post('/setup', setupInterview);
 
 // Get list of interview sessions
-router.get('/', protect, getInterviewSessions);
+router.get('/', getInterviewSessions);
 
 // Specific session routes
-router.get('/:id', protect, getInterview);
-router.post('/:id/chat', protect, chatInterview);
-router.post('/:id/finish', protect, finishInterview);
-router.delete('/:id', protect, deleteInterviewSession);
+router.get('/:id', getInterview);
+router.post('/:id/chat', chatInterview);
+router.post('/:id/finish', finishInterview);
+router.delete('/:id', deleteInterviewSession);
 
 export default router;

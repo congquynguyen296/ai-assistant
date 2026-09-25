@@ -13,6 +13,7 @@ import {
   resetPassword,
 } from "../controllers/authController.js";
 import protect from "@/middlewares/auth.js";
+import { authLimiter, otpLimiter } from "@/middlewares/rateLimiter.js";
 
 const router = express.Router();
 
@@ -32,18 +33,18 @@ const loginValidation = [
   body("password").notEmpty().withMessage("Mật khẩu không được để trống"),
 ];
 
-router.post("/register", registerValidation, register);
+router.post("/register", authLimiter, registerValidation, register);
 
-router.post("/confirm-email", confirmEmail);
+router.post("/confirm-email", otpLimiter, confirmEmail);
 
-router.post("/resend-otp", resendOTP);
+router.post("/resend-otp", otpLimiter, resendOTP);
 
-router.post("/forgot-password", forgotPassword);
-router.post("/reset-password", resetPassword);
+router.post("/forgot-password", otpLimiter, forgotPassword);
+router.post("/reset-password", otpLimiter, resetPassword);
 
-router.post("/login", loginValidation, login);
+router.post("/login", authLimiter, loginValidation, login);
 
-router.post("/google-login", googleLogin);
+router.post("/google-login", authLimiter, googleLogin);
 
 router.get("/profile", protect, getProfile);
 
