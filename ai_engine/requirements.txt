@@ -9,3 +9,7 @@ loguru==0.7.3
 openai>=1.0.0
 aio-pika==9.4.1
 psutil==6.0.0
+
+azure-ai-documentintelligence==1.0.0
+pypdf==4.1.0
+httpx>=0.28.1

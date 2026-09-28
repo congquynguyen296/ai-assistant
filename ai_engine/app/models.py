@@ -21,6 +21,11 @@ class Chunk(BaseModel):
 
 # ── Ingest ────────────────────────────────────────────────────────────────────
 
+class IngestRequest(BaseModel):
+    document_id: str = Field(..., description="MongoDB ObjectId string of the document")
+    filename: str = Field(..., description="Original file name (for metadata)")
+    text: str = Field(..., description="Full extracted plain text of the document")
+
 class IngestResponse(BaseModel):
     document_id: str
     filename: str

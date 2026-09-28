@@ -80,6 +80,7 @@ export const enqueueDocumentProcessing = async (payload: {
   userId: string;
   fileName: string;
   text: string;
+  fileUrl?: string;
   correlationId?: string;
 }) => {
   if (!publishChannel) {
@@ -113,7 +114,7 @@ export const enqueueDocumentProcessing = async (payload: {
   });
 };
 
-const createAndSendNotification = async (payload: {
+export const createAndSendNotification = async (payload: {
   userId: string;
   title: string;
   message: string;
@@ -136,14 +137,21 @@ const handleCompletedJob = async (data: {
   fileName: string;
   status: "ready" | "failed";
   error: any;
+  extractedText?: string;
+  pageCount?: number;
+  ocrUsed?: boolean;
+  ocrPages?: number;
 }) => {
-  const { documentId, userId, fileName, status, error } = data;
+  const { documentId, userId, fileName, status, error, extractedText, pageCount, ocrUsed, ocrPages } = data;
 
   try {
     // 1. Idempotent Update
+    const updateData: any = { status };
+    if (extractedText) updateData.extractedText = extractedText;
+    
     const result = await Document.findOneAndUpdate(
       { _id: documentId, status: { $in: ["processing", "failed"] } },
-      { status }
+      updateData
     );
 
     if (result && result.status !== status) {
