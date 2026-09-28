@@ -177,3 +177,13 @@ export const deleteDocumentVectors = async (
     return false;
   }
 };
+
+export const wakePythonService = () => {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 90_000); // cold start ~1 phút
+  fetch(`${PYTHON_SERVICE_URL}/health`, { signal: ctrl.signal })
+    .catch((err) =>
+      apiLogger.warn("Wake-up Python failed", { error: (err as Error).message }),
+    )
+    .finally(() => clearTimeout(timer));
+};

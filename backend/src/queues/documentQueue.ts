@@ -1,37 +1,75 @@
 import amqplib from "amqplib";
 import mongoose from "mongoose";
 import Document from "@/models/Document.js";
-import KnowledgeGraph from "@/models/KnowledgeGraph.js";
 import Notification from "@/models/Notification.js";
-import { ingestDocument } from "@/services/ragClientService.js";
-import { generateKnowledgeGraph } from "@/utils/azureAiUtil.js";
 import { getIO } from "@/services/socketService.js";
+import { deleteDocumentVectors, wakePythonService } from "@/services/ragClientService.js";
 
-const QUEUE_NAME = "document_processing_queue";
-let channel: amqplib.Channel;
+const PROCESSING_QUEUE = "document_processing_queue";
+const COMPLETED_QUEUE = "document_completed_queue";
+const RETRY_QUEUE = "document_retry_queue";
+
+const PROCESSING_EXCHANGE = "processing_exchange";
+const RETRY_EXCHANGE = "retry_exchange";
+
+let publishChannel: amqplib.ConfirmChannel;
+let consumeChannel: amqplib.Channel;
 
 export const initRabbitMQ = async () => {
   try {
     const rabbitMqUrl = process.env.RABBITMQ_URL || "amqp://localhost:5672";
     const connection = await amqplib.connect(rabbitMqUrl);
-    channel = await connection.createChannel();
-    await channel.assertQueue(QUEUE_NAME, { durable: true });
-    
-    // Start consumer
-    channel.consume(QUEUE_NAME, async (msg) => {
+
+    connection.on("error", (err) => console.error("RabbitMQ Connection Error:", err));
+    connection.on("close", () => console.error("RabbitMQ Connection Closed"));
+
+    // 1. Setup Publish Channel (for safe publishing)
+    publishChannel = await connection.createConfirmChannel();
+
+    // 2. Setup Consume Channel
+    consumeChannel = await connection.createChannel();
+    await consumeChannel.prefetch(10); // Fair dispatch for completed queue
+
+    // 3. Declare Topology
+    // Exchanges
+    await publishChannel.assertExchange(PROCESSING_EXCHANGE, "direct", { durable: true });
+    await publishChannel.assertExchange(RETRY_EXCHANGE, "direct", { durable: true });
+
+    // Processing Queue (routes to Retry Exchange on NACK)
+    await publishChannel.assertQueue(PROCESSING_QUEUE, {
+      durable: true,
+      deadLetterExchange: RETRY_EXCHANGE,
+      deadLetterRoutingKey: RETRY_QUEUE, // routes DLX messages to retry_queue
+    });
+    await publishChannel.bindQueue(PROCESSING_QUEUE, PROCESSING_EXCHANGE, PROCESSING_QUEUE);
+
+    // Retry Queue (TTL 60s, routes back to Processing Exchange)
+    await publishChannel.assertQueue(RETRY_QUEUE, {
+      durable: true,
+      messageTtl: 60000, // 60 seconds
+      deadLetterExchange: PROCESSING_EXCHANGE,
+      deadLetterRoutingKey: PROCESSING_QUEUE,
+    });
+    await publishChannel.bindQueue(RETRY_QUEUE, RETRY_EXCHANGE, RETRY_QUEUE);
+
+    // Completed Queue
+    await publishChannel.assertQueue(COMPLETED_QUEUE, { durable: true });
+
+    // 4. Start Consumer for Completed Queue
+    consumeChannel.consume(COMPLETED_QUEUE, async (msg) => {
       if (msg !== null) {
         try {
           const data = JSON.parse(msg.content.toString());
-          await processDocumentJob(data);
-          channel.ack(msg);
+          await handleCompletedJob(data);
+          consumeChannel.ack(msg);
         } catch (error) {
-          console.error("Error processing message:", error);
-          // Nack message, but don't requeue if it's a permanent error (simplification)
-          channel.nack(msg, false, false); 
+          console.error("Error processing completed message:", error);
+          consumeChannel.nack(msg, false, false); // If parsing fails, discard it
         }
       }
     });
-    console.log("RabbitMQ consumer initialized.");
+    
+    console.log("RabbitMQ initialized. Topology asserted. Listening to completed queue.");
   } catch (error) {
     console.error("Failed to initialize RabbitMQ:", error);
   }
@@ -42,15 +80,36 @@ export const enqueueDocumentProcessing = async (payload: {
   userId: string;
   fileName: string;
   text: string;
-  chunks: Array<{ content: string; chunkIndex: number }>;
+  correlationId?: string;
 }) => {
-  if (!channel) {
+  if (!publishChannel) {
     console.error("RabbitMQ channel not initialized. Cannot enqueue job.");
-    return;
+    throw new Error("RabbitMQ not connected");
   }
-  
-  channel.sendToQueue(QUEUE_NAME, Buffer.from(JSON.stringify(payload)), {
-    persistent: true,
+
+  // Ensure message size is relatively small before publishing
+  const payloadStr = JSON.stringify({ ...payload, correlationId: payload.correlationId || crypto.randomUUID() });
+  const buffer = Buffer.from(payloadStr);
+
+  if (buffer.length > 5 * 1024 * 1024) {
+    throw new Error("Tài liệu quá lớn (vượt quá 5MB). Vui lòng tải lên file nhỏ hơn.");
+  }
+
+  return new Promise<void>((resolve, reject) => {
+    publishChannel.sendToQueue(
+      PROCESSING_QUEUE,
+      buffer,
+      { persistent: true },
+      (err, ok) => {
+        if (err !== null) {
+          console.error("Message nacked by broker:", err);
+          reject(err);
+        } else {
+          wakePythonService();
+          resolve();
+        }
+      }
+    );
   });
 };
 
@@ -71,139 +130,54 @@ const createAndSendNotification = async (payload: {
   return notification;
 };
 
-const processDocumentJob = async (data: {
+const handleCompletedJob = async (data: {
   documentId: string;
   userId: string;
   fileName: string;
-  text: string;
-  chunks: Array<{ content: string; chunkIndex: number }>;
+  status: "ready" | "failed";
+  error: any;
 }) => {
-  const { documentId, userId, fileName, text, chunks } = data;
-  
+  const { documentId, userId, fileName, status, error } = data;
+
   try {
-    console.log(`Processing document job for ${documentId}`);
+    // 1. Idempotent Update
+    const result = await Document.findOneAndUpdate(
+      { _id: documentId, status: { $in: ["processing", "failed"] } },
+      { status }
+    );
 
-    // 1. RAG Ingestion
-    try {
-      await ingestDocument(documentId, fileName, text);
-      
-      await createAndSendNotification({
-        userId,
-        title: "Xử lý tài liệu thành công",
-        message: `Hệ thống đã đọc và phân tích tài liệu "${fileName}" thành công. Bạn đã có thể bắt đầu trò chuyện.`,
-        type: "success",
-        link: `/documents/${documentId}`,
-      });
-      
-      // Update document status to ready
-      await Document.findByIdAndUpdate(documentId, { status: "ready" });
-    } catch (err) {
-      console.error(
-        `[RAG] ingestDocument failed for ${documentId}:`,
-        (err as Error).message,
-      );
-      
-      await createAndSendNotification({
-        userId,
-        title: "Lỗi xử lý tài liệu",
-        message: `Có lỗi xảy ra khi phân tích tài liệu "${fileName}".`,
-        type: "error",
-      });
-    }
-
-    // 2. Knowledge Graph Generation (Tạm tắt tính năng Network)
-    /*
-    let graph = await KnowledgeGraph.findOne({ documentId, userId });
-    
-    if (!graph) {
-      graph = new KnowledgeGraph({
-        documentId,
-        userId,
-        status: "processing",
-        nodes: [],
-        edges: [],
-      });
-      await graph.save();
-    } else {
-      graph.status = "processing";
-      graph.error = undefined;
-      await graph.save();
-    }
-
-    try {
-      const chunksToProcess = chunks.length > 50 ? chunks.slice(0, 50) : chunks;
-      
-      const generatedGraph = await generateKnowledgeGraph(chunksToProcess);
-      
-      const idMap = new Map<string, string>();
-      
-      generatedGraph.nodes.forEach((node) => {
-        idMap.set(node.id, new mongoose.Types.ObjectId().toString());
-      });
-
-      const mappedNodes = generatedGraph.nodes.map((node) => ({
-        id: idMap.get(node.id)!,
-        label: node.label,
-        category: node.category,
-        importance: node.importance,
-        summary: node.summary,
-        position: { x: Math.random() * 500, y: Math.random() * 500 }, // Random initial layout
-      }));
-
-      const mappedEdges = generatedGraph.edges
-        .filter((edge) => idMap.has(edge.from) && idMap.has(edge.to))
-        .map((edge) => ({
-          id: new mongoose.Types.ObjectId().toString(),
-          from: idMap.get(edge.from)!,
-          to: idMap.get(edge.to)!,
-          label: edge.label,
-        }));
-
-      graph.nodes = mappedNodes;
-      graph.edges = mappedEdges;
-      graph.status = "completed";
-      
-      const notification = await Notification.create({
-        userId,
-        title: "Tạo sơ đồ tri thức thành công",
-        message: `Hệ thống đã phân tích và tạo mạng tri thức cho tài liệu "${fileName}" thành công.`,
-        type: "success",
-        link: `/documents/${documentId}?tab=network`,
-      });
-      
-      try {
-        const io = getIO();
-        io.to(userId).emit("new_notification", notification);
-      } catch (err) {
-        console.error("Socket error", err);
+    if (result && result.status !== status) {
+      // It was updated successfully from a different status
+      const updatedName = result.title || result.fileName || fileName;
+      if (status === "ready") {
+        await createAndSendNotification({
+          userId,
+          title: "Xử lý tài liệu thành công",
+          message: `Hệ thống đã đọc và phân tích tài liệu "${updatedName}" thành công. Bạn đã có thể bắt đầu trò chuyện.`,
+          type: "success",
+          link: `/documents/${documentId}`,
+        });
+      } else {
+        await createAndSendNotification({
+          userId,
+          title: "Lỗi xử lý tài liệu",
+          message: `Có lỗi xảy ra khi phân tích tài liệu "${updatedName}": ${error || "Lỗi hệ thống"}`,
+          type: "error",
+        });
       }
-      
-    } catch (graphError) {
-      console.error(`Knowledge Graph generation failed for ${documentId}:`, graphError);
-      graph.status = "failed";
-      graph.error = (graphError as Error).message;
-      
-      const notification = await Notification.create({
-        userId,
-        title: "Lỗi tạo sơ đồ tri thức",
-        message: `Có lỗi xảy ra khi tạo mạng tri thức cho tài liệu "${fileName}".`,
-        type: "error",
-      });
-      
-      try {
-        const io = getIO();
-        io.to(userId).emit("new_notification", notification);
-      } catch (err) {
-        console.error("Socket error", err);
+    } else if (!result) {
+      // 2. Race condition handling: check if document was deleted by user
+      const exists = await Document.exists({ _id: documentId });
+      if (!exists && status === "ready") {
+        console.log(`Document ${documentId} deleted before completion. Removing orphan vectors...`);
+        // Non-blocking call to delete vectors in Qdrant via HTTP
+        deleteDocumentVectors(documentId).catch(err => {
+          console.error(`Failed to delete orphan vectors for ${documentId}:`, err);
+        });
       }
     }
-    
-    await graph.save();
-    */
-
-  } catch (error) {
-    console.error(`Error in document processing job for ${documentId}:`, error);
-    await Document.findByIdAndUpdate(documentId, { status: "failed" });
-    throw error;
+  } catch (err) {
+    console.error(`Error updating document ${documentId} status:`, err);
+    throw err;
   }
 };

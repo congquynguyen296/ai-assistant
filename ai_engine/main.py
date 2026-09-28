@@ -35,8 +35,47 @@ from app.rag.vector_store import (
     get_client,
 )
 
+import asyncio
+import contextlib
+import logging
+import os
+import signal
+from contextlib import asynccontextmanager
+
+from mem import log_mem, rss_mb
+from worker import run_worker
+
 # ── Logging ───────────────────────────────────────────────────────────────────
 setup_logging()
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
+logger = logging.getLogger("main")
+
+worker_task: asyncio.Task | None = None
+mem_task: asyncio.Task | None = None
+
+def _on_worker_done(task: asyncio.Task):
+    if task.cancelled():
+        return
+    logger.critical("Worker task chết: %r", task.exception())
+    os.kill(os.getpid(), signal.SIGTERM)
+
+async def _mem_monitor():
+    while True:
+        log_mem("periodic")
+        await asyncio.sleep(300)
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    global worker_task, mem_task
+    log_mem("startup")
+    worker_task = asyncio.create_task(run_worker(), name="rabbit-worker")
+    worker_task.add_done_callback(_on_worker_done)
+    mem_task = asyncio.create_task(_mem_monitor(), name="mem-monitor")
+    yield
+    for t in (worker_task, mem_task):
+        t.cancel()
+        with contextlib.suppress(asyncio.CancelledError, Exception):
+            await t
 
 # ── App ───────────────────────────────────────────────────────────────────────
 app = FastAPI(
@@ -45,6 +84,7 @@ app = FastAPI(
     version="1.0.0",
     docs_url="/docs",
     redoc_url=None,
+    lifespan=lifespan,
 )
 
 app.add_middleware(
@@ -102,28 +142,14 @@ def root_head():
     """HEAD method for faster platform ping checks."""
     return {}
 
-@app.get("/health", response_model=HealthResponse, tags=["Health"])
-def health_check():
-    """Liveness + readiness check. Returns Qdrant collection stats."""
-    try:
-        client = get_client()
-        info = client.get_collection(QDRANT_COLLECTION)
-        total_points = info.points_count or 0
-    except Exception as exc:
-        logger.warning("Qdrant health check failed: {}", exc)
-        return HealthResponse(
-            status="degraded",
-            embedding_model=EMBEDDING_MODEL,
-            embedding_model_loaded=False,
-            total_documents=0,
-        )
+from fastapi import Response
 
-    return HealthResponse(
-        status="ok",
-        embedding_model=EMBEDDING_MODEL,
-        embedding_model_loaded=True,
-        total_documents=total_points,
-    )
+@app.get("/health", tags=["Health"])
+async def health(response: Response):
+    alive = worker_task is not None and not worker_task.done()
+    if not alive:
+        response.status_code = 503
+    return {"status": "ok" if alive else "worker_down", "rss_mb": round(rss_mb())}
 
 
 @app.post(
