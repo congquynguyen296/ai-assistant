@@ -159,7 +159,11 @@ export const login = async (
       message: "Đăng nhập thành công",
       data: result,
     });
-  } catch (error) {
+  } catch (error: any) {
+    if (error.message === "Mật khẩu không đúng" && (req as any).rateLimit) {
+      const remaining = (req as any).rateLimit.remaining;
+      error.message = `Mật khẩu không đúng. Bạn còn ${remaining} lần thử.`;
+    }
     next(error);
   }
 };

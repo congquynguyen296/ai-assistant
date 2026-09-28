@@ -316,13 +316,13 @@ export const deleteDocumentService = async (input: {
 };
 
 const invalidateDocumentsListCache = async (userId: string): Promise<void> => {
-  const cacheKey = `documents:${userId}`;
+  const cacheKeyPattern = `documents:${userId}:*`;
   try {
-    await redisService.deleteObject(cacheKey);
-    console.log(`Invalidated documents list cache (key: ${cacheKey})`);
+    await redisService.deleteByPattern(cacheKeyPattern);
+    console.log(`Invalidated documents list cache (pattern: ${cacheKeyPattern})`);
   } catch (error) {
     console.error(
-      `Failed to invalidate documents cache (key: ${cacheKey})`,
+      `Failed to invalidate documents cache (pattern: ${cacheKeyPattern})`,
       error,
     );
   }
@@ -357,12 +357,11 @@ const processDocument = async (
     const chunks: TextChunk[] = chunkText(text, 500, 50);
 
     await Document.findByIdAndUpdate(documentId, {
-      chunks,
       extractedText: text,
-      status: "ready",
+      status: "processing", // Let RabbitMQ completed queue set this to ready
     });
 
-    console.log(`Xử lý tài liệu ${documentId} hoàn tất`);
+    console.log(`Đã lưu text thô cho tài liệu ${documentId}, đưa vào hàng đợi xử lý...`);
 
     const ragDoc = await Document.findById(documentId).select("fileName userId").lean();
     await enqueueDocumentProcessing({
@@ -370,7 +369,6 @@ const processDocument = async (
       userId: String(ragDoc?.userId),
       fileName: (ragDoc?.fileName as string) || "unknown",
       text,
-      chunks,
     });
   } catch (error) {
     console.error("Lỗi khi xử lý tài liệu: ", error);

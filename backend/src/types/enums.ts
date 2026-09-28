@@ -22,3 +22,9 @@ export enum InterviewQuestionSource {
   AI_GENERATED = "ai_generated",
   MANUAL = "manual",
 }
+
+export enum RateLimitKeyPrefix {
+  AUTH = "rl:auth:",
+  OTP = "rl:otp:",
+  API = "rl:api:",
+}
