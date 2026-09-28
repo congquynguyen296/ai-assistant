@@ -9,9 +9,12 @@ import {
   deleteQuiz,
 } from "../controllers/quizController.js";
 
+import { apiLimiter } from "@/middlewares/rateLimiter.js";
+
 const router = express.Router();
 
 router.use(protect);
+router.use(apiLimiter);
 
 router.get("/", getAllQuizzes);
 

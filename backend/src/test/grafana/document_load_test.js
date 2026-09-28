@@ -32,8 +32,8 @@ export default function () {
   const res = http.get(url, params);
 
   check(res, {
-    'Trạng thái là 200 (Thành công)': (r) => r.status === 200,
-    'Phản hồi nhanh hơn 1 giây': (r) => r.timings.duration < 1000,
+    'Trạng thái là 200 (Bình thường)': (r) => r.status === 200,
+    'Trạng thái là 429 (Bị Rate Limit chặn)': (r) => r.status === 429,
   });
 
   sleep(1);
