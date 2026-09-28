@@ -6,7 +6,12 @@ import type { Request, Response } from "express";
 // Create a generic Redis store for rate limiters
 const getRedisStore = (prefix: string) => {
   return new RedisStore({
-    sendCommand: (...args: string[]) => redisClient.sendCommand(args),
+    sendCommand: async (...args: string[]) => {
+      if (!redisClient.isOpen) {
+        await redisClient.connect();
+      }
+      return redisClient.sendCommand(args);
+    },
     prefix: prefix,
   });
 };
