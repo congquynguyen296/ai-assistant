@@ -358,6 +358,7 @@ const processDocument = async (
 
     await Document.findByIdAndUpdate(documentId, {
       extractedText: text,
+      chunks: chunks,
       status: "processing", // Let RabbitMQ completed queue set this to ready
     });
 
