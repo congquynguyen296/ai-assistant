@@ -4,37 +4,70 @@ import logging
 import os
 
 import aio_pika
+import httpx
 
 from mem import log_mem
 from app.rag.ingest_service import ingest_text
+from app.rag.vector_store import delete_document
+from errors import TransientError, PermanentError
+from app.rag.ocr import extract_pdf_text
 
 logger = logging.getLogger("worker")
 
 PROCESSING_QUEUE = "document_processing_queue"
 COMPLETED_QUEUE = "document_completed_queue"
-JOB_TIMEOUT_S = 300      # timeout cứng cho mỗi lần xử lý
+JOB_TIMEOUT_S = 600      # timeout cứng cho mỗi lần xử lý
 MAX_RETRY = 3
 
-class TransientError(Exception):
-    """Lỗi tạm thời: rate limit 429, timeout mạng..."""
-
-class PermanentError(Exception):
-    """Lỗi vĩnh viễn: text rỗng, dữ liệu hỏng..."""
-
-def ingest_sync(payload: dict) -> int:
-    """Logic hiện có: chunk -> embedding -> upsert Qdrant (uuid5). Trả về số chunk."""
+def ingest_sync(payload: dict) -> dict:
+    """Logic hiện có: tải file -> OCR -> chunk -> embedding -> upsert Qdrant (uuid5)."""
     doc_id = payload.get("documentId")
     file_name = payload.get("fileName")
     text = payload.get("text")
+    file_url = payload.get("fileUrl")
+    
+    ocr_result = {
+        "text": text,
+        "pageCount": 0,
+        "ocrUsed": False,
+        "ocrPages": 0
+    }
+    
+    if not text and file_url:
+        logger.info("Text empty, downloading fileUrl for OCR: %s", doc_id)
+        try:
+            with httpx.Client(timeout=30.0) as client:
+                r = client.get(file_url)
+                if r.status_code in [403, 404]:
+                    raise PermanentError(f"HTTP {r.status_code} downloading file")
+                r.raise_for_status()
+                pdf_bytes = r.content
+                
+            if len(pdf_bytes) > 20 * 1024 * 1024:
+                raise PermanentError("File exceeds 20MB limit for OCR")
+                
+            ocr_result = extract_pdf_text(pdf_bytes)
+            text = ocr_result["text"]
+            
+        except httpx.RequestError as e:
+            raise TransientError(f"Network error downloading file: {e}")
+            
     if not text:
-        raise PermanentError("Text is empty")
+        raise PermanentError("Text is empty and no fileUrl provided, or OCR returned empty")
+        
     try:
+        # Idempotency: OCR is non-deterministic, delete existing chunks first
+        delete_document(doc_id)
+        
         stored, _ = ingest_text(doc_id, file_name, text)
-        return stored
+        return {
+            "totalChunks": stored,
+            "extractedText": text,
+            "ocrUsed": ocr_result["ocrUsed"],
+            "ocrPages": ocr_result["ocrPages"],
+            "pageCount": ocr_result["pageCount"]
+        }
     except Exception as e:
-        # Wrap unknown errors in TransientError for retry by default,
-        # or PermanentError if you have specific parsing logic.
-        # For now, we assume all ingest_text errors are transient (network/rate limit).
         raise TransientError(str(e)) from e
 
 def count_rejected(headers) -> int:
@@ -43,7 +76,7 @@ def count_rejected(headers) -> int:
             return int(d.get("count", 0))
     return 0
 
-async def publish_result(channel, payload: dict, status: str, error: str | None):
+async def publish_result(channel, payload: dict, status: str, error: str | None, result: dict = None):
     body = {
         "documentId": payload["documentId"],
         "userId": payload.get("userId"),
@@ -52,6 +85,9 @@ async def publish_result(channel, payload: dict, status: str, error: str | None)
         "error": error,
         "correlationId": payload.get("correlationId"),
     }
+    if result:
+        body.update(result)
+        
     await channel.default_exchange.publish(
         aio_pika.Message(
             body=json.dumps(body).encode(),
@@ -73,8 +109,8 @@ async def handle(message: aio_pika.IncomingMessage, channel):
     cid = payload.get("correlationId")
     log_mem("job_start", cid)
     try:
-        await asyncio.wait_for(asyncio.to_thread(ingest_sync, payload), JOB_TIMEOUT_S)
-        await publish_result(channel, payload, "ready", None)
+        result = await asyncio.wait_for(asyncio.to_thread(ingest_sync, payload), JOB_TIMEOUT_S)
+        await publish_result(channel, payload, "ready", None, result)
         await message.ack()
     except (TransientError, asyncio.TimeoutError) as e:
         if count_rejected(message.headers) < MAX_RETRY:

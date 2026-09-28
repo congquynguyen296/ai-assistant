@@ -40,6 +40,10 @@ def setup_logging() -> None:
     # Thêm InterceptHandler vào standard logging để hứng log từ Uvicorn/FastAPI
     logging.basicConfig(handlers=[InterceptHandler()], level=0, force=True)
 
+    # Silence noisy third-party loggers
+    for _logger_name in ("azure", "azure.core", "httpx", "httpcore"):
+        logging.getLogger(_logger_name).setLevel(logging.WARNING)
+
     # Log ra console (giữ plain text cho dễ đọc ở dev)
     logger.add(sys.stdout, level="INFO")
 

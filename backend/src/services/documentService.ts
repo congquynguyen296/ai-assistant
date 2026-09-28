@@ -12,7 +12,7 @@ import { AppError } from "@/middlewares/errorHandle.js";
 import supabase from "@/config/supabase.js";
 import { redisService } from "@/services/redisService.js";
 import { deleteDocumentVectors } from "@/services/ragClientService.js";
-import { enqueueDocumentProcessing } from "@/queues/documentQueue.js";
+import { enqueueDocumentProcessing, createAndSendNotification } from "@/queues/documentQueue.js";
 import { mapDocumentResponse } from "@/utils/dtoMapper.js";
 import type {
   DocumentListResponseDto,
@@ -350,11 +350,24 @@ const processDocument = async (
       text = await extractTextFromExcel(fileBuffer);
     }
 
-    if (!text) {
+    let fileUrl: string | undefined = undefined;
+    
+    // Check if it's a scanned PDF
+    if (mimeType === "application/pdf" && (!text || text.trim().length < 200)) {
+      console.log(`Tài liệu ${documentId} có quá ít chữ, chuyển sang chế độ OCR...`);
+      text = ""; // clear garbage text
+      const ragDoc = await Document.findById(documentId).select("filePath userId").lean();
+      if (ragDoc?.filePath) {
+        fileUrl = (await generateSignedUrl(ragDoc.filePath, 14400)) || undefined;
+      }
+      if (!fileUrl) {
+        throw new Error("Không thể tạo URL để đọc ảnh PDF. Vui lòng thử lại sau.");
+      }
+    } else if (!text) {
       throw new Error("Không thể trích xuất văn bản từ tài liệu này.");
     }
 
-    const chunks: TextChunk[] = chunkText(text, 500, 50);
+    const chunks: TextChunk[] = text ? chunkText(text, 500, 50) : [];
 
     await Document.findByIdAndUpdate(documentId, {
       extractedText: text,
@@ -370,10 +383,20 @@ const processDocument = async (
       userId: String(ragDoc?.userId),
       fileName: (ragDoc?.fileName as string) || "unknown",
       text,
+      fileUrl,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Lỗi khi xử lý tài liệu: ", error);
 
-    await Document.findByIdAndUpdate(documentId, { status: "failed" });
+    const doc = await Document.findByIdAndUpdate(documentId, { status: "failed" });
+    if (doc) {
+      const updatedName = doc.title || doc.fileName || "unknown";
+      await createAndSendNotification({
+        userId: doc.userId.toString(),
+        title: "Lỗi xử lý tài liệu",
+        message: `Có lỗi xảy ra khi trích xuất tài liệu "${updatedName}": ${error.message || "Lỗi hệ thống"}`,
+        type: "error",
+      });
+    }
   }
 };
