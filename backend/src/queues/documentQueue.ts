@@ -4,6 +4,7 @@ import Document from "@/models/Document.js";
 import Notification from "@/models/Notification.js";
 import { getIO } from "@/services/socketService.js";
 import { deleteDocumentVectors, wakePythonService } from "@/services/ragClientService.js";
+import { invalidateDocumentsListCache } from "@/services/documentService.js";
 
 const PROCESSING_QUEUE = "document_processing_queue";
 const COMPLETED_QUEUE = "document_completed_queue";
@@ -156,6 +157,13 @@ const handleCompletedJob = async (data: {
 
     if (result && result.status !== status) {
       // It was updated successfully from a different status
+
+      try {
+        await invalidateDocumentsListCache(userId);
+      } catch (cacheErr) {
+        console.warn(`[documentQueue] Failed to invalidate cache for user ${userId}:`, cacheErr);
+      }
+
       const updatedName = result.title || result.fileName || fileName;
       if (status === "ready") {
         await createAndSendNotification({

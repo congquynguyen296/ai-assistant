@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 DOCINTEL_ENDPOINT = os.getenv("DOCINTEL_ENDPOINT")
 DOCINTEL_KEY = os.getenv("DOCINTEL_KEY")
 OCR_BATCH_PAGES = int(os.getenv("OCR_BATCH_PAGES", "2"))
-OCR_MAX_PAGES = int(os.getenv("OCR_MAX_PAGES", "50"))
+OCR_MAX_PAGES = int(os.getenv("OCR_MAX_PAGES", "30"))
 OCR_MIN_CHARS_PER_PAGE = int(os.getenv("OCR_MIN_CHARS_PER_PAGE", "200"))
 
 def get_docintel_client():

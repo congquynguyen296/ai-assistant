@@ -69,7 +69,8 @@ const documentSchema = new Schema<DocumentDocument>(
   { timestamps: true },
 );
 
-documentSchema.index({ userId: 1, uploadDate: -1 });
+documentSchema.index({ userId: 1, uploadDate: -1 }); // Legacy index (can be removed later)
+documentSchema.index({ userId: 1, uploadDate: -1, _id: -1 }); // New index for cursor-based pagination
 
 const Document = model<DocumentDocument>("Document", documentSchema);
 export default Document;

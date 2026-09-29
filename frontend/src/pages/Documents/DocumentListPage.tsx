@@ -13,6 +13,9 @@ const DocumentListPage = () => {
   // State for documents
   const [documents, setDocuments] = useState<Document[] | null>(null);
   const [loading, setLoading] = useState(true);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [hasNextPage, setHasNextPage] = useState<boolean>(false);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   // State for upload modal
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
@@ -32,15 +35,34 @@ const DocumentListPage = () => {
 
 
 
-  // Fetch documents function
+  // Fetch documents function (first page)
   const fectchDocuments = async () => {
+    setLoading(true);
     try {
-      const response = await documentService.getDocuments();
+      const response = await documentService.getDocuments(1, 10, null);
       setDocuments(response.data.documents);
+      setNextCursor(response.data.pagination?.nextCursor || null);
+      setHasNextPage(response.data.pagination?.hasNextPage || false);
     } catch (error) {
       console.error("Lấy danh sách tài liệu thất bại:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Fetch more documents (cursor)
+  const fetchMoreDocuments = async () => {
+    if (!nextCursor || loadingMore) return;
+    setLoadingMore(true);
+    try {
+      const response = await documentService.getDocuments(1, 10, nextCursor);
+      setDocuments((prev) => [...(prev || []), ...response.data.documents]);
+      setNextCursor(response.data.pagination?.nextCursor || null);
+      setHasNextPage(response.data.pagination?.hasNextPage || false);
+    } catch (error) {
+      console.error("Lấy thêm danh sách tài liệu thất bại:", error);
+    } finally {
+      setLoadingMore(false);
     }
   };
 
@@ -181,15 +203,38 @@ const DocumentListPage = () => {
     }
 
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-        {documents?.map((document) => (
-          <DocumentCard
-            key={document._id}
-            document={document}
-            onDelete={handleDeleteRequest}
-            onRename={handleRenameRequest}
-          />
-        ))}
+      <div className="space-y-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+          {documents?.map((document) => (
+            <DocumentCard
+              key={document._id}
+              document={document}
+              onDelete={handleDeleteRequest}
+              onRename={handleRenameRequest}
+            />
+          ))}
+        </div>
+        
+        {/* Load more button */}
+        {hasNextPage && (
+          <div className="flex justify-center mt-8 pb-4">
+            <Button
+              variant="secondary"
+              onClick={fetchMoreDocuments}
+              disabled={loadingMore}
+              className="min-w-[200px]"
+            >
+              {loadingMore ? (
+                <>
+                  <div className="animate-spin w-4 h-4 border-2 border-slate-600 border-t-transparent rounded-full mr-2" />
+                  Đang tải...
+                </>
+              ) : (
+                "Tải thêm"
+              )}
+            </Button>
+          </div>
+        )}
       </div>
     );
   };

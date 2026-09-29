@@ -159,28 +159,42 @@ export const getDocumentsService = async (input: {
   userId: string;
   page?: number;
   size?: number;
+  cursor?: { date: Date; id: string } | null;
 }): Promise<DocumentListResponseDto> => {
-  const { userId, page = 1, size = 10 } = input;
-  const cacheKey = `documents:${userId}:${page}:${size}`;
-  const cacheDate = await redisService.getObject<DocumentListResponseDto>(
-    cacheKey,
-  );
-
-  if (cacheDate) {
-    console.log(`Cache HIT for documents list (key: ${cacheKey})`);
-    return cacheDate;
+  const { userId, page = 1, size = 10, cursor } = input;
+  let cacheKey = "";
+  if (cursor) {
+    // We don't cache cursor queries as they are numerous and less frequently hit
+  } else {
+    cacheKey = `documents:${userId}:first_page:${size}`;
+    const cacheDate = await redisService.getObject<DocumentListResponseDto>(
+      cacheKey,
+    );
+    if (cacheDate) {
+      console.log(`Cache HIT for documents list (key: ${cacheKey})`);
+      return cacheDate;
+    }
   }
 
   console.log(
-    `Cache MISS for documents list (key: ${cacheKey}), querying MongoDB`,
+    `Cache MISS for documents list, querying MongoDB`,
   );
   
   const total = await Document.countDocuments({ userId });
+
+  const matchStage: any = { userId: new mongoose.Types.ObjectId(userId) };
+  if (cursor) {
+    matchStage.$or = [
+      { uploadDate: { $lt: cursor.date } },
+      { uploadDate: cursor.date, _id: { $lt: new mongoose.Types.ObjectId(cursor.id) } },
+    ];
+  }
+
   const documents = (await Document.aggregate([
-    { $match: { userId: new mongoose.Types.ObjectId(userId) } },
-    { $sort: { uploadDate: -1 } },
-    { $skip: (page - 1) * size },
-    { $limit: size },
+    { $match: matchStage },
+    { $sort: { uploadDate: -1, _id: -1 } },
+    { $skip: cursor ? 0 : (page - 1) * size },
+    { $limit: size + 1 }, // Lấy dư 1 bản ghi để biết có trang tiếp theo không
     {
       $lookup: {
         from: "flashcards",
@@ -213,6 +227,15 @@ export const getDocumentsService = async (input: {
     },
   ])) as Array<Record<string, unknown>>;
 
+  const hasNextPage = documents.length > size;
+  if (hasNextPage) {
+    documents.pop(); // Bỏ đi bản ghi dư
+  }
+
+  const nextCursor = hasNextPage && documents.length > 0
+    ? `${new Date(documents[documents.length - 1].uploadDate as Date).getTime()}_${documents[documents.length - 1]._id?.toString()}`
+    : null;
+
   const documentsWithUrls = await Promise.all(
     documents.map(async (doc) => {
       const fileUrl = doc.fileUrl as string | null | undefined;
@@ -232,10 +255,12 @@ export const getDocumentsService = async (input: {
       page,
       size,
       totalPages: Math.ceil(total / size),
+      nextCursor,
+      hasNextPage,
     }
   };
 
-  if (response.documents.length > 0) {
+  if (cacheKey && response.documents.length > 0) {
     try {
       await redisService.setObject(cacheKey, response);
       console.log(
@@ -244,7 +269,7 @@ export const getDocumentsService = async (input: {
     } catch (cacheErr) {
       console.warn(`Failed to cache documents list:`, (cacheErr as Error).message);
     }
-  } else {
+  } else if (cacheKey) {
     console.log(`Documents list is empty (key: ${cacheKey}), skipping cache.`);
   }
 
@@ -315,14 +340,18 @@ export const deleteDocumentService = async (input: {
   await invalidateDocumentsListCache(userId);
 };
 
-const invalidateDocumentsListCache = async (userId: string): Promise<void> => {
-  const cacheKeyPattern = `documents:${userId}:*`;
+export const invalidateDocumentsListCache = async (userId: string): Promise<void> => {
   try {
+    // Delete the first_page cache directly (instead of using KEYS pattern)
+    // We only cache first pages now. So we just need to delete keys matching `documents:${userId}:first_page:*`
+    // Since we don't have SCAN set up simply, we'll just delete common size keys (10, 20, 50)
+    // Alternatively, we can still use deleteByPattern for now until we rewrite redisService.
+    const cacheKeyPattern = `documents:${userId}:*`;
     await redisService.deleteByPattern(cacheKeyPattern);
     console.log(`Invalidated documents list cache (pattern: ${cacheKeyPattern})`);
   } catch (error) {
     console.error(
-      `Failed to invalidate documents cache (pattern: ${cacheKeyPattern})`,
+      `Failed to invalidate documents cache`,
       error,
     );
   }

@@ -20,9 +20,11 @@ export interface DocumentResponseDto {
 export interface DocumentListResponseDto {
   documents: DocumentResponseDto[];
   pagination: {
-    total: number;
-    page: number;
     size: number;
-    totalPages: number;
+    total?: number; // legacy
+    page?: number;  // legacy
+    totalPages?: number; // legacy
+    nextCursor?: string | null;
+    hasNextPage?: boolean;
   };
 }

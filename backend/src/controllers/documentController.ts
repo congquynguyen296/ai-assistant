@@ -10,6 +10,19 @@ import { getUserIdFromReq } from "@/utils/authUtil.js";
 import type { AuthRequest } from "@/dtos/common/request.dto.js";
 import type { UploadDocumentRequestDto } from "@/dtos/documents/upload.request.dto.js";
 import type { UpdateDocumentRequestDto } from "@/dtos/documents/update.request.dto.js";
+import { AppError } from "@/middlewares/errorHandle.js";
+
+const CURSOR_RE = /^(\d{1,15})_([a-f\d]{24})$/i;
+
+function parseCursor(raw: unknown) {
+  if (raw === undefined || raw === "") return null;
+  if (typeof raw !== "string") throw new AppError("Cursor không hợp lệ", 400);
+  const m = CURSOR_RE.exec(raw);
+  const date = m ? new Date(Number(m[1])) : null;
+  if (!m || !date || Number.isNaN(date.getTime()))
+    throw new AppError("Cursor không hợp lệ", 400);
+  return { date, id: m[2] };
+}
 
 export const uploadDocument = async (
   req: AuthRequest,
@@ -85,10 +98,11 @@ export const getDocuments = async (
 ): Promise<Response | void> => {
   try {
     const userId = getUserIdFromReq(req);
+    const cursor = parseCursor(req.query.cursor);
     const page = Number.parseInt(String(req.query.page ?? 1), 10) || 1;
-    const size = Number.parseInt(String(req.query.size ?? 10), 10) || 10;
+    const size = Math.min(Math.max(Number.parseInt(String(req.query.size ?? 10), 10) || 10, 1), 50);
 
-    const result = await getDocumentsService({ userId, page, size });
+    const result = await getDocumentsService({ userId, page, size, cursor });
 
     return res.status(200).json({
       success: true,

@@ -45,6 +45,8 @@ export interface DocumentListPayload {
     page?: number;
     size?: number;
     totalPages?: number;
+    nextCursor?: string | null;
+    hasNextPage?: boolean;
   };
 }
 
